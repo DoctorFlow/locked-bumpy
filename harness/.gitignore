@@ -1,0 +1,9 @@
+# Working files of the watcher: never commit
+tools/run/
+tools/picture_watcher.log
+tools/picture_watcher.lock
+tools/STOP
+__pycache__/
+
+# In this kit repository: no pictures and no real queue (the kit is guidance only).
+# In the team's own app repository, pictures, records and the gallery are kept as evidence.

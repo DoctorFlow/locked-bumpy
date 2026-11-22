@@ -1,0 +1,20 @@
+[
+ {
+  "name": "bumpy_first",
+  "description_by": "Rachel",
+  "run_by": "Lakshya",
+  "ratio": "1:1",
+  "takes": 3,
+  "refs": [],
+  "prompt": "REPLACE WITH RACHEL'S OWN DESCRIPTION OF BUMPY. Then keep these technical lines: one baby, whole body, centred, eyes open. Plain flat pure green background (#00FF00) filling the whole picture, nothing else in it. No text, no letters, no white sheet, no halo."
+ },
+ {
+  "name": "bumpy_costume_example",
+  "description_by": "Rachel",
+  "run_by": "Lakshya",
+  "ratio": "1:1",
+  "takes": 2,
+  "refs": ["bumpy_first"],
+  "prompt": "The same baby as in the reference picture, same face and proportions. REPLACE WITH RACHEL'S WORDS FOR THE COSTUME AND POSE. One baby, whole body, centred, eyes open. Plain flat pure green background (#00FF00), nothing else. No text, no letters, no white sheet, no halo."
+ }
+]

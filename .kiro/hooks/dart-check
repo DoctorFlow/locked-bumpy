@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+# .kiro/hooks/dart-check
+set -e
+echo "Running Dart format check and Flutter analyze..."
+dart format --output=none --set-exit-if-changed lib test
+flutter analyze

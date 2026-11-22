@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+# .kiro/hooks/content-check
+set -e
+echo "Running Little Bumpy Content Gate..."
+flutter test test/unit/content_gate_test.dart
