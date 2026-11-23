@@ -28,3 +28,20 @@ flutter analyze
 flutter test
 flutter run
 ```
+
+For an installable web release, run `python tool/prepare_offline_web.py --build`
+and serve `build/web/` over HTTPS or localhost. The command uses the local
+CanvasKit renderer and bundles the fonts, app shell, costumes and content for
+offline use. For a site hosted below the root, run Flutter with the site's base
+path first, then package that output:
+
+```bash
+flutter build web --release --no-web-resources-cdn --base-href /little-bumpy/
+python tool/prepare_offline_web.py
+```
+
+To check a deployment, open it online once and wait for the service worker to
+activate. Switch the browser offline, reload, and open a costume you haven't
+viewed. Updates take effect after the existing app tabs close. A partial
+download keeps the previous complete release available.
+Serve the packaged bytes unchanged so the browser can verify their hashes.
