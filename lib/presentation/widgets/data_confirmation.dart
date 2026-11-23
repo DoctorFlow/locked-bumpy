@@ -80,10 +80,10 @@ class _ConfirmDialog extends StatelessWidget {
           onPressed: () => Navigator.of(context).pop(true),
           style: ElevatedButton.styleFrom(
             backgroundColor: confirmDestructive
-                ? Colors.redAccent
+                ? AppPalette.eraseAccent
                 : palette.accent,
             foregroundColor: confirmDestructive
-                ? Colors.white
+                ? AppPalette.eraseInk
                 : palette.accentText,
           ),
           child: Text(confirmLabel),

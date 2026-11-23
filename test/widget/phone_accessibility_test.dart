@@ -6,6 +6,14 @@ import 'package:little_bumpy/domain/models/app_state.dart';
 import 'package:little_bumpy/main.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+double contrast(Color text, Color surface) {
+  final foreground = Color.alphaBlend(text, surface).computeLuminance();
+  final background = surface.computeLuminance();
+  return foreground >= background
+      ? (foreground + .05) / (background + .05)
+      : (background + .05) / (foreground + .05);
+}
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   setUpAll(ContentLoader.loadWeekCards);
@@ -20,13 +28,6 @@ void main() {
       state.setTab(1);
       await tester.pumpWidget(LittleBumpyApp(state: state));
       await tester.pumpAndSettle();
-      double contrast(Color text, Color surface) {
-        final foreground = Color.alphaBlend(text, surface).computeLuminance();
-        final background = surface.computeLuminance();
-        return foreground >= background
-            ? (foreground + .05) / (background + .05)
-            : (background + .05) / (foreground + .05);
-      }
 
       for (final palette in [AppPalette.everyday, AppPalette.halloween]) {
         final heading = tester.widget<Text>(
@@ -56,6 +57,65 @@ void main() {
       await tester.pumpWidget(const SizedBox());
     },
   );
+  for (final palette in [AppPalette.everyday, AppPalette.halloween]) {
+    testWidgets(
+      'input hints and erase confirmation have readable contrast in ${palette.isHalloween ? "Halloween" : "Everyday"}',
+      (t) async {
+        SharedPreferences.setMockInitialValues({
+          'is_halloween': palette.isHalloween,
+        });
+        final state = await AppState.load();
+        await t.pumpWidget(LittleBumpyApp(state: state));
+        await t.pumpAndSettle();
+        await t.tap(find.text('Tap to pick a date'));
+        await t.pumpAndSettle();
+        await t.tap(find.text('OK'));
+        await t.pumpAndSettle();
+        await t.tap(find.text('Next').first);
+        await t.pumpAndSettle();
+        final decoration = t
+            .widget<TextField>(find.byType(TextField))
+            .decoration!;
+        expect(
+          contrast(decoration.hintStyle!.color!, decoration.fillColor!),
+          greaterThanOrEqualTo(4.5),
+          reason: 'nickname hint',
+        );
+        expect(
+          contrast(decoration.counterStyle!.color!, palette.skyTop),
+          greaterThanOrEqualTo(4.5),
+          reason: 'character counter',
+        );
+        await state.saveDueDate(DateTime.now().add(const Duration(days: 100)));
+        await state.togglePause();
+        await t.pumpAndSettle();
+        final erase = find.widgetWithText(TextButton, 'Erase all data');
+        await t.ensureVisible(erase);
+        final eraseStyle = t.widget<TextButton>(erase).style!;
+        expect(
+          contrast(eraseStyle.foregroundColor!.resolve({})!, palette.skyTop),
+          greaterThanOrEqualTo(4.5),
+          reason: 'erase action',
+        );
+        await t.tap(erase);
+        await t.pumpAndSettle();
+        final style = t
+            .widget<ElevatedButton>(
+              find.widgetWithText(ElevatedButton, 'Yes, erase'),
+            )
+            .style!;
+        expect(
+          contrast(
+            style.foregroundColor!.resolve({})!,
+            style.backgroundColor!.resolve({})!,
+          ),
+          greaterThanOrEqualTo(4.5),
+          reason: 'erase confirmation',
+        );
+        await t.pumpWidget(const SizedBox());
+      },
+    );
+  }
   for (final size in [const Size(320, 568), const Size(568, 320)]) {
     testWidgets(
       'large text keeps check-ins and lamp controls usable at $size',

@@ -114,7 +114,7 @@ class PausedScreen extends StatelessWidget {
                   child: TextButton(
                     onPressed: () => confirmErase(context, state),
                     style: TextButton.styleFrom(
-                      foregroundColor: Colors.redAccent,
+                      foregroundColor: AppPalette.eraseAccent,
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       minimumSize: const Size(double.infinity, 48),
                     ),

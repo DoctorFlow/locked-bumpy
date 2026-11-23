@@ -258,7 +258,7 @@ class _TodayScreenState extends State<TodayScreen>
             AppConstants.disclaimer,
             style: TextStyle(
               fontSize: 11,
-              color: palette.moonlightSoft.withValues(alpha: 0.7),
+              color: palette.moonlightSoft,
               height: 1.3,
             ),
             textAlign: TextAlign.center,

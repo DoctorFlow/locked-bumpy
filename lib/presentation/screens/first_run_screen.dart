@@ -353,7 +353,7 @@ class _Step1Date extends StatelessWidget {
             AppConstants.disclaimer,
             style: TextStyle(
               fontSize: 11,
-              color: palette.moonlightSoft.withValues(alpha: 0.7),
+              color: palette.moonlightSoft,
               height: 1.4,
             ),
             textAlign: TextAlign.center,
@@ -472,13 +472,11 @@ class _Step2Nickname extends StatelessWidget {
             style: TextStyle(fontSize: 18, color: palette.ink),
             decoration: InputDecoration(
               hintText: 'e.g. Peanut, Sprout…',
-              hintStyle: TextStyle(
-                color: palette.inkSoft.withValues(alpha: 0.6),
-              ),
+              hintStyle: TextStyle(color: palette.inkSoft),
               filled: true,
               fillColor: palette.paper,
               counterStyle: TextStyle(
-                color: palette.moonlightSoft.withValues(alpha: 0.6),
+                color: palette.moonlightSoft,
                 fontSize: 11,
               ),
               border: OutlineInputBorder(
@@ -620,7 +618,7 @@ class _Step3Look extends StatelessWidget {
             AppConstants.disclaimer,
             style: TextStyle(
               fontSize: 11,
-              color: palette.moonlightSoft.withValues(alpha: 0.7),
+              color: palette.moonlightSoft,
               height: 1.4,
             ),
             textAlign: TextAlign.center,
