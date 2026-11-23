@@ -66,7 +66,11 @@ void main() {
   ) async {
     final state = await open(tester);
     final erase = find.text('Erase all data');
-    await tester.ensureVisible(erase);
+    await tester.dragUntilVisible(
+      erase.hitTestable(),
+      find.byType(ListView),
+      const Offset(0, -160),
+    );
     await tester.tap(erase);
     await tester.pumpAndSettle();
     await tester.tap(find.text('Never mind'));

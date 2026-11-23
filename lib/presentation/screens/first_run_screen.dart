@@ -4,6 +4,7 @@ import '../../core/constants/app_constants.dart';
 import '../../core/theme/palette.dart';
 import '../../domain/models/app_state.dart';
 import '../../domain/pregnancy.dart';
+import '../widgets/pregnancy_date_picker.dart';
 
 /// First-run onboarding: 3 steps shown as a horizontal page flow.
 ///
@@ -80,27 +81,13 @@ class _FirstRunScreenState extends State<FirstRunScreen> {
 
   Future<void> _pickDate() async {
     widget.state.refreshDay();
-    final now = widget.state.today;
-    final firstDate = _useDueDate
-        ? now.subtract(const Duration(days: 7))
-        : now.subtract(const Duration(days: 294));
-    final lastDate = _useDueDate ? now.add(const Duration(days: 294)) : now;
-    final initial =
-        _pickedDate ??
-        (_useDueDate
-            ? now.add(const Duration(days: 140))
-            : now.subtract(const Duration(days: 140)));
-
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: initial,
-      firstDate: firstDate,
-      lastDate: lastDate,
-      helpText: _useDueDate
-          ? 'Pick your due date'
-          : 'Pick your last period start',
+    final picked = await pickPregnancyDate(
+      context,
+      today: widget.state.today,
+      useDueDate: _useDueDate,
+      selected: _pickedDate,
     );
-    if (picked != null) setState(() => _pickedDate = picked);
+    if (picked != null && mounted) setState(() => _pickedDate = picked);
   }
 
   Future<void> _confirm() async {

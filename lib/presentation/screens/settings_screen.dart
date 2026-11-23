@@ -3,6 +3,7 @@ import '../../core/constants/app_constants.dart';
 import '../../core/theme/palette.dart';
 import '../../domain/models/app_state.dart';
 import '../widgets/data_confirmation.dart';
+import '../widgets/pregnancy_date_picker.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key, required this.state});
@@ -11,7 +12,10 @@ class SettingsScreen extends StatelessWidget {
   static Future<void> open(BuildContext context, AppState state) async {
     final nav = Navigator.of(context);
     final route = MaterialPageRoute<void>(
-      builder: (_) => SettingsScreen(state: state),
+      builder: (_) => ListenableBuilder(
+        listenable: state,
+        builder: (context, _) => SettingsScreen(state: state),
+      ),
     );
     // Pause and Erase replace every active screen in the same frame.
     void closeIfInactive() {
@@ -25,6 +29,42 @@ class SettingsScreen extends StatelessWidget {
       await nav.push(route);
     } finally {
       state.removeListener(closeIfInactive);
+    }
+  }
+
+  Future<void> _editNickname(BuildContext context) async {
+    var value = state.nickname;
+    final saved = await showDialog<String>(
+      context: context,
+      builder: (dialog) => AlertDialog(
+        scrollable: true,
+        title: const Text('Baby nickname'),
+        content: TextFormField(
+          initialValue: value,
+          autofocus: true,
+          maxLength: 24,
+          textCapitalization: TextCapitalization.words,
+          decoration: const InputDecoration(labelText: 'Nickname (optional)'),
+          onChanged: (text) => value = text,
+          onFieldSubmitted: (text) => Navigator.pop(dialog, text),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialog),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(dialog, value),
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
+    if (saved != null &&
+        context.mounted &&
+        !state.isPaused &&
+        !state.isFirstRun) {
+      await state.saveNickname(saved);
     }
   }
 
@@ -93,27 +133,57 @@ class SettingsScreen extends StatelessWidget {
                                 style: TextStyle(color: palette.inkSoft),
                               ),
                               const SizedBox(height: 24),
+                              _EditableDetail(
+                                label: 'Due date',
+                                value: state.dueDate == null
+                                    ? ''
+                                    : MaterialLocalizations.of(
+                                        context,
+                                      ).formatShortDate(state.dueDate!),
+                                action: 'Change due date',
+                                palette: palette,
+                                onTap: () async {
+                                  state.refreshDay();
+                                  final picked = await pickPregnancyDate(
+                                    context,
+                                    today: state.today,
+                                    useDueDate: true,
+                                    selected: state.dueDate,
+                                  );
+                                  if (picked != null &&
+                                      context.mounted &&
+                                      !state.isPaused &&
+                                      !state.isFirstRun) {
+                                    await state.saveDueDate(picked);
+                                  }
+                                },
+                              ),
+                              _EditableDetail(
+                                label: 'Nickname',
+                                value: state.babyDisplayName,
+                                action: 'Edit nickname',
+                                palette: palette,
+                                onTap: () => _editNickname(context),
+                              ),
+                              const SizedBox(height: 16),
                               Text('Appearance', style: title),
                               const SizedBox(height: 8),
-                              ListenableBuilder(
-                                listenable: state,
-                                builder: (context, _) => Wrap(
-                                  spacing: 8,
-                                  children: [
-                                    for (final mode in [false, true])
-                                      ChoiceChip(
-                                        label: Text(
-                                          mode ? 'Halloween' : 'Everyday',
-                                        ),
-                                        selected: mode == state.isHalloween,
-                                        onSelected: (_) {
-                                          if (mode != state.isHalloween) {
-                                            state.toggleMode();
-                                          }
-                                        },
+                              Wrap(
+                                spacing: 8,
+                                children: [
+                                  for (final mode in [false, true])
+                                    ChoiceChip(
+                                      label: Text(
+                                        mode ? 'Halloween' : 'Everyday',
                                       ),
-                                  ],
-                                ),
+                                      selected: mode == state.isHalloween,
+                                      onSelected: (_) {
+                                        if (mode != state.isHalloween) {
+                                          state.toggleMode();
+                                        }
+                                      },
+                                    ),
+                                ],
                               ),
                               const SizedBox(height: 24),
                               Text('Privacy', style: title),
@@ -152,6 +222,34 @@ class SettingsScreen extends StatelessWidget {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _EditableDetail extends StatelessWidget {
+  const _EditableDetail({
+    required this.label,
+    required this.value,
+    required this.action,
+    required this.palette,
+    required this.onTap,
+  });
+  final String label;
+  final String value;
+  final String action;
+  final AppPalette palette;
+  final VoidCallback onTap;
+  @override
+  Widget build(BuildContext context) {
+    return Tooltip(
+      message: action,
+      child: ListTile(
+        contentPadding: EdgeInsets.zero,
+        onTap: onTap,
+        title: Text(label, style: TextStyle(color: palette.ink)),
+        subtitle: Text(value, style: TextStyle(color: palette.inkSoft)),
+        trailing: Icon(Icons.edit_outlined, color: palette.inkSoft, size: 20),
       ),
     );
   }
