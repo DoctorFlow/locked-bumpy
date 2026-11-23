@@ -72,6 +72,29 @@ void main() {
       expect(state.completedCheckIns, isEmpty);
     });
 
+    test(
+      'erase removes every Bumpy key and preserves other app settings',
+      () async {
+        SharedPreferences.setMockInitialValues({
+          'due_date_iso': '2027-05-10',
+          'is_halloween': false,
+          'is_paused': true,
+          'baby_nickname': 'Cub',
+          'skin_tone': 'deep',
+          'daily_needs_v2': <String>['2026-11-23', 'water'],
+          'checkin_ids': 'water',
+          'checkin_date': '2026-11-23',
+          'other_app_setting': 'preserved',
+        });
+        final state = await AppState.load();
+        await state.eraseAll();
+        final prefs = await SharedPreferences.getInstance();
+        expect(prefs.getKeys(), {'other_app_setting'});
+        expect(prefs.getString('other_app_setting'), 'preserved');
+        expect((await AppState.load()).isFirstRun, isTrue);
+      },
+    );
+
     test('prefs are actually cleared after eraseAll', () async {
       SharedPreferences.setMockInitialValues({
         'due_date_iso': '2027-05-10',

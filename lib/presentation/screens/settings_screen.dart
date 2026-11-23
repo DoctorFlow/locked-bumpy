@@ -10,27 +10,15 @@ class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key, required this.state});
   final AppState state;
 
-  static Future<void> open(BuildContext context, AppState state) async {
-    final nav = Navigator.of(context);
-    final route = MaterialPageRoute<void>(
-      builder: (_) => ListenableBuilder(
-        listenable: state,
-        builder: (context, _) => SettingsScreen(state: state),
+  static Future<void> open(BuildContext context, AppState state) {
+    return Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => ListenableBuilder(
+          listenable: state,
+          builder: (context, _) => SettingsScreen(state: state),
+        ),
       ),
     );
-    // Pause and Erase replace every active screen in the same frame.
-    void closeIfInactive() {
-      if ((state.isPaused || state.isFirstRun) && route.isActive) {
-        nav.removeRoute(route);
-      }
-    }
-
-    state.addListener(closeIfInactive);
-    try {
-      await nav.push(route);
-    } finally {
-      state.removeListener(closeIfInactive);
-    }
   }
 
   Future<void> _editNickname(BuildContext context) async {

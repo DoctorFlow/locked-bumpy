@@ -93,8 +93,23 @@ class PrefsService {
 
   // ── Nuclear erase ────────────────────────────────────────────────────────
 
-  /// Wipes every key — used by Erase all data only.
-  Future<void> clearAll() => _prefs.clear();
+  /// Clears Little Bumpy's current and legacy keys on this device.
+  Future<void> clearAll() async {
+    const ownedKeys = [
+      AppConstants.prefsDueDateKey,
+      AppConstants.prefsSkinToneKey,
+      AppConstants.prefsIsHalloweenKey,
+      AppConstants.prefsIsPausedKey,
+      AppConstants.prefsNicknameKey,
+      AppConstants.prefsDailyNeedsKey,
+      AppConstants.prefsCheckInDateKey,
+      AppConstants.prefsCheckInIdsKey,
+    ];
+    await Future.wait([
+      for (final key in ownedKeys)
+        if (_prefs.containsKey(key)) _prefs.remove(key),
+    ]);
+  }
 
   // ── Helpers ───────────────────────────────────────────────────────────────
 

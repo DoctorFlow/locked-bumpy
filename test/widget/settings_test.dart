@@ -83,6 +83,27 @@ void main() {
       await tester.pumpWidget(const SizedBox());
     },
   );
+  testWidgets('Pause clears an open nickname editor and its private text', (
+    tester,
+  ) async {
+    final state = await open(tester);
+    final edit = find.byTooltip('Edit nickname');
+    await tester.ensureVisible(edit);
+    await tester.tap(edit);
+    await tester.pumpAndSettle();
+    expect(find.byType(TextFormField), findsOneWidget);
+    await tester.enterText(find.byType(TextFormField), 'Unsaved nickname');
+    await state.togglePause();
+    await tester.pumpAndSettle();
+    expect(find.byType(TextFormField), findsNothing);
+    expect(find.text('Everything is paused.'), findsOneWidget);
+    await tester.tap(find.text('Resume'));
+    await tester.pumpAndSettle();
+    expect(state.nickname, 'Cub');
+    expect(find.byType(TextFormField), findsNothing);
+    await tester.pumpWidget(const SizedBox());
+  });
+
   testWidgets('Settings and Pause use the same reversible erase confirmation', (
     tester,
   ) async {

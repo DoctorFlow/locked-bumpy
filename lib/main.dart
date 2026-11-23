@@ -77,6 +77,8 @@ class _LittleBumpyAppState extends State<LittleBumpyApp>
         : AppPalette.everyday;
 
     return MaterialApp(
+      // Pause and Erase dismiss the whole route stack, including any open editor.
+      key: ValueKey((state.isFirstRun, state.isPaused)),
       title: 'Little Bumpy',
       themeAnimationDuration:
           MediaQuery.maybeDisableAnimationsOf(context) ??
