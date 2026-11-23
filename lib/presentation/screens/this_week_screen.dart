@@ -17,20 +17,54 @@ class ThisWeekScreen extends StatefulWidget {
 
 class _ThisWeekScreenState extends State<ThisWeekScreen> {
   List<WeekCard>? _cards;
-  // Follow the current week until the reader chooses another card.
-  int? _browsedWeek;
-  int get _currentWeek => widget.state.currentWeek ?? _minWeek;
-  int get _selectedWeek => _browsedWeek ?? _currentWeek;
-  void _selectWeek(int week) =>
-      setState(() => _browsedWeek = week == _currentWeek ? null : week);
-
-  static const int _minWeek = AppConstants.minWeek; // 4
-  static const int _maxWeek = AppConstants.maxWeek; // 42
+  static const int _minWeek = AppConstants.minWeek;
+  static const int _maxWeek = AppConstants.maxWeek;
+  late int _currentWeek;
+  late int _selectedWeek;
+  late final PageController _pages;
 
   @override
   void initState() {
     super.initState();
+    _currentWeek = widget.state.currentWeek ?? _minWeek;
+    _selectedWeek = _currentWeek;
+    _pages = PageController(initialPage: _selectedWeek - _minWeek);
     _loadCards();
+  }
+
+  @override
+  void didUpdateWidget(ThisWeekScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final current = widget.state.currentWeek ?? _minWeek;
+    if (current == _currentWeek) return;
+    final following = _selectedWeek == _currentWeek;
+    _currentWeek = current;
+    if (following) {
+      _selectedWeek = current;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && _pages.hasClients) _pages.jumpToPage(current - _minWeek);
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _pages.dispose();
+    super.dispose();
+  }
+
+  void _goTo(int week) {
+    final index = week - _minWeek;
+    if (MediaQuery.disableAnimationsOf(context) ||
+        (_selectedWeek - week).abs() > 1) {
+      _pages.jumpToPage(index);
+    } else {
+      _pages.animateToPage(
+        index,
+        duration: const Duration(milliseconds: 220),
+        curve: Curves.easeOut,
+      );
+    }
   }
 
   Future<void> _loadCards() async {
@@ -48,79 +82,92 @@ class _ThisWeekScreenState extends State<ThisWeekScreen> {
     }
 
     final mode = palette.isHalloween ? 'halloween' : 'everyday';
-    final card = WeekCard.findFor(
-      cards: cards,
-      week: _selectedWeek,
-      mode: mode,
-    );
-
-    return CustomScrollView(
-      slivers: [
-        SliverFillRemaining(
-          hasScrollBody: false,
-          child: Column(
+    return Column(
+      children: [
+        const SizedBox(height: 12),
+        ExcludeSemantics(
+          child: _WeekDots(
+            selected: _selectedWeek,
+            min: _minWeek,
+            max: _maxWeek,
+            current: _currentWeek,
+            palette: palette,
+          ),
+        ),
+        const SizedBox(height: 12),
+        Expanded(
+          child: PageView.builder(
+            controller: _pages,
+            itemCount: _maxWeek - _minWeek + 1,
+            onPageChanged: (page) =>
+                setState(() => _selectedWeek = page + _minWeek),
+            itemBuilder: (context, index) {
+              final week = _minWeek + index;
+              final card = WeekCard.findFor(
+                cards: cards,
+                week: week,
+                mode: mode,
+              );
+              return Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: CustomScrollView(
+                  key: PageStorageKey('week-$week'),
+                  slivers: [
+                    SliverFillRemaining(
+                      hasScrollBody: false,
+                      child: _WeekCardView(
+                        week: week,
+                        card: card,
+                        palette: palette,
+                        isCurrentWeek: week == _currentWeek,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const SizedBox(height: 16),
-
-              // Week dot strip
-              _WeekDots(
-                selected: _selectedWeek,
-                min: _minWeek,
-                max: _maxWeek,
-                current: _currentWeek,
+              _NavButton(
+                icon: Icons.arrow_back_ios_new,
+                label: 'Previous week',
+                enabled: _selectedWeek > _minWeek,
                 palette: palette,
+                onTap: () => _goTo(_selectedWeek - 1),
               ),
-              const SizedBox(height: 16),
-
-              // Card + arrows
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Column(
-                    children: [
-                      Expanded(
-                        child: _WeekCardView(
-                          week: _selectedWeek,
-                          card: card,
-                          palette: palette,
-                          isCurrentWeek: _selectedWeek == _currentWeek,
+              Flexible(
+                child: _selectedWeek == _currentWeek
+                    ? Text(
+                        'Week $_selectedWeek',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
+                          color: palette.moonlight,
+                        ),
+                      )
+                    : TextButton(
+                        style: TextButton.styleFrom(
+                          foregroundColor: palette.moonlight,
+                        ),
+                        onPressed: () => _goTo(_currentWeek),
+                        child: const Text(
+                          'Back to this week',
+                          textAlign: TextAlign.center,
                         ),
                       ),
-                      const SizedBox(height: 16),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          _NavButton(
-                            icon: Icons.arrow_back_ios_new,
-                            label: 'Previous week',
-                            enabled: _selectedWeek > _minWeek,
-                            palette: palette,
-                            onTap: () => _selectWeek(_selectedWeek - 1),
-                          ),
-                          Flexible(
-                            child: Text(
-                              'Week $_selectedWeek',
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                fontSize: 15,
-                                fontWeight: FontWeight.bold,
-                                color: palette.moonlight,
-                              ),
-                            ),
-                          ),
-                          _NavButton(
-                            icon: Icons.arrow_forward_ios,
-                            label: 'Next week',
-                            enabled: _selectedWeek < _maxWeek,
-                            palette: palette,
-                            onTap: () => _selectWeek(_selectedWeek + 1),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 20),
-                    ],
-                  ),
-                ),
+              ),
+              _NavButton(
+                icon: Icons.arrow_forward_ios,
+                label: 'Next week',
+                enabled: _selectedWeek < _maxWeek,
+                palette: palette,
+                onTap: () => _goTo(_selectedWeek + 1),
               ),
             ],
           ),
@@ -299,29 +346,24 @@ class _NavButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Semantics(
-      label: label,
-      button: true,
-      enabled: enabled,
-      child: GestureDetector(
-        onTap: enabled ? onTap : null,
-        child: Container(
-          constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-          decoration: BoxDecoration(
-            color: enabled
-                ? palette.paperRaised.withValues(alpha: 0.6)
-                : Colors.transparent,
+    return Tooltip(
+      message: label,
+      excludeFromSemantics: true,
+      child: IconButton(
+        onPressed: enabled ? onTap : null,
+        style: IconButton.styleFrom(
+          minimumSize: const Size(48, 48),
+          foregroundColor: palette.moonlight,
+          disabledForegroundColor: palette.moonlightSoft.withValues(
+            alpha: 0.45,
+          ),
+          // Both looks use a dark sky outside the paper card.
+          backgroundColor: palette.moonlight.withValues(alpha: 0.10),
+          shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
-          child: Icon(
-            icon,
-            size: 20,
-            color: enabled
-                ? palette.moonlight
-                : palette.moonlightSoft.withValues(alpha: 0.3),
-          ),
         ),
+        icon: Icon(icon, semanticLabel: label, size: 20),
       ),
     );
   }
