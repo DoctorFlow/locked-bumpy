@@ -5,6 +5,7 @@ import '../../core/theme/palette.dart';
 import '../../domain/models/app_state.dart';
 import '../../domain/models/content_record.dart';
 import '../../domain/models/need.dart';
+import '../widgets/bumpy_avatar.dart';
 
 /// Today tab — daily loop under 30 seconds.
 /// Baby-voice lines are loaded from [ContentLoader] (bundled JSON, offline).
@@ -76,7 +77,11 @@ class _TodayScreenState extends State<TodayScreen>
     await widget.state.toggleCheckIn(id);
     if (mounted) setState(() {});
 
-    if (id == AppConstants.checkInNeed && !wasChecked && !_hopping) {
+    if (mounted &&
+        id == AppConstants.checkInNeed &&
+        !wasChecked &&
+        !_hopping &&
+        !MediaQuery.disableAnimationsOf(context)) {
       _hopping = true;
       await _hopController.forward(from: 0);
       _hopping = false;
@@ -177,19 +182,50 @@ class _TodayScreenState extends State<TodayScreen>
                 const SizedBox(height: 16),
 
                 // Baby avatar
-                _buildBabyAvatar(context, palette, need),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(16),
+                  child: SizedBox(
+                    height: 212,
+                    width: double.infinity,
+                    child: Stack(
+                      alignment: Alignment.bottomCenter,
+                      children: [
+                        Positioned.fill(
+                          child: Image.asset(
+                            palette.isHalloween
+                                ? 'assets/images/nursery-halloween.png'
+                                : 'assets/images/nursery-everyday.png',
+                            fit: BoxFit.cover,
+                            excludeFromSemantics: true,
+                            errorBuilder: (_, _, _) =>
+                                ColoredBox(color: palette.skyBottom),
+                          ),
+                        ),
+                        BumpyAvatar(
+                          need: need,
+                          palette: palette,
+                          happy: needTicked,
+                          hopAnimation: _hopAnimation,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
                 const SizedBox(height: 14),
 
                 // Baby speech
-                Text(
-                  babyLine,
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                    height: 1.35,
-                    color: palette.ink,
+                ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 240),
+                  child: Text(
+                    babyLine,
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      height: 1.35,
+                      color: palette.ink,
+                    ),
+                    textAlign: TextAlign.center,
                   ),
-                  textAlign: TextAlign.center,
                 ),
               ],
             ),
@@ -283,51 +319,6 @@ class _TodayScreenState extends State<TodayScreen>
         ],
       ),
     );
-  }
-
-  Widget _buildBabyAvatar(
-    BuildContext context,
-    AppPalette palette,
-    MaternalNeed need,
-  ) {
-    final disableAnimations = MediaQuery.disableAnimationsOf(context);
-    final avatar = Container(
-      width: 90,
-      height: 90,
-      decoration: BoxDecoration(
-        color: palette.paperRaised,
-        shape: BoxShape.circle,
-      ),
-      child: Center(
-        child: Text(
-          _costumeEmoji(need, palette),
-          style: const TextStyle(fontSize: 44),
-        ),
-      ),
-    );
-
-    if (disableAnimations) return avatar;
-
-    return AnimatedBuilder(
-      animation: _hopAnimation,
-      builder: (_, child) => Transform.translate(
-        offset: Offset(0, _hopAnimation.value),
-        child: child,
-      ),
-      child: avatar,
-    );
-  }
-
-  String _costumeEmoji(MaternalNeed need, AppPalette palette) {
-    if (!palette.isHalloween) return '👶';
-    return switch (need) {
-      MaternalNeed.iron => '🧛',
-      MaternalNeed.brain => '🧟',
-      MaternalNeed.bones => '💀',
-      MaternalNeed.water => '🧕',
-      MaternalNeed.rest => '👻',
-      MaternalNeed.vitamin => '🧙',
-    };
   }
 }
 

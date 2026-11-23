@@ -54,4 +54,11 @@ enum MaternalNeed {
   /// Returns the display tag. Reads [palette] so no boolean branch in callers.
   String tag(AppPalette palette) =>
       palette.isHalloween ? '$costume · $needName' : 'TODAY · $needName';
+
+  String assetPath(AppPalette palette, {bool happy = false}) {
+    final stem = palette.isHalloween
+        ? 'body-${costume.toLowerCase()}'
+        : 'everyday';
+    return 'assets/images/$stem${happy ? '-happy' : ''}.png';
+  }
 }
