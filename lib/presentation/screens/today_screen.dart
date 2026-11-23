@@ -78,7 +78,7 @@ class _TodayScreenState extends State<TodayScreen>
     if (mounted) setState(() {});
 
     if (mounted &&
-        id == AppConstants.checkInNeed &&
+        id == widget.state.todayNeed.name &&
         !wasChecked &&
         !_hopping &&
         !MediaQuery.disableAnimationsOf(context)) {
@@ -132,8 +132,7 @@ class _TodayScreenState extends State<TodayScreen>
     final palette = AppPalette.of(context);
     final state = widget.state;
     final need = state.todayNeed;
-    final thirdNeed = state.thirdCheckIn;
-    final needTicked = state.isChecked(AppConstants.checkInNeed);
+    final needTicked = state.isChecked(need.name);
     final allDone = state.allChecked;
     final babyLine = _babyLine(need, needTicked, allDone, palette);
 
@@ -243,68 +242,20 @@ class _TodayScreenState extends State<TodayScreen>
           ),
           const SizedBox(height: 10),
 
-          // Check-in 1 — Need of the Day
-          _CheckInTile(
-            id: AppConstants.checkInNeed,
-            title: '${need.needName} · Need of the Day',
-            subtitle: need.foodHint,
-            needColor: need.color,
-            isTicked: needTicked,
-            palette: palette,
-            onTap: () => _onCheckIn(AppConstants.checkInNeed),
-          ),
-          const SizedBox(height: 8),
-
-          // Check-in 2 — Water
-          _CheckInTile(
-            id: AppConstants.checkInWater,
-            title: 'Water',
-            subtitle: MaternalNeed.water.foodHint,
-            needColor: AppPalette.needWater,
-            isTicked: state.isChecked(AppConstants.checkInWater),
-            palette: palette,
-            onTap: () => _onCheckIn(AppConstants.checkInWater),
-          ),
-          const SizedBox(height: 8),
-
-          // Check-in 3 — Vitamin OR Rest
-          _CheckInTile(
-            id: AppConstants.checkInVitamin,
-            title: thirdNeed == MaternalNeed.rest ? 'Rest' : 'Prenatal Vitamin',
-            subtitle: thirdNeed == MaternalNeed.rest
-                ? MaternalNeed.rest.foodHint
-                : MaternalNeed.vitamin.foodHint,
-            needColor: thirdNeed == MaternalNeed.rest
-                ? AppPalette.needRest
-                : AppPalette.needVitamin,
-            isTicked: state.isChecked(AppConstants.checkInVitamin),
-            palette: palette,
-            onTap: () => _onCheckIn(AppConstants.checkInVitamin),
-          ),
-
-          if (allDone) ...[
-            const SizedBox(height: 20),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              decoration: BoxDecoration(
-                color: palette.accent.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(
-                  color: palette.accent.withValues(alpha: 0.4),
-                ),
-              ),
-              child: Text(
-                babyLine,
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600,
-                  color: palette.ink,
-                ),
-                textAlign: TextAlign.center,
-              ),
+          for (final item in state.dailyCheckIns) ...[
+            _CheckInTile(
+              key: ValueKey(item),
+              title: item == need
+                  ? '${need.needName} · Need of the Day'
+                  : item.label,
+              subtitle: item.foodHint,
+              needColor: item.color,
+              isTicked: state.isChecked(item.name),
+              palette: palette,
+              onTap: () => _onCheckIn(item.name),
             ),
+            const SizedBox(height: 8),
           ],
-
           const SizedBox(height: 20),
           Text(
             AppConstants.disclaimer,
@@ -326,7 +277,7 @@ class _TodayScreenState extends State<TodayScreen>
 
 class _CheckInTile extends StatelessWidget {
   const _CheckInTile({
-    required this.id,
+    super.key,
     required this.title,
     required this.subtitle,
     required this.needColor,
@@ -335,7 +286,6 @@ class _CheckInTile extends StatelessWidget {
     required this.onTap,
   });
 
-  final String id;
   final String title;
   final String subtitle;
   final Color needColor;

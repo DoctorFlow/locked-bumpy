@@ -27,12 +27,6 @@ class GuidesScreen extends StatelessWidget {
                 color: palette.moonlight,
               ),
             ),
-            const SizedBox(height: 10),
-            Text(
-              'Nutritional and care guides coming in Rung 2.',
-              style: TextStyle(fontSize: 14, color: palette.moonlightSoft),
-              textAlign: TextAlign.center,
-            ),
             const SizedBox(height: 32),
             Text(
               AppConstants.disclaimer,

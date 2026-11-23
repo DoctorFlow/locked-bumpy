@@ -1,5 +1,7 @@
 import 'package:shared_preferences/shared_preferences.dart';
 import '../constants/app_constants.dart';
+import '../../domain/models/need.dart';
+import '../../domain/models/need_rotation.dart';
 
 /// Thin wrapper around [SharedPreferences].
 /// All data stays on-device — zero network calls, zero serialisation to any
@@ -50,19 +52,36 @@ class PrefsService {
 
   /// Returns the saved check-in IDs for today; clears them if the saved date
   /// is before today (a new day started).
-  Set<String> loadTodayCheckIns() {
+  Set<String> loadTodayCheckIns(DateTime date) {
+    final today = _isoDate(date);
+    final current = _prefs.getStringList(AppConstants.prefsDailyNeedsKey);
+    if (current != null) {
+      return current.isNotEmpty && current.first == today
+          ? current.skip(1).toSet()
+          : {};
+    }
+    // Earlier builds saved tile positions. Decode what those tiles actually
+    // said: on Water and Rest days two old tiles could mean the same thing.
     final savedDate = _prefs.getString(AppConstants.prefsCheckInDateKey);
-    final today = _isoDate(DateTime.now());
     if (savedDate != today) return {};
-    final raw = _prefs.getString(AppConstants.prefsCheckInIdsKey) ?? '';
-    if (raw.isEmpty) return {};
-    return raw.split(',').toSet();
+    final slots = (_prefs.getString(AppConstants.prefsCheckInIdsKey) ?? '')
+        .split(',');
+    final need = NeedRotation.forDate(date);
+    return {
+      if (slots.contains(AppConstants.checkInNeed)) need.name,
+      if (slots.contains(AppConstants.checkInWater)) MaternalNeed.water.name,
+      if (slots.contains(AppConstants.checkInVitamin))
+        NeedRotation.thirdCheckIn(need) == MaternalNeed.rest
+            ? MaternalNeed.rest.name
+            : MaternalNeed.vitamin.name,
+    };
   }
 
-  Future<void> saveTodayCheckIns(Set<String> ids) async {
-    final today = _isoDate(DateTime.now());
-    await _prefs.setString(AppConstants.prefsCheckInDateKey, today);
-    await _prefs.setString(AppConstants.prefsCheckInIdsKey, ids.join(','));
+  Future<void> saveTodayCheckIns(DateTime date, Set<String> ids) async {
+    await _prefs.setStringList(AppConstants.prefsDailyNeedsKey, [
+      _isoDate(date),
+      ...ids,
+    ]);
   }
 
   // ── Nuclear erase ────────────────────────────────────────────────────────

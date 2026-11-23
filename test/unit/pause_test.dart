@@ -37,7 +37,7 @@ void main() {
         'checkin_date': '2026-11-23',
         'checkin_ids': 'need_of_the_day,water',
       });
-      final state = await AppState.load();
+      final state = await AppState.load(now: () => DateTime(2026, 11, 23));
       expect(state.isChecked('water'), isTrue);
       expect(state.isPaused, isTrue);
 

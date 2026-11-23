@@ -16,6 +16,7 @@ class AppConstants {
 
   /// Comma-separated completed check-in IDs for today.
   static const String prefsCheckInIdsKey = 'checkin_ids';
+  static const String prefsDailyNeedsKey = 'daily_needs_v2';
 
   // ── Gestational bounds ──────────────────────────────────────────────────
   static const int minWeek = 4;

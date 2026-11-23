@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'core/theme/palette.dart';
 import 'domain/models/app_state.dart';
@@ -24,20 +25,49 @@ class LittleBumpyApp extends StatefulWidget {
   State<LittleBumpyApp> createState() => _LittleBumpyAppState();
 }
 
-class _LittleBumpyAppState extends State<LittleBumpyApp> {
+class _LittleBumpyAppState extends State<LittleBumpyApp>
+    with WidgetsBindingObserver {
+  Timer? _dayTimer;
+
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     widget.state.addListener(_onStateChange);
+    _scheduleMidnight();
   }
 
   @override
   void dispose() {
+    _dayTimer?.cancel();
+    WidgetsBinding.instance.removeObserver(this);
     widget.state.removeListener(_onStateChange);
     super.dispose();
   }
 
-  void _onStateChange() => setState(() {});
+  void _onStateChange() {
+    _scheduleMidnight();
+    setState(() {});
+  }
+
+  void _scheduleMidnight() {
+    _dayTimer?.cancel();
+    if (widget.state.isPaused || widget.state.isFirstRun) return;
+    _dayTimer = Timer(widget.state.timeToMidnight, () {
+      widget.state.refreshDay();
+      _scheduleMidnight();
+    });
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      widget.state.refreshDay();
+      _scheduleMidnight();
+    } else {
+      _dayTimer?.cancel();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {

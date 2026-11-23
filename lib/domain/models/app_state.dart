@@ -1,5 +1,4 @@
 import 'package:flutter/foundation.dart';
-import '../../core/constants/app_constants.dart';
 import '../../core/services/prefs_service.dart';
 import 'need.dart';
 import 'need_rotation.dart';
@@ -7,14 +6,17 @@ import 'need_rotation.dart';
 /// Central app state. Loaded from [PrefsService] at startup.
 /// All mutations persist immediately — 100% on-device.
 class AppState extends ChangeNotifier {
-  AppState._(this._prefs)
+  AppState._(this._prefs, this._now)
     : _dueDate = _prefs.dueDate,
       _isHalloween = _prefs.isHalloween,
       _isPaused = _prefs.isPaused,
-      _nickname = _prefs.nickname,
-      _completedCheckIns = _prefs.loadTodayCheckIns();
+      _nickname = _prefs.nickname {
+    _day = _now();
+    _completedCheckIns = _prefs.loadTodayCheckIns(_day);
+  }
 
   final PrefsService _prefs;
+  final DateTime Function() _now;
 
   // ── Onboarding ───────────────────────────────────────────────────────────
 
@@ -62,6 +64,7 @@ class AppState extends ChangeNotifier {
 
   Future<void> togglePause() async {
     _isPaused = !_isPaused;
+    if (!_isPaused) refreshDay();
     notifyListeners();
     await _prefs.saveIsPaused(_isPaused);
   }
@@ -78,25 +81,43 @@ class AppState extends ChangeNotifier {
 
   // ── Daily check-ins ──────────────────────────────────────────────────────
 
-  Set<String> _completedCheckIns;
+  late DateTime _day;
+  late Set<String> _completedCheckIns;
   Set<String> get completedCheckIns => Set.unmodifiable(_completedCheckIns);
 
   bool isChecked(String id) => _completedCheckIns.contains(id);
 
-  /// Today's need-of-the-day, resolved at call time.
-  MaternalNeed get todayNeed => NeedRotation.forDate(DateTime.now());
+  MaternalNeed get todayNeed => NeedRotation.forDate(_day);
 
-  /// The third check-in slot (REST when need is water/vitamin, else the need).
-  MaternalNeed get thirdCheckIn => NeedRotation.thirdCheckIn(todayNeed);
+  List<MaternalNeed> get dailyCheckIns => NeedRotation.checkIns(todayNeed);
 
   /// True when all 3 check-ins are ticked.
-  bool get allChecked {
-    return isChecked(AppConstants.checkInWater) &&
-        isChecked(AppConstants.checkInVitamin) &&
-        isChecked(AppConstants.checkInNeed);
+  bool get allChecked => dailyCheckIns.every((need) => isChecked(need.name));
+
+  bool refreshDay() {
+    final now = _now();
+    if (now.year == _day.year &&
+        now.month == _day.month &&
+        now.day == _day.day) {
+      return false;
+    }
+    _day = now;
+    _completedCheckIns = _prefs.loadTodayCheckIns(now);
+    notifyListeners();
+    return true;
+  }
+
+  Duration get timeToMidnight {
+    final now = _now();
+    return DateTime(now.year, now.month, now.day + 1).difference(now);
   }
 
   Future<void> toggleCheckIn(String id) async {
+    if (refreshDay() ||
+        isPaused ||
+        !dailyCheckIns.any((need) => need.name == id)) {
+      return;
+    }
     final next = Set<String>.from(_completedCheckIns);
     if (next.contains(id)) {
       next.remove(id);
@@ -105,16 +126,17 @@ class AppState extends ChangeNotifier {
     }
     _completedCheckIns = next;
     notifyListeners(); // immediate — UI rebuilds before persistence completes
-    await _prefs.saveTodayCheckIns(_completedCheckIns);
+    await _prefs.saveTodayCheckIns(_day, _completedCheckIns);
   }
 
   /// Clears today's check-ins and unpauses. Used by Start Fresh.
   Future<void> clearTodayCheckIns() async {
+    _day = _now();
     _completedCheckIns = {};
     _isPaused = false;
     _currentTab = 0;
     notifyListeners();
-    await _prefs.saveTodayCheckIns({});
+    await _prefs.saveTodayCheckIns(_day, {});
     await _prefs.saveIsPaused(false);
   }
 
@@ -132,8 +154,8 @@ class AppState extends ChangeNotifier {
 
   // ── Factory ───────────────────────────────────────────────────────────────
 
-  static Future<AppState> load() async {
+  static Future<AppState> load({DateTime Function() now = DateTime.now}) async {
     final prefs = await PrefsService.create();
-    return AppState._(prefs);
+    return AppState._(prefs, now);
   }
 }
