@@ -300,17 +300,19 @@ class _WeekCardView extends StatelessWidget {
               color: palette.accent,
             ),
           ),
-          const SizedBox(height: 16),
-          Text(
-            card?.babyLine ?? 'Week $week is on the way.',
-            style: TextStyle(
-              fontSize: 17,
-              fontWeight: FontWeight.w600,
-              height: 1.4,
-              color: palette.ink,
+          if (card != null) ...[
+            const SizedBox(height: 16),
+            Text(
+              card!.babyLine,
+              style: TextStyle(
+                fontSize: 17,
+                fontWeight: FontWeight.w600,
+                height: 1.4,
+                color: palette.ink,
+              ),
+              textAlign: TextAlign.center,
             ),
-            textAlign: TextAlign.center,
-          ),
+          ],
           if (card?.sizeObject != null) ...[
             const SizedBox(height: 12),
             Text(

@@ -49,8 +49,8 @@ class ContentRecord {
     tone: j['tone'] as String,
     text: j['text'] as String,
     status: j['status'] as String,
-    approvedBy: j['approved_by'] as String,
-    approvedDate: j['approved_date'] as String,
+    approvedBy: j['approved_by'] as String? ?? '',
+    approvedDate: j['approved_date'] as String? ?? '',
   );
 
   static List<ContentRecord> listFromJsonString(String raw) {
@@ -142,10 +142,22 @@ class ContentGate {
         'status is "${record.status}", expected "approved"',
       );
     }
+    if (!hasDatedReview(record.approvedBy, record.approvedDate)) {
+      throw ContentGateException(
+        record,
+        'missing reviewer or invalid review date',
+      );
+    }
     final banned = bannedTerm(record.text);
     if (banned != null) {
       throw ContentGateException(record, 'text contains banned term "$banned"');
     }
+  }
+
+  static bool hasDatedReview(String reviewer, String date) {
+    if (reviewer.trim().isEmpty || date.length != 10) return false;
+    final parsed = DateTime.tryParse('${date}T00:00:00Z');
+    return parsed != null && parsed.toIso8601String().split('T').first == date;
   }
 
   static String? bannedTerm(String text) {

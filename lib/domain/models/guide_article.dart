@@ -20,10 +20,8 @@ class GuideArticle {
         (row['need'] as String).toLowerCase(),
       );
       final date = row['approved_date'] as String? ?? '';
-      final parsed = DateTime.tryParse(date);
       if (row['approved_by'] != reviewer ||
-          parsed == null ||
-          parsed.toIso8601String().split('T').first != date) {
+          !ContentGate.hasDatedReview(reviewer, date)) {
         throw FormatException('Missing physician review for ${need.name}');
       }
       final body = row['body'] as String;
