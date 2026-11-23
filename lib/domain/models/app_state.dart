@@ -34,8 +34,8 @@ class AppState extends ChangeNotifier {
 
   Future<void> toggleMode() async {
     _isHalloween = !_isHalloween;
-    await _prefs.saveIsHalloween(_isHalloween);
     notifyListeners();
+    await _prefs.saveIsHalloween(_isHalloween);
   }
 
   // ── Pause ────────────────────────────────────────────────────────────────
@@ -45,8 +45,8 @@ class AppState extends ChangeNotifier {
 
   Future<void> togglePause() async {
     _isPaused = !_isPaused;
-    await _prefs.saveIsPaused(_isPaused);
     notifyListeners();
+    await _prefs.saveIsPaused(_isPaused);
   }
 
   // ── Tab ──────────────────────────────────────────────────────────────────
@@ -87,8 +87,8 @@ class AppState extends ChangeNotifier {
       next.add(id);
     }
     _completedCheckIns = next;
+    notifyListeners(); // immediate — UI rebuilds before persistence completes
     await _prefs.saveTodayCheckIns(_completedCheckIns);
-    notifyListeners();
   }
 
   // ── Factory ───────────────────────────────────────────────────────────────
