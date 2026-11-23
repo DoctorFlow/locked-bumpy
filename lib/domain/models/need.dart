@@ -3,59 +3,55 @@ import '../../core/theme/palette.dart';
 
 enum MaternalNeed {
   iron(
-    name: 'IRON',
+    needName: 'IRON',
     costume: 'VAMPIRE',
     color: AppPalette.needIron,
-    foodExamples: 'Lentils or beans',
+    foodHint: 'Lentils or beans',
   ),
   brain(
-    name: 'BRAIN',
+    needName: 'BRAIN',
     costume: 'ZOMBIE',
     color: AppPalette.needBrain,
-    foodExamples: 'Leafy greens or beans',
+    foodHint: 'Leafy greens or beans',
   ),
   bones(
-    name: 'BONES',
+    needName: 'BONES',
     costume: 'SKELETON',
     color: AppPalette.needBones,
-    foodExamples: 'Milk, yogurt or cheese',
+    foodHint: 'Milk, yogurt or cheese',
   ),
   water(
-    name: 'WATER',
+    needName: 'WATER',
     costume: 'MUMMY',
     color: AppPalette.needWater,
-    foodExamples: 'A refreshing glass of water',
+    foodHint: 'A refreshing glass of water',
   ),
   rest(
-    name: 'REST',
+    needName: 'REST',
     costume: 'GHOST',
     color: AppPalette.needRest,
-    foodExamples: 'Put your feet up for five',
+    foodHint: 'Put your feet up for five',
   ),
   vitamin(
-    name: 'VITAMIN',
+    needName: 'VITAMIN',
     costume: 'WITCH',
     color: AppPalette.needVitamin,
-    foodExamples: 'The vitamin your doctor chose',
+    foodHint: 'The vitamin your doctor chose',
   );
 
-  final String name;
+  final String needName;
   final String costume;
   final Color color;
-  final String foodExamples;
+  final String foodHint;
 
   const MaternalNeed({
-    required this.name,
+    required this.needName,
     required this.costume,
     required this.color,
-    required this.foodExamples,
+    required this.foodHint,
   });
 
-  String tag({required bool isHalloween}) {
-    if (isHalloween) {
-      return '$costume · $name';
-    } else {
-      return 'TODAY · $name';
-    }
-  }
+  /// Returns the display tag. Reads [palette] so no boolean branch in callers.
+  String tag(AppPalette palette) =>
+      palette.isHalloween ? '$costume · $needName' : 'TODAY · $needName';
 }
