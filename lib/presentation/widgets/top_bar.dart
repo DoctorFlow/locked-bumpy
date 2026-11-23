@@ -3,6 +3,7 @@ import '../../core/theme/palette.dart';
 import '../../domain/models/app_state.dart';
 import '../../domain/pregnancy.dart';
 import '../sheets/closet_sheet.dart';
+import '../screens/settings_screen.dart';
 
 /// App top bar: week chip, lamp toggle, pause button.
 class TopBar extends StatelessWidget implements PreferredSizeWidget {
@@ -83,6 +84,11 @@ class TopBar extends StatelessWidget implements PreferredSizeWidget {
                   icon: Icon(Icons.checkroom, color: palette.moonlight),
                   onPressed: () => ClosetSheet.open(context, state),
                 ),
+              IconButton(
+                tooltip: 'Settings',
+                icon: Icon(Icons.settings_outlined, color: palette.moonlight),
+                onPressed: () => SettingsScreen.open(context, state),
+              ),
               // Pause
               Semantics(
                 label: 'Pause app',

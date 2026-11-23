@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../../core/theme/palette.dart';
 import '../../domain/models/app_state.dart';
 
+import '../widgets/data_confirmation.dart';
+
 /// Quiet, neutral Paused screen.
 /// App voice only — no baby, no costume, no animations.
 class PausedScreen extends StatelessWidget {
@@ -76,7 +78,7 @@ class PausedScreen extends StatelessWidget {
           SizedBox(
             width: double.infinity,
             child: OutlinedButton(
-              onPressed: () => _confirmStartFresh(context, palette),
+              onPressed: () => confirmStartFresh(context, state),
               style: OutlinedButton.styleFrom(
                 foregroundColor: palette.moonlightSoft,
                 side: BorderSide(
@@ -100,7 +102,7 @@ class PausedScreen extends StatelessWidget {
           SizedBox(
             width: double.infinity,
             child: TextButton(
-              onPressed: () => _confirmErase(context, palette),
+              onPressed: () => confirmErase(context, state),
               style: TextButton.styleFrom(
                 foregroundColor: Colors.redAccent,
                 padding: const EdgeInsets.symmetric(vertical: 14),
@@ -114,101 +116,6 @@ class PausedScreen extends StatelessWidget {
           ),
         ],
       ),
-    );
-  }
-
-  Future<void> _confirmStartFresh(
-    BuildContext context,
-    AppPalette palette,
-  ) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => _ConfirmDialog(
-        palette: palette,
-        title: 'Start a fresh day?',
-        body: "Today's check-ins will reset. Your date and nickname stay.",
-        confirmLabel: 'Yes, start fresh',
-        confirmDestructive: false,
-      ),
-    );
-    if (confirmed == true && context.mounted) {
-      await state.clearTodayCheckIns();
-    }
-  }
-
-  Future<void> _confirmErase(BuildContext context, AppPalette palette) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => _ConfirmDialog(
-        palette: palette,
-        title: 'Erase everything?',
-        body:
-            'This removes your date, nickname, and check-ins. '
-            'It cannot be undone.',
-        confirmLabel: 'Yes, erase',
-        confirmDestructive: true,
-      ),
-    );
-    if (confirmed == true && context.mounted) {
-      await state.eraseAll();
-    }
-  }
-}
-
-// ── Shared confirm dialog ─────────────────────────────────────────────────
-
-class _ConfirmDialog extends StatelessWidget {
-  const _ConfirmDialog({
-    required this.palette,
-    required this.title,
-    required this.body,
-    required this.confirmLabel,
-    required this.confirmDestructive,
-  });
-
-  final AppPalette palette;
-  final String title;
-  final String body;
-  final String confirmLabel;
-  final bool confirmDestructive;
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      backgroundColor: palette.paper,
-      title: Text(
-        title,
-        style: TextStyle(
-          color: palette.ink,
-          fontWeight: FontWeight.bold,
-          fontSize: 17,
-        ),
-      ),
-      content: Text(
-        body,
-        style: TextStyle(color: palette.inkSoft, fontSize: 14, height: 1.4),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(false),
-          child: Text(
-            'Never mind',
-            style: TextStyle(color: palette.moonlightSoft),
-          ),
-        ),
-        ElevatedButton(
-          onPressed: () => Navigator.of(context).pop(true),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: confirmDestructive
-                ? Colors.redAccent
-                : palette.accent,
-            foregroundColor: confirmDestructive
-                ? Colors.white
-                : palette.accentText,
-          ),
-          child: Text(confirmLabel),
-        ),
-      ],
     );
   }
 }

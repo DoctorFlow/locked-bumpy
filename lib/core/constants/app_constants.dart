@@ -3,6 +3,10 @@
 class AppConstants {
   AppConstants._();
 
+  static const String appVersion = 'v1.0.0';
+  static const String privacyStatement =
+      'No data ever leaves your phone. No accounts. No tracking. No ads.';
+
   // ── SharedPreferences keys ──────────────────────────────────────────────
   static const String prefsDueDateKey = 'due_date_iso';
   static const String prefsIsHalloweenKey = 'is_halloween';

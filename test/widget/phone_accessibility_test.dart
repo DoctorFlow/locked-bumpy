@@ -77,7 +77,7 @@ void main() {
         await tester.pumpWidget(LittleBumpyApp(state: state));
         await tester.pumpAndSettle();
         final buttons = find.byType(IconButton).evaluate();
-        expect(buttons.length, 3);
+        expect(buttons.length, 4);
         for (final button in buttons) {
           final target = tester.getSize(find.byWidget(button.widget));
           expect(target.shortestSide, greaterThanOrEqualTo(48));
