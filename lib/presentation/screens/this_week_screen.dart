@@ -4,7 +4,6 @@ import '../../core/constants/app_constants.dart';
 import '../../core/theme/palette.dart';
 import '../../domain/models/app_state.dart';
 import '../../domain/models/week_card.dart';
-import '../../domain/pregnancy.dart';
 
 /// This Week tab — browse gestational weeks 4–42 with approved baby-voice cards.
 class ThisWeekScreen extends StatefulWidget {
@@ -18,7 +17,12 @@ class ThisWeekScreen extends StatefulWidget {
 
 class _ThisWeekScreenState extends State<ThisWeekScreen> {
   List<WeekCard>? _cards;
-  late int _selectedWeek;
+  // Follow the current week until the reader chooses another card.
+  int? _browsedWeek;
+  int get _currentWeek => widget.state.currentWeek ?? _minWeek;
+  int get _selectedWeek => _browsedWeek ?? _currentWeek;
+  void _selectWeek(int week) =>
+      setState(() => _browsedWeek = week == _currentWeek ? null : week);
 
   static const int _minWeek = AppConstants.minWeek; // 4
   static const int _maxWeek = AppConstants.maxWeek; // 42
@@ -26,16 +30,7 @@ class _ThisWeekScreenState extends State<ThisWeekScreen> {
   @override
   void initState() {
     super.initState();
-    _selectedWeek = _currentWeek();
     _loadCards();
-  }
-
-  int _currentWeek() {
-    if (widget.state.dueDate == null) return _minWeek;
-    return PregnancyCalculator.weekFromDueDate(
-      dueDate: widget.state.dueDate!,
-      currentDate: DateTime.now(),
-    );
   }
 
   Future<void> _loadCards() async {
@@ -72,7 +67,7 @@ class _ThisWeekScreenState extends State<ThisWeekScreen> {
                 selected: _selectedWeek,
                 min: _minWeek,
                 max: _maxWeek,
-                current: _currentWeek(),
+                current: _currentWeek,
                 palette: palette,
               ),
               const SizedBox(height: 16),
@@ -88,7 +83,7 @@ class _ThisWeekScreenState extends State<ThisWeekScreen> {
                           week: _selectedWeek,
                           card: card,
                           palette: palette,
-                          isCurrentWeek: _selectedWeek == _currentWeek(),
+                          isCurrentWeek: _selectedWeek == _currentWeek,
                         ),
                       ),
                       const SizedBox(height: 16),
@@ -100,7 +95,7 @@ class _ThisWeekScreenState extends State<ThisWeekScreen> {
                             label: 'Previous week',
                             enabled: _selectedWeek > _minWeek,
                             palette: palette,
-                            onTap: () => setState(() => _selectedWeek--),
+                            onTap: () => _selectWeek(_selectedWeek - 1),
                           ),
                           Flexible(
                             child: Text(
@@ -118,7 +113,7 @@ class _ThisWeekScreenState extends State<ThisWeekScreen> {
                             label: 'Next week',
                             enabled: _selectedWeek < _maxWeek,
                             palette: palette,
-                            onTap: () => setState(() => _selectedWeek++),
+                            onTap: () => _selectWeek(_selectedWeek + 1),
                           ),
                         ],
                       ),

@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import '../../core/services/prefs_service.dart';
+import '../pregnancy.dart';
 import 'need.dart';
 import 'need_rotation.dart';
 
@@ -26,6 +27,7 @@ class AppState extends ChangeNotifier {
   bool get isFirstRun => _dueDate == null;
 
   Future<void> saveDueDate(DateTime date) async {
+    refreshDay();
     _dueDate = date;
     notifyListeners();
     await _prefs.saveDueDate(date);
@@ -94,6 +96,24 @@ class AppState extends ChangeNotifier {
   // ── Daily check-ins ──────────────────────────────────────────────────────
 
   late DateTime _day;
+  DateTime get today => _day;
+
+  int? get currentWeek => _dueDate == null
+      ? null
+      : PregnancyCalculator.weekFromDueDate(
+          dueDate: _dueDate!,
+          currentDate: today,
+        );
+
+  int get daysTogetherCount {
+    if (_dueDate == null) return 0;
+    final days = PregnancyCalculator.daysFromDueDate(
+      dueDate: _dueDate!,
+      currentDate: today,
+    );
+    return days < 0 ? 0 : days;
+  }
+
   late Set<String> _completedCheckIns;
   Set<String> get completedCheckIns => Set.unmodifiable(_completedCheckIns);
 

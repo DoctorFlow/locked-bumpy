@@ -251,6 +251,14 @@ class _TodayScreenState extends State<TodayScreen>
             ),
             const SizedBox(height: 8),
           ],
+          const SizedBox(height: 8),
+          Text(
+            state.daysTogetherCount == 1
+                ? '1 day together'
+                : '${state.daysTogetherCount} days together',
+            textAlign: TextAlign.center,
+            style: TextStyle(color: palette.moonlightSoft, fontSize: 14),
+          ),
           const SizedBox(height: 20),
           Text(
             AppConstants.disclaimer,

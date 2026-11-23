@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../core/theme/palette.dart';
 import '../../domain/models/app_state.dart';
-import '../../domain/pregnancy.dart';
 import '../sheets/closet_sheet.dart';
 import '../screens/settings_screen.dart';
 
@@ -17,9 +16,8 @@ class TopBar extends StatelessWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context) {
     final palette = AppPalette.of(context);
-    final week = state.dueDate == null
-        ? '—'
-        : 'Week ${PregnancyCalculator.weekFromDueDate(dueDate: state.dueDate!, currentDate: DateTime.now())}';
+    final currentWeek = state.currentWeek;
+    final week = currentWeek == null ? '—' : 'Week $currentWeek';
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),

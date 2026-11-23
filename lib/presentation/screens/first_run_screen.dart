@@ -35,10 +35,10 @@ class _FirstRunScreenState extends State<FirstRunScreen> {
     if (_pickedDate == null) return null;
     final dueDate = _useDueDate
         ? _pickedDate!
-        : _pickedDate!.add(const Duration(days: AppConstants.fullTermDays));
+        : PregnancyCalculator.dueDateFromLmp(_pickedDate!);
     return PregnancyCalculator.weekFromDueDate(
       dueDate: dueDate,
-      currentDate: DateTime.now(),
+      currentDate: widget.state.today,
     );
   }
 
@@ -87,7 +87,8 @@ class _FirstRunScreenState extends State<FirstRunScreen> {
   }
 
   Future<void> _pickDate() async {
-    final now = DateTime.now();
+    widget.state.refreshDay();
+    final now = widget.state.today;
     final firstDate = _useDueDate
         ? now.subtract(const Duration(days: 7))
         : now.subtract(const Duration(days: 294));
@@ -116,7 +117,7 @@ class _FirstRunScreenState extends State<FirstRunScreen> {
 
     final dueDate = _useDueDate
         ? _pickedDate!
-        : _pickedDate!.add(const Duration(days: AppConstants.fullTermDays));
+        : PregnancyCalculator.dueDateFromLmp(_pickedDate!);
 
     final nickname = _nicknameController.text.trim();
 
