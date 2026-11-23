@@ -48,9 +48,13 @@ void main() {
       // No preview chip before a date is picked.
       expect(find.textContaining('week'), findsNothing);
 
-      // Simulate state change by rebuilding with a known date in the picker.
-      // We test the _WeekPreview widget directly to avoid showDatePicker.
-      expect(find.byType(FirstRunScreen), findsOneWidget);
+      await tester.tap(find.text('Last Period'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Tap to pick a date'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('OK'));
+      await tester.pumpAndSettle();
+      expect(find.text('You are at week 20 right now.'), findsOneWidget);
     });
 
     testWidgets('medical disclaimer present on step 1', (tester) async {
@@ -81,16 +85,14 @@ void main() {
       await tester.pumpWidget(_wrap(state));
       await tester.pump();
 
-      // Manually drive to step 3 via page controller by tapping through.
-      // Step 1 → need to have a date to press Next. We use the state API
-      // to simulate that the user picked a date.
-      await state.saveDueDate(DateTime(2027, 5, 10));
-      await tester.pump();
-
-      // After saveDueDate, isFirstRun flips so the widget is gone — we need
-      // to test step 3 in isolation by pumping a fresh widget at step 3.
-      // We do this by testing the _Step3Look widget contract directly.
-      expect(find.text('🎃 Halloween'), findsNothing); // already navigated away
+      tester.widget<PageView>(find.byType(PageView)).controller!.jumpToPage(2);
+      await tester.pumpAndSettle();
+      expect(find.text('Halloween'), findsOneWidget);
+      expect(find.text('Everyday'), findsOneWidget);
+      await tester.tap(find.text('Everyday'));
+      await tester.pumpAndSettle();
+      // Looking at a choice is reversible until the final confirmation.
+      expect(state.isHalloween, isTrue);
     });
 
     testWidgets(

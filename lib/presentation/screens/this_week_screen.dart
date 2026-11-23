@@ -266,8 +266,10 @@ class _WeekCardView extends StatelessWidget {
               shape: BoxShape.circle,
               color: palette.moon.withValues(alpha: 0.3),
             ),
-            child: const Center(
-              child: Text('🌙', style: TextStyle(fontSize: 20)),
+            child: Icon(
+              Icons.nightlight_round,
+              color: palette.accent,
+              size: 22,
             ),
           ),
           const SizedBox(height: 16),
@@ -316,7 +318,7 @@ class _WeekCardView extends StatelessWidget {
           if (card?.sizeObject != null) ...[
             const SizedBox(height: 12),
             Text(
-              '📏 About the size of a ${card!.sizeObject}',
+              'About the size of a ${card!.sizeObject}',
               style: TextStyle(
                 fontSize: 13,
                 color: palette.inkSoft,

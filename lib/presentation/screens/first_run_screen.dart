@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import '../../core/constants/app_constants.dart';
 import '../../core/theme/palette.dart';
 import '../../domain/models/app_state.dart';
+import '../../domain/models/need.dart';
 import '../../domain/pregnancy.dart';
 import '../widgets/pregnancy_date_picker.dart';
 
@@ -241,15 +242,12 @@ class _Step1Date extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Moon mark
           Center(
-            child: Container(
-              width: 56,
-              height: 56,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: palette.moon,
-              ),
+            child: Image.asset(
+              MaternalNeed.iron.assetPath(AppPalette.everyday),
+              width: 112,
+              height: 112,
+              semanticLabel: 'Little Bumpy in a lavender onesie',
             ),
           ),
           const SizedBox(height: 20),
@@ -564,33 +562,35 @@ class _Step3Look extends StatelessWidget {
           ),
           const SizedBox(height: 28),
 
-          // Two look cards side by side
-          Row(
-            children: [
-              Expanded(
-                child: _LookCard(
-                  label: '🎃 Halloween',
-                  description: 'Midnight plum, pumpkin moon',
-                  selected: isHalloween,
-                  selectedColor: AppPalette.halloween.accent,
-                  bgColor: const Color(0xFF2A1F38),
-                  textColor: const Color(0xFFF3E9DA),
-                  onTap: () => onToggle(true),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _LookCard(
-                  label: '☀️ Everyday',
-                  description: 'Warm cream, storybook',
-                  selected: !isHalloween,
-                  selectedColor: AppPalette.everyday.accent,
-                  bgColor: const Color(0xFFFBF3E6),
-                  textColor: const Color(0xFF2E2040),
-                  onTap: () => onToggle(false),
-                ),
-              ),
-            ],
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final largeText = MediaQuery.textScalerOf(context).scale(14) > 20;
+              final width = largeText
+                  ? constraints.maxWidth
+                  : (constraints.maxWidth - 12) / 2;
+              return Wrap(
+                spacing: 12,
+                runSpacing: 12,
+                children: [
+                  for (final look in [
+                    AppPalette.halloween,
+                    AppPalette.everyday,
+                  ])
+                    SizedBox(
+                      width: width,
+                      child: _LookCard(
+                        label: look.isHalloween ? 'Halloween' : 'Everyday',
+                        description: look.isHalloween
+                            ? 'Midnight plum, pumpkin moon'
+                            : 'Warm cream, storybook',
+                        selected: look.isHalloween == isHalloween,
+                        look: look,
+                        onTap: () => onToggle(look.isHalloween),
+                      ),
+                    ),
+                ],
+              );
+            },
           ),
           const SizedBox(height: 32),
 
@@ -636,24 +636,22 @@ class _LookCard extends StatelessWidget {
     required this.label,
     required this.description,
     required this.selected,
-    required this.selectedColor,
-    required this.bgColor,
-    required this.textColor,
+    required this.look,
     required this.onTap,
   });
 
   final String label;
   final String description;
   final bool selected;
-  final Color selectedColor;
-  final Color bgColor;
-  final Color textColor;
+  final AppPalette look;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     return Semantics(
-      label: label,
+      label: '$label. $description',
+      excludeSemantics: true,
+      onTap: onTap,
       selected: selected,
       button: true,
       child: GestureDetector(
@@ -664,10 +662,10 @@ class _LookCard extends StatelessWidget {
               : const Duration(milliseconds: 200),
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: bgColor,
+            color: look.paper,
             borderRadius: BorderRadius.circular(18),
             border: Border.all(
-              color: selected ? selectedColor : Colors.transparent,
+              color: selected ? look.accent : Colors.transparent,
               width: 2.5,
             ),
             boxShadow: [
@@ -681,12 +679,21 @@ class _LookCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              Center(
+                child: Image.asset(
+                  MaternalNeed.iron.assetPath(look),
+                  width: 96,
+                  height: 96,
+                  excludeFromSemantics: true,
+                ),
+              ),
+              const SizedBox(height: 8),
               Text(
                 label,
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.bold,
-                  color: textColor,
+                  color: look.ink,
                 ),
               ),
               const SizedBox(height: 4),
@@ -694,7 +701,7 @@ class _LookCard extends StatelessWidget {
                 description,
                 style: TextStyle(
                   fontSize: 11,
-                  color: textColor.withValues(alpha: 0.7),
+                  color: look.inkSoft,
                   height: 1.3,
                 ),
               ),
@@ -704,10 +711,10 @@ class _LookCard extends StatelessWidget {
                   width: 20,
                   height: 20,
                   decoration: BoxDecoration(
-                    color: selectedColor,
+                    color: look.accent,
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(Icons.check, size: 13, color: Colors.white),
+                  child: Icon(Icons.check, size: 13, color: look.accentText),
                 )
               else
                 Container(
@@ -716,7 +723,7 @@ class _LookCard extends StatelessWidget {
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     border: Border.all(
-                      color: textColor.withValues(alpha: 0.3),
+                      color: look.ink.withValues(alpha: 0.3),
                       width: 1.5,
                     ),
                   ),
