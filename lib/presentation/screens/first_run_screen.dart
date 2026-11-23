@@ -64,22 +64,14 @@ class _FirstRunScreenState extends State<FirstRunScreen> {
     super.dispose();
   }
 
-  void _goNext() {
-    if (_step < 2) {
-      setState(() => _step++);
+  void _goTo(int step) {
+    FocusScope.of(context).unfocus();
+    setState(() => _step = step);
+    if (MediaQuery.disableAnimationsOf(context)) {
+      _pages.jumpToPage(step);
+    } else {
       _pages.animateToPage(
-        _step,
-        duration: const Duration(milliseconds: 320),
-        curve: Curves.easeInOut,
-      );
-    }
-  }
-
-  void _goBack() {
-    if (_step > 0) {
-      setState(() => _step--);
-      _pages.animateToPage(
-        _step,
+        step,
         duration: const Duration(milliseconds: 320),
         curve: Curves.easeInOut,
       );
@@ -168,20 +160,20 @@ class _FirstRunScreenState extends State<FirstRunScreen> {
                               _pickedDate = null;
                             }),
                             onPickDate: _pickDate,
-                            onNext: _pickedDate != null ? _goNext : null,
+                            onNext: _pickedDate != null ? () => _goTo(1) : null,
                           ),
                           _Step2Nickname(
                             palette: palette,
                             controller: _nicknameController,
-                            onBack: _goBack,
-                            onNext: _goNext,
+                            onBack: () => _goTo(0),
+                            onNext: () => _goTo(2),
                           ),
                           _Step3Look(
                             palette: palette,
                             isHalloween: _pickHalloween,
                             saving: _saving,
                             onToggle: (v) => setState(() => _pickHalloween = v),
-                            onBack: _goBack,
+                            onBack: () => _goTo(1),
                             onConfirm: _confirm,
                           ),
                         ],
@@ -215,7 +207,9 @@ class _StepIndicator extends StatelessWidget {
         children: List.generate(3, (i) {
           final active = i == step;
           return AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
+            duration: MediaQuery.disableAnimationsOf(context)
+                ? Duration.zero
+                : const Duration(milliseconds: 200),
             margin: const EdgeInsets.symmetric(horizontal: 4),
             width: active ? 24 : 8,
             height: 8,
@@ -353,7 +347,9 @@ class _Step1Date extends StatelessWidget {
 
           // ── Live week preview ──────────────────────────────────────────
           AnimatedSwitcher(
-            duration: const Duration(milliseconds: 250),
+            duration: MediaQuery.disableAnimationsOf(context)
+                ? Duration.zero
+                : const Duration(milliseconds: 250),
             child: previewWeek == null
                 ? const SizedBox(height: 56, key: ValueKey('empty'))
                 : _WeekPreview(
@@ -426,12 +422,14 @@ class _WeekPreview extends StatelessWidget {
           children: [
             Icon(Icons.child_friendly, color: palette.accent, size: 18),
             const SizedBox(width: 10),
-            Text(
-              'You are at week $week right now.',
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                color: palette.ink,
+            Flexible(
+              child: Text(
+                'You are at week $week right now.',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: palette.moonlight,
+                ),
               ),
             ),
           ],
@@ -674,7 +672,9 @@ class _LookCard extends StatelessWidget {
       child: GestureDetector(
         onTap: onTap,
         child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
+          duration: MediaQuery.disableAnimationsOf(context)
+              ? Duration.zero
+              : const Duration(milliseconds: 200),
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             color: bgColor,
