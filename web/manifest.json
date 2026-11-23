@@ -6,7 +6,7 @@
     "background_color": "#1A1224",
     "theme_color": "#1A1224",
     "description": "An offline pregnancy companion with daily check-ins and a paper-cut nursery.",
-    "orientation": "portrait-primary",
+    "orientation": "any",
     "prefer_related_applications": false,
     "icons": [
         {

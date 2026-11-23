@@ -8,6 +8,10 @@ import unittest
 
 
 class PackageTest(unittest.TestCase):
+    def test_installed_web_app_accepts_the_device_orientation(self):
+        manifest = json.loads((Path(__file__).resolve().parents[1] / "web/manifest.json").read_text())
+        self.assertEqual(manifest.get("orientation", "any"), "any")
+
     def test_repeated_packaging_keeps_one_registration_and_changes_with_assets(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
