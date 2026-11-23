@@ -9,6 +9,6 @@
 
 ## Tasks
 - [x] 1. Prototype Today tab with baby speech, need tag, and 3 check-in tiles
-- [ ] 2. Connect daily rotation algorithm for the 6 maternal needs
-- [ ] 3. Implement hop animation on Need of the Day completion
-- [ ] 4. Store daily completion timestamps locally
+- [x] 2. Connect daily rotation algorithm for the 6 maternal needs
+- [x] 3. Implement hop animation on Need of the Day completion
+- [x] 4. Store daily completion timestamps locally

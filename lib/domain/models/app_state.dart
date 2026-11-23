@@ -11,6 +11,7 @@ class AppState extends ChangeNotifier {
     : _dueDate = _prefs.dueDate,
       _isHalloween = _prefs.isHalloween,
       _isPaused = _prefs.isPaused,
+      _nickname = _prefs.nickname,
       _completedCheckIns = _prefs.loadTodayCheckIns();
 
   final PrefsService _prefs;
@@ -23,8 +24,24 @@ class AppState extends ChangeNotifier {
 
   Future<void> saveDueDate(DateTime date) async {
     _dueDate = date;
-    await _prefs.saveDueDate(date);
     notifyListeners();
+    await _prefs.saveDueDate(date);
+  }
+
+  // ── Nickname ─────────────────────────────────────────────────────────────
+
+  String _nickname;
+
+  /// The name the mother chose for the baby. Empty string = no nickname set.
+  String get nickname => _nickname;
+
+  /// Display name: nickname if set, otherwise 'Little Bumpy'.
+  String get babyDisplayName => _nickname.isEmpty ? 'Little Bumpy' : _nickname;
+
+  Future<void> saveNickname(String value) async {
+    _nickname = value.trim();
+    notifyListeners();
+    await _prefs.saveNickname(_nickname);
   }
 
   // ── Mode ─────────────────────────────────────────────────────────────────
@@ -89,6 +106,28 @@ class AppState extends ChangeNotifier {
     _completedCheckIns = next;
     notifyListeners(); // immediate — UI rebuilds before persistence completes
     await _prefs.saveTodayCheckIns(_completedCheckIns);
+  }
+
+  /// Clears today's check-ins and unpauses. Used by Start Fresh.
+  Future<void> clearTodayCheckIns() async {
+    _completedCheckIns = {};
+    _isPaused = false;
+    _currentTab = 0;
+    notifyListeners();
+    await _prefs.saveTodayCheckIns({});
+    await _prefs.saveIsPaused(false);
+  }
+
+  /// Wipes all data and returns the app to First Run. Used by Erase.
+  Future<void> eraseAll() async {
+    _dueDate = null;
+    _nickname = '';
+    _isHalloween = true;
+    _isPaused = false;
+    _currentTab = 0;
+    _completedCheckIns = {};
+    notifyListeners();
+    await _prefs.clearAll();
   }
 
   // ── Factory ───────────────────────────────────────────────────────────────

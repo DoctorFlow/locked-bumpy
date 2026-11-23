@@ -38,6 +38,14 @@ class PrefsService {
   Future<void> saveIsPaused(bool value) =>
       _prefs.setBool(AppConstants.prefsIsPausedKey, value);
 
+  // ── Nickname ─────────────────────────────────────────────────────────────
+
+  /// Empty string means the mother hasn't set a nickname.
+  String get nickname => _prefs.getString(AppConstants.prefsNicknameKey) ?? '';
+
+  Future<void> saveNickname(String value) =>
+      _prefs.setString(AppConstants.prefsNicknameKey, value.trim());
+
   // ── Daily check-ins ──────────────────────────────────────────────────────
 
   /// Returns the saved check-in IDs for today; clears them if the saved date
@@ -56,6 +64,11 @@ class PrefsService {
     await _prefs.setString(AppConstants.prefsCheckInDateKey, today);
     await _prefs.setString(AppConstants.prefsCheckInIdsKey, ids.join(','));
   }
+
+  // ── Nuclear erase ────────────────────────────────────────────────────────
+
+  /// Wipes every key — used by Erase all data only.
+  Future<void> clearAll() => _prefs.clear();
 
   // ── Helpers ───────────────────────────────────────────────────────────────
 

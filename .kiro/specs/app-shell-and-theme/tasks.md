@@ -8,5 +8,5 @@
 - [x] 6. Implement App Shell widget with 3 tabs and top navigation bar
 - [x] 7. Implement Paused screen state and transition
 - [x] 8. Write property tests for week monotonicity and mode parity
-- [ ] 9. Setup GitHub Actions CI workflow for automatic linting and test execution
-- [ ] 10. Implement persistent local date selection (First-Run onboarding flow)
+- [x] 9. Setup GitHub Actions CI workflow for automatic linting and test execution
+- [x] 10. Implement persistent local date selection (First-Run onboarding flow)

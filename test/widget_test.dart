@@ -97,13 +97,17 @@ void main() {
   });
 
   group('PausedScreen', () {
-    testWidgets('shows no baby content and Resume button', (tester) async {
+    testWidgets('shows no baby content, Resume, Start Fresh, Erase buttons', (
+      tester,
+    ) async {
       final state = await _buildState(isPaused: true);
       await tester.pumpWidget(_wrap(PausedScreen(state: state), state));
       await tester.pump();
 
       expect(find.text('Everything is paused.'), findsOneWidget);
       expect(find.text('Resume'), findsOneWidget);
+      expect(find.text('Start Fresh'), findsOneWidget);
+      expect(find.text('Erase all data'), findsOneWidget);
       // No check-ins shown while paused.
       expect(find.text("Today's 3 Check-Ins"), findsNothing);
     });

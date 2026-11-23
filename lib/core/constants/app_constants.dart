@@ -8,6 +8,9 @@ class AppConstants {
   static const String prefsIsHalloweenKey = 'is_halloween';
   static const String prefsIsPausedKey = 'is_paused';
 
+  /// Optional nickname the mother gives the baby. Empty string = not set.
+  static const String prefsNicknameKey = 'baby_nickname';
+
   /// ISO date string (yyyy-MM-dd) of the last day check-ins were saved.
   static const String prefsCheckInDateKey = 'checkin_date';
 

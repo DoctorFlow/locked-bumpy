@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+import '../../content/content_loader.dart';
 import '../../core/constants/app_constants.dart';
 import '../../core/theme/palette.dart';
 import '../../domain/models/app_state.dart';
+import '../../domain/models/content_record.dart';
 import '../../domain/models/need.dart';
 
 /// Today tab — daily loop under 30 seconds.
+/// Baby-voice lines are loaded from [ContentLoader] (bundled JSON, offline).
 class TodayScreen extends StatefulWidget {
   const TodayScreen({super.key, required this.state});
 
@@ -19,7 +22,9 @@ class _TodayScreenState extends State<TodayScreen>
   late AnimationController _hopController;
   late Animation<double> _hopAnimation;
 
-  /// Track whether we already triggered the hop for this check-in tap.
+  /// Cached today-lines once loaded.
+  List<ContentRecord>? _records;
+
   bool _hopping = false;
 
   @override
@@ -46,6 +51,13 @@ class _TodayScreenState extends State<TodayScreen>
         weight: 50,
       ),
     ]).animate(_hopController);
+
+    _loadRecords();
+  }
+
+  Future<void> _loadRecords() async {
+    final records = await ContentLoader.load('assets/content/today_lines.json');
+    if (mounted) setState(() => _records = records);
   }
 
   void _onStateChanged() {
@@ -64,13 +76,51 @@ class _TodayScreenState extends State<TodayScreen>
     await widget.state.toggleCheckIn(id);
     if (mounted) setState(() {});
 
-    // Trigger hop only when ticking the Need of the Day for the first time.
     if (id == AppConstants.checkInNeed && !wasChecked && !_hopping) {
       _hopping = true;
       await _hopController.forward(from: 0);
       _hopping = false;
     }
   }
+
+  // ── Line resolution ───────────────────────────────────────────────────────
+
+  String _babyLine(
+    MaternalNeed need,
+    bool needTicked,
+    bool allDone,
+    AppPalette palette,
+  ) {
+    if (allDone) return _goodbye(palette);
+    final category = needTicked ? 'thank_you' : 'greeting';
+    final mode = palette.isHalloween ? 'halloween' : 'everyday';
+    if (_records != null) {
+      final r = ContentLoader.find(
+        records: _records!,
+        need: need.needName,
+        category: category,
+        mode: mode,
+      );
+      if (r != null) return r.text;
+    }
+    // Fallback while records are loading (first frame only).
+    return needTicked ? 'Thank you!' : need.foodHint;
+  }
+
+  String _goodbye(AppPalette palette) {
+    if (_records != null) {
+      final r = ContentLoader.find(
+        records: _records!,
+        need: 'ALL',
+        category: 'goodbye',
+        mode: palette.isHalloween ? 'halloween' : 'everyday',
+      );
+      if (r != null) return r.text;
+    }
+    return "That's us for today.";
+  }
+
+  // ── Build ─────────────────────────────────────────────────────────────────
 
   @override
   Widget build(BuildContext context) {
@@ -80,13 +130,7 @@ class _TodayScreenState extends State<TodayScreen>
     final thirdNeed = state.thirdCheckIn;
     final needTicked = state.isChecked(AppConstants.checkInNeed);
     final allDone = state.allChecked;
-
-    final babyLine = _babyLine(
-      need: need,
-      needTicked: needTicked,
-      allDone: allDone,
-      palette: palette,
-    );
+    final babyLine = _babyLine(need, needTicked, allDone, palette);
 
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -132,9 +176,8 @@ class _TodayScreenState extends State<TodayScreen>
                 ),
                 const SizedBox(height: 16),
 
-                // Baby avatar — hop animation on need completion.
-                // Respects system reduce-motion preference.
-                _buildBabyAvatar(context, palette, need, needTicked),
+                // Baby avatar
+                _buildBabyAvatar(context, palette, need),
                 const SizedBox(height: 14),
 
                 // Baby speech
@@ -188,7 +231,7 @@ class _TodayScreenState extends State<TodayScreen>
           ),
           const SizedBox(height: 8),
 
-          // Check-in 3 — Vitamin OR Rest (depends on today's need)
+          // Check-in 3 — Vitamin OR Rest
           _CheckInTile(
             id: AppConstants.checkInVitamin,
             title: thirdNeed == MaternalNeed.rest ? 'Rest' : 'Prenatal Vitamin',
@@ -215,7 +258,7 @@ class _TodayScreenState extends State<TodayScreen>
                 ),
               ),
               child: Text(
-                "That's us for today. ✨",
+                babyLine,
                 style: TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.w600,
@@ -227,7 +270,6 @@ class _TodayScreenState extends State<TodayScreen>
           ],
 
           const SizedBox(height: 20),
-          // Medical disclaimer
           Text(
             AppConstants.disclaimer,
             style: TextStyle(
@@ -247,10 +289,8 @@ class _TodayScreenState extends State<TodayScreen>
     BuildContext context,
     AppPalette palette,
     MaternalNeed need,
-    bool needTicked,
   ) {
     final disableAnimations = MediaQuery.disableAnimationsOf(context);
-
     final avatar = Container(
       width: 90,
       height: 90,
@@ -289,63 +329,6 @@ class _TodayScreenState extends State<TodayScreen>
       MaternalNeed.vitamin => '🧙',
     };
   }
-
-  String _babyLine({
-    required MaternalNeed need,
-    required bool needTicked,
-    required bool allDone,
-    required AppPalette palette,
-  }) {
-    if (allDone) {
-      return "That's us for today. ✨";
-    }
-    if (needTicked) {
-      return palette.isHalloween
-          ? _halloweenThankYou(need)
-          : _everydayThankYou(need);
-    }
-    return palette.isHalloween
-        ? _halloweenGreeting(need)
-        : _everydayGreeting(need);
-  }
-
-  String _everydayGreeting(MaternalNeed need) => switch (need) {
-    MaternalNeed.iron => 'Iron snack? Lentils or beans, your pick.',
-    MaternalNeed.brain => 'Leafy greens today? A handful does it.',
-    MaternalNeed.bones => 'Milk or yogurt or cheese — your call.',
-    MaternalNeed.water => 'Water time. One glass for the two of us.',
-    MaternalNeed.rest => 'Five quiet minutes. Feet up, eyes closed.',
-    MaternalNeed.vitamin =>
-      'The vitamin your doctor chose. Ready when you are.',
-  };
-
-  String _halloweenGreeting(MaternalNeed need) => switch (need) {
-    MaternalNeed.iron => 'I vant... lentils. Or beans. Your pick.',
-    MaternalNeed.brain => 'This tiny brain needs greens. A handful!',
-    MaternalNeed.bones => 'Rattle, rattle — milk or yogurt keeps us strong.',
-    MaternalNeed.water => 'One glass of water. Mummies stay wrapped tight.',
-    MaternalNeed.rest => 'Five quiet minutes. Even ghosts rest softly.',
-    MaternalNeed.vitamin =>
-      'The vitamin your doctor chose. Ready when you are.',
-  };
-
-  String _everydayThankYou(MaternalNeed need) => switch (need) {
-    MaternalNeed.iron => 'Iron in. Thank you!',
-    MaternalNeed.brain => 'Greens in. Thank you!',
-    MaternalNeed.bones => 'Bones happy. Thank you!',
-    MaternalNeed.water => 'Splendid. Thank you!',
-    MaternalNeed.rest => 'Rested. Thank you!',
-    MaternalNeed.vitamin => 'Vitamin in. Thank you!',
-  };
-
-  String _halloweenThankYou(MaternalNeed need) => switch (need) {
-    MaternalNeed.iron => 'Cape on. Thank you!',
-    MaternalNeed.brain => 'Greens in. Thank you!',
-    MaternalNeed.bones => 'Bones clinking happily. Thank you!',
-    MaternalNeed.water => 'Mummy secured. Thank you!',
-    MaternalNeed.rest => 'Resting quietly. Thank you!',
-    MaternalNeed.vitamin => 'Vitamin secured. Thank you!',
-  };
 }
 
 // ── Reusable check-in tile ─────────────────────────────────────────────────
