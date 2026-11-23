@@ -61,6 +61,28 @@ void main() {
     expect(state.currentTab, 2);
     await tester.pumpWidget(const SizedBox());
   });
+  testWidgets(
+    'Settings keeps Pause and its details reachable at 200% on a narrow phone',
+    (tester) async {
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = const Size(320, 568);
+      tester.platformDispatcher.textScaleFactorTestValue = 2;
+      addTearDown(tester.view.resetDevicePixelRatio);
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+      final state = await open(tester);
+      expect(tester.takeException(), isNull);
+      expect(find.text('Pause').hitTestable(), findsOneWidget);
+      final nickname = find.byTooltip('Edit nickname');
+      await tester.ensureVisible(nickname);
+      await tester.pumpAndSettle();
+      expect(nickname.hitTestable(), findsOneWidget);
+      await tester.tap(find.text('Pause'));
+      await tester.pumpAndSettle();
+      expect(state.isPaused, isTrue);
+      await tester.pumpWidget(const SizedBox());
+    },
+  );
   testWidgets('Settings and Pause use the same reversible erase confirmation', (
     tester,
   ) async {

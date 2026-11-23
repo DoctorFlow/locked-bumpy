@@ -71,6 +71,7 @@ class SettingsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final palette = AppPalette.of(context);
+    final largeText = MediaQuery.textScalerOf(context).scale(14) > 20;
     final title = Theme.of(context).textTheme.titleMedium?.copyWith(
       color: palette.ink,
       fontWeight: FontWeight.bold,
@@ -106,8 +107,10 @@ class SettingsScreen extends StatelessWidget {
                         style: TextButton.styleFrom(
                           foregroundColor: palette.moonlight,
                         ),
-                        icon: const Icon(Icons.pause_circle_outline),
-                        label: const Text('Pause app'),
+                        icon: largeText
+                            ? null
+                            : const Icon(Icons.pause_circle_outline),
+                        label: Text(largeText ? 'Pause' : 'Pause app'),
                       ),
                     ),
                   ],
