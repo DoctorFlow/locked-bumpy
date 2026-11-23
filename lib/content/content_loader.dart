@@ -13,14 +13,16 @@ class ContentLoader {
 
   static final Map<String, List<ContentRecord>> _cache = {};
 
-  /// Loads and gate-validates [assetPath] (e.g.
+  /// Loads the individually reviewed records in [assetPath] (e.g.
   /// `'assets/content/today_lines.json'`). Returns cached result on
   /// subsequent calls.
   static Future<List<ContentRecord>> load(String assetPath) async {
     if (_cache.containsKey(assetPath)) return _cache[assetPath]!;
     final raw = await rootBundle.loadString(assetPath);
     final records = ContentRecord.listFromJsonString(raw);
-    final validated = ContentGate.validateAll(records);
+    final validated = List<ContentRecord>.unmodifiable(
+      records.where(ContentGate.canDisplay),
+    );
     _cache[assetPath] = validated;
     return validated;
   }

@@ -57,14 +57,8 @@ class _TodayScreenState extends State<TodayScreen>
   }
 
   Future<void> _loadRecords() async {
-    try {
-      final records = await ContentLoader.load(
-        'assets/content/today_lines.json',
-      );
-      if (mounted) setState(() => _records = records);
-    } on ContentGateException {
-      // Keep check-ins available while dialogue awaits review.
-    }
+    final records = await ContentLoader.load('assets/content/today_lines.json');
+    if (mounted) setState(() => _records = records);
   }
 
   void _onStateChanged() {

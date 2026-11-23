@@ -136,22 +136,21 @@ class ContentGate {
 
   /// Validates [record]. Throws [ContentGateException] on first violation.
   static void validate(ContentRecord record) {
+    final issue = _reviewIssue(record);
+    if (issue != null) throw ContentGateException(record, issue);
+  }
+
+  static bool canDisplay(ContentRecord record) => _reviewIssue(record) == null;
+
+  static String? _reviewIssue(ContentRecord record) {
     if (record.status != 'approved') {
-      throw ContentGateException(
-        record,
-        'status is "${record.status}", expected "approved"',
-      );
+      return 'status is "${record.status}", expected "approved"';
     }
     if (!hasDatedReview(record.approvedBy, record.approvedDate)) {
-      throw ContentGateException(
-        record,
-        'missing reviewer or invalid review date',
-      );
+      return 'missing reviewer or invalid review date';
     }
     final banned = bannedTerm(record.text);
-    if (banned != null) {
-      throw ContentGateException(record, 'text contains banned term "$banned"');
-    }
+    return banned == null ? null : 'text contains banned term "$banned"';
   }
 
   static bool hasDatedReview(String reviewer, String date) {
