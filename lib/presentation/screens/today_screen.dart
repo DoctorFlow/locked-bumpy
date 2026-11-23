@@ -162,7 +162,9 @@ class _TodayScreenState extends State<TodayScreen>
                     border: Border.all(color: need.color, width: 1.5),
                   ),
                   child: Text(
-                    need.tag(palette),
+                    state.costumeOverride != null && palette.isHalloween
+                        ? 'TODAY · ${need.needName}'
+                        : need.tag(palette),
                     style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.bold,
@@ -194,7 +196,7 @@ class _TodayScreenState extends State<TodayScreen>
                           ),
                         ),
                         BumpyAvatar(
-                          need: need,
+                          need: state.costumeOverride ?? need,
                           palette: palette,
                           happy: needTicked,
                           hopAnimation: _hopAnimation,

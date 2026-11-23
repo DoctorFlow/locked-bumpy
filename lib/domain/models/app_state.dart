@@ -4,7 +4,8 @@ import 'need.dart';
 import 'need_rotation.dart';
 
 /// Central app state. Loaded from [PrefsService] at startup.
-/// All mutations persist immediately — 100% on-device.
+/// Preferences and check-ins are saved on-device. Dress-up lasts for the day
+/// or until the app closes.
 class AppState extends ChangeNotifier {
   AppState._(this._prefs, this._now)
     : _dueDate = _prefs.dueDate,
@@ -50,6 +51,17 @@ class AppState extends ChangeNotifier {
 
   bool _isHalloween;
   bool get isHalloween => _isHalloween;
+
+  MaternalNeed? _costumeOverride;
+  MaternalNeed? get costumeOverride => _costumeOverride;
+
+  void setCostumeOverride(MaternalNeed? need) {
+    if (refreshDay() || isFirstRun || isPaused || !isHalloween) return;
+    final next = need == todayNeed ? null : need;
+    if (next == _costumeOverride) return;
+    _costumeOverride = next;
+    notifyListeners();
+  }
 
   Future<void> toggleMode() async {
     _isHalloween = !_isHalloween;
@@ -102,6 +114,7 @@ class AppState extends ChangeNotifier {
       return false;
     }
     _day = now;
+    _costumeOverride = null;
     _completedCheckIns = _prefs.loadTodayCheckIns(now);
     notifyListeners();
     return true;
@@ -133,6 +146,7 @@ class AppState extends ChangeNotifier {
   Future<void> clearTodayCheckIns() async {
     _day = _now();
     _completedCheckIns = {};
+    _costumeOverride = null;
     _isPaused = false;
     _currentTab = 0;
     notifyListeners();
@@ -148,6 +162,7 @@ class AppState extends ChangeNotifier {
     _isPaused = false;
     _currentTab = 0;
     _completedCheckIns = {};
+    _costumeOverride = null;
     notifyListeners();
     await _prefs.clearAll();
   }
