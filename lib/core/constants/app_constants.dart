@@ -9,6 +9,7 @@ class AppConstants {
 
   // ── SharedPreferences keys ──────────────────────────────────────────────
   static const String prefsDueDateKey = 'due_date_iso';
+  static const String prefsSkinToneKey = 'skin_tone';
   static const String prefsIsHalloweenKey = 'is_halloween';
   static const String prefsIsPausedKey = 'is_paused';
 

@@ -4,11 +4,13 @@ import '../../core/constants/app_constants.dart';
 import '../../core/theme/palette.dart';
 import '../../domain/models/guide_article.dart';
 import '../../domain/models/need.dart';
+import '../../domain/models/skin_tone.dart';
 import '../widgets/bumpy_avatar.dart';
 
 /// The details stay inside the main shell so Pause immediately hides them.
 class GuidesScreen extends StatefulWidget {
-  const GuidesScreen({super.key});
+  const GuidesScreen({super.key, this.skinTone = SkinTone.peach});
+  final SkinTone skinTone;
 
   @override
   State<GuidesScreen> createState() => _GuidesScreenState();
@@ -44,6 +46,7 @@ class _GuidesScreenState extends State<GuidesScreen> {
                 need: need,
                 palette: palette,
                 article: snapshot.data?[need],
+                skinTone: widget.skinTone,
               ),
             ),
           Text(
@@ -62,10 +65,12 @@ class _NeedGuide extends StatelessWidget {
     required this.need,
     required this.palette,
     required this.article,
+    required this.skinTone,
   });
   final MaternalNeed need;
   final AppPalette palette;
   final GuideArticle? article;
+  final SkinTone skinTone;
 
   @override
   Widget build(BuildContext context) {
@@ -100,7 +105,12 @@ class _NeedGuide extends StatelessWidget {
         expandedCrossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Center(
-            child: BumpyAvatar(need: need, palette: palette, happy: false),
+            child: BumpyAvatar(
+              need: need,
+              palette: palette,
+              happy: false,
+              skinTone: skinTone,
+            ),
           ),
           if (palette.isHalloween)
             Text(

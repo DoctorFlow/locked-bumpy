@@ -4,6 +4,7 @@ import '../../core/theme/palette.dart';
 import '../../domain/models/app_state.dart';
 import '../widgets/data_confirmation.dart';
 import '../widgets/pregnancy_date_picker.dart';
+import '../widgets/skin_tone_picker.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key, required this.state});
@@ -187,6 +188,12 @@ class SettingsScreen extends StatelessWidget {
                                       },
                                     ),
                                 ],
+                              ),
+                              const SizedBox(height: 24),
+                              SkinTonePicker(
+                                selected: state.skinTone,
+                                onSelected: state.saveSkinTone,
+                                foreground: palette.ink,
                               ),
                               const SizedBox(height: 24),
                               Text('Privacy', style: title),

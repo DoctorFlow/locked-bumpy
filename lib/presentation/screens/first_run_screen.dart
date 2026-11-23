@@ -6,6 +6,9 @@ import '../../domain/models/app_state.dart';
 import '../../domain/models/need.dart';
 import '../../domain/pregnancy.dart';
 import '../widgets/pregnancy_date_picker.dart';
+import '../widgets/paper_portrait.dart';
+import '../widgets/skin_tone_picker.dart';
+import '../../domain/models/skin_tone.dart';
 
 /// First-run onboarding: 3 steps shown as a horizontal page flow.
 ///
@@ -50,6 +53,7 @@ class _FirstRunScreenState extends State<FirstRunScreen> {
   // ── Step 3 state ─────────────────────────────────────────────────────────
   /// Tracks the look choice locally during onboarding before final save.
   late bool _pickHalloween;
+  late SkinTone _skinTone;
 
   bool _saving = false;
 
@@ -57,6 +61,7 @@ class _FirstRunScreenState extends State<FirstRunScreen> {
   void initState() {
     super.initState();
     _pickHalloween = widget.state.isHalloween;
+    _skinTone = widget.state.skinTone;
   }
 
   @override
@@ -105,6 +110,7 @@ class _FirstRunScreenState extends State<FirstRunScreen> {
     if (_pickHalloween != widget.state.isHalloween) {
       await widget.state.toggleMode();
     }
+    await widget.state.saveSkinTone(_skinTone);
     await widget.state.saveNickname(nickname);
     await widget.state.saveDueDate(dueDate);
     // isFirstRun flips to false → parent rebuilds to main shell.
@@ -140,6 +146,7 @@ class _FirstRunScreenState extends State<FirstRunScreen> {
                         children: [
                           _Step1Date(
                             palette: palette,
+                            skinTone: _skinTone,
                             useDueDate: _useDueDate,
                             pickedDate: _pickedDate,
                             previewWeek: _previewWeek,
@@ -158,6 +165,8 @@ class _FirstRunScreenState extends State<FirstRunScreen> {
                           ),
                           _Step3Look(
                             palette: palette,
+                            skinTone: _skinTone,
+                            onTone: (tone) => setState(() => _skinTone = tone),
                             isHalloween: _pickHalloween,
                             saving: _saving,
                             onToggle: (v) => setState(() => _pickHalloween = v),
@@ -219,6 +228,7 @@ class _StepIndicator extends StatelessWidget {
 class _Step1Date extends StatelessWidget {
   const _Step1Date({
     required this.palette,
+    required this.skinTone,
     required this.useDueDate,
     required this.pickedDate,
     required this.previewWeek,
@@ -229,6 +239,7 @@ class _Step1Date extends StatelessWidget {
 
   final AppPalette palette;
   final bool useDueDate;
+  final SkinTone skinTone;
   final DateTime? pickedDate;
   final int? previewWeek;
   final ValueChanged<bool> onToggleMode;
@@ -243,8 +254,11 @@ class _Step1Date extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Center(
-            child: Image.asset(
-              MaternalNeed.iron.assetPath(AppPalette.everyday),
+            child: Image(
+              image: paperPortrait(
+                MaternalNeed.iron.assetPath(AppPalette.everyday),
+                skinTone,
+              ),
               width: 112,
               height: 112,
               semanticLabel: 'Little Bumpy in a lavender onesie',
@@ -521,6 +535,8 @@ class _Step2Nickname extends StatelessWidget {
 class _Step3Look extends StatelessWidget {
   const _Step3Look({
     required this.palette,
+    required this.skinTone,
+    required this.onTone,
     required this.isHalloween,
     required this.saving,
     required this.onToggle,
@@ -531,6 +547,8 @@ class _Step3Look extends StatelessWidget {
   final AppPalette palette;
   final bool isHalloween;
   final bool saving;
+  final SkinTone skinTone;
+  final ValueChanged<SkinTone> onTone;
   final ValueChanged<bool> onToggle;
   final VoidCallback onBack;
   final VoidCallback onConfirm;
@@ -583,6 +601,7 @@ class _Step3Look extends StatelessWidget {
                             : 'Warm cream, storybook',
                         selected: look.isHalloween == isHalloween,
                         look: look,
+                        skinTone: skinTone,
                         onTap: () => onToggle(look.isHalloween),
                       ),
                     ),
@@ -590,7 +609,13 @@ class _Step3Look extends StatelessWidget {
               );
             },
           ),
-          const SizedBox(height: 32),
+          const SizedBox(height: 20),
+          SkinTonePicker(
+            selected: skinTone,
+            onSelected: onTone,
+            foreground: palette.moonlight,
+          ),
+          const SizedBox(height: 24),
 
           Row(
             children: [
@@ -635,6 +660,7 @@ class _LookCard extends StatelessWidget {
     required this.description,
     required this.selected,
     required this.look,
+    required this.skinTone,
     required this.onTap,
   });
 
@@ -642,6 +668,7 @@ class _LookCard extends StatelessWidget {
   final String description;
   final bool selected;
   final AppPalette look;
+  final SkinTone skinTone;
   final VoidCallback onTap;
 
   @override
@@ -678,8 +705,11 @@ class _LookCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Center(
-                child: Image.asset(
-                  MaternalNeed.iron.assetPath(look),
+                child: Image(
+                  image: paperPortrait(
+                    MaternalNeed.iron.assetPath(look),
+                    skinTone,
+                  ),
                   width: 96,
                   height: 96,
                   excludeFromSemantics: true,

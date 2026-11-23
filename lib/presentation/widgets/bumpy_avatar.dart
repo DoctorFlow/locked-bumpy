@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../core/theme/palette.dart';
 import '../../domain/models/need.dart';
+import '../../domain/models/skin_tone.dart';
+import 'paper_portrait.dart';
 
 /// Full-body paper cut on the same square registration in both nursery looks.
 class BumpyAvatar extends StatelessWidget {
@@ -10,11 +12,13 @@ class BumpyAvatar extends StatelessWidget {
     required this.palette,
     required this.happy,
     this.hopAnimation,
+    this.skinTone = SkinTone.peach,
   });
 
   final MaternalNeed need;
   final AppPalette palette;
   final bool happy;
+  final SkinTone skinTone;
   final Animation<double>? hopAnimation;
 
   @override
@@ -28,8 +32,8 @@ class BumpyAvatar extends StatelessWidget {
       duration: reduceMotion
           ? Duration.zero
           : const Duration(milliseconds: 300),
-      child: Image.asset(
-        path,
+      child: Image(
+        image: paperPortrait(path, skinTone),
         key: ValueKey(path),
         width: 190,
         height: 190,

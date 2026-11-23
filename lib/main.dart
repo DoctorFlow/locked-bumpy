@@ -140,6 +140,6 @@ class _MainShell extends StatelessWidget {
   Widget _currentScreen() => switch (state.currentTab) {
     0 => TodayScreen(state: state),
     1 => ThisWeekScreen(state: state),
-    _ => const GuidesScreen(),
+    _ => GuidesScreen(skinTone: state.skinTone),
   };
 }

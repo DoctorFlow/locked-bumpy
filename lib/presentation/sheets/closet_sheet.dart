@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../../core/theme/palette.dart';
 import '../../domain/models/app_state.dart';
 import '../../domain/models/need.dart';
+import '../../domain/models/skin_tone.dart';
+import '../widgets/paper_portrait.dart';
 
 class ClosetSheet extends StatefulWidget {
   const ClosetSheet({super.key, required this.state});
@@ -96,6 +98,7 @@ class _ClosetSheetState extends State<ClosetSheet> {
                       width: (constraints.maxWidth - 8) / 2,
                       child: _CostumeCard(
                         need: need,
+                        skinTone: widget.state.skinTone,
                         palette: palette,
                         selected: selected == need,
                         onTap: () {
@@ -119,11 +122,13 @@ class _CostumeCard extends StatelessWidget {
     required this.need,
     required this.palette,
     required this.selected,
+    required this.skinTone,
     required this.onTap,
   });
   final MaternalNeed need;
   final AppPalette palette;
   final bool selected;
+  final SkinTone skinTone;
   final VoidCallback onTap;
 
   @override
@@ -150,26 +155,47 @@ class _CostumeCard extends StatelessWidget {
         child: InkWell(
           onTap: onTap,
           customBorder: shape,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
-            child: Column(
-              children: [
-                Image.asset(need.assetPath(palette), height: 84, width: 84),
-                Text(
-                  name,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: palette.ink,
+          child: Column(
+            children: [
+              SizedBox(
+                width: double.infinity,
+                height: 88,
+                child: ColoredBox(
+                  color: Color.alphaBlend(
+                    palette.moonlight.withValues(alpha: .40),
+                    palette.paperRaised,
+                  ),
+                  child: Center(
+                    child: Image(
+                      image: paperPortrait(need.assetPath(palette), skinTone),
+                      height: 84,
+                      width: 84,
+                      gaplessPlayback: true,
+                    ),
                   ),
                 ),
-                Text(
-                  need.label,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: palette.inkSoft),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(6, 4, 6, 8),
+                child: Column(
+                  children: [
+                    Text(
+                      name,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: palette.ink,
+                      ),
+                    ),
+                    Text(
+                      need.label,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: palette.inkSoft),
+                    ),
+                  ],
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),

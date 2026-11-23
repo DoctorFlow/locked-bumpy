@@ -1,6 +1,7 @@
 import 'package:shared_preferences/shared_preferences.dart';
 import '../constants/app_constants.dart';
 import '../../domain/models/need.dart';
+import '../../domain/models/skin_tone.dart';
 import '../../domain/models/need_rotation.dart';
 
 /// Thin wrapper around [SharedPreferences].
@@ -28,6 +29,12 @@ class PrefsService {
       _prefs.setString(AppConstants.prefsDueDateKey, _isoDate(date));
 
   // ── Mode & pause ─────────────────────────────────────────────────────────
+
+  SkinTone get skinTone =>
+      SkinTone.fromPreference(_prefs.getString(AppConstants.prefsSkinToneKey));
+
+  Future<void> saveSkinTone(SkinTone tone) =>
+      _prefs.setString(AppConstants.prefsSkinToneKey, tone.name);
 
   bool get isHalloween =>
       _prefs.getBool(AppConstants.prefsIsHalloweenKey) ?? true;

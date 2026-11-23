@@ -3,6 +3,7 @@ import '../../core/services/prefs_service.dart';
 import '../pregnancy.dart';
 import 'need.dart';
 import 'need_rotation.dart';
+import 'skin_tone.dart';
 
 /// Central app state. Loaded from [PrefsService] at startup.
 /// Preferences and check-ins are saved on-device. Dress-up lasts for the day
@@ -11,6 +12,7 @@ class AppState extends ChangeNotifier {
   AppState._(this._prefs, this._now)
     : _dueDate = _prefs.dueDate,
       _isHalloween = _prefs.isHalloween,
+      _skinTone = _prefs.skinTone,
       _isPaused = _prefs.isPaused,
       _nickname = _prefs.nickname {
     _day = _now();
@@ -50,6 +52,16 @@ class AppState extends ChangeNotifier {
   }
 
   // ── Mode ─────────────────────────────────────────────────────────────────
+
+  SkinTone _skinTone;
+  SkinTone get skinTone => _skinTone;
+
+  Future<void> saveSkinTone(SkinTone tone) async {
+    if (tone == _skinTone) return;
+    _skinTone = tone;
+    notifyListeners();
+    await _prefs.saveSkinTone(tone);
+  }
 
   bool _isHalloween;
   bool get isHalloween => _isHalloween;
@@ -179,6 +191,7 @@ class AppState extends ChangeNotifier {
     _dueDate = null;
     _nickname = '';
     _isHalloween = true;
+    _skinTone = SkinTone.peach;
     _isPaused = false;
     _currentTab = 0;
     _completedCheckIns = {};

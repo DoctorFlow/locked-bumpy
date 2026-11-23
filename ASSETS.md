@@ -20,3 +20,9 @@ Graphical assets and fonts used in Little Bumpy.
 | `assets/images/nursery-halloween.png` | Bumpy Studio, `originals/night-nursery-violet.png` | Team Kit Studio Release | 2026-11-23 |
 
 The full-character PNGs use the Demo Starter poses and the Peach tone from the studio rig with its `reference-paper-v4` expression recipe. The base expression is Calm. Happy uses Wide smile, with First tooth for Vampire. The sprites keep the studio's common canvas and face placement at 512 × 512 pixels. Icons and backdrops preserve their source proportions at a 512-pixel long edge.
+
+## Five studio skin tones
+
+The app keeps the 24 original PNGs and adds 15 lossless WebP masks (214,824 bytes). The masks carry skin and blush weights for the seven looks and their expressions. Flutter applies the studio colours to the original 512 px paper art on the device. The complete image folder is 3,920,345 bytes. The original Peach PNG renders directly.
+
+To regenerate the masks, use Python with Pillow and NumPy and run `python tool/make_paper_tones.py /path/to/avatar-harness`. Add `--check` to compare the export with the committed masks. The exporter compares all 60 alternate renders with the studio rig at 190 px and checks their full-resolution alpha channels.

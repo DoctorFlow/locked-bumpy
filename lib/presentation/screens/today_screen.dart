@@ -193,6 +193,7 @@ class _TodayScreenState extends State<TodayScreen>
                           need: state.costumeOverride ?? need,
                           palette: palette,
                           happy: needTicked,
+                          skinTone: state.skinTone,
                           hopAnimation: _hopAnimation,
                         ),
                       ],
