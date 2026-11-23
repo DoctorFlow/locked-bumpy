@@ -3,7 +3,7 @@
         android:allowBackup="false"
         android:fullBackupContent="false"
         android:dataExtractionRules="@xml/backup_rules"
-        android:label="little_bumpy"
+        android:label="Little Bumpy"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity
