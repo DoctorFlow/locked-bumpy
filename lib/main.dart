@@ -78,6 +78,15 @@ class _LittleBumpyAppState extends State<LittleBumpyApp>
 
     return MaterialApp(
       title: 'Little Bumpy',
+      themeAnimationDuration:
+          MediaQuery.maybeDisableAnimationsOf(context) ??
+              WidgetsBinding
+                  .instance
+                  .platformDispatcher
+                  .accessibilityFeatures
+                  .disableAnimations
+          ? Duration.zero
+          : const Duration(milliseconds: 300),
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         brightness: state.isHalloween ? Brightness.dark : Brightness.light,

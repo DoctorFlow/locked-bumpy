@@ -142,12 +142,18 @@ class ContentGate {
         'status is "${record.status}", expected "approved"',
       );
     }
-    final lower = record.text.toLowerCase();
-    for (final word in _banned) {
-      if (lower.contains(word)) {
-        throw ContentGateException(record, 'text contains banned term "$word"');
-      }
+    final banned = bannedTerm(record.text);
+    if (banned != null) {
+      throw ContentGateException(record, 'text contains banned term "$banned"');
     }
+  }
+
+  static String? bannedTerm(String text) {
+    final lower = text.toLowerCase();
+    for (final word in _banned) {
+      if (lower.contains(word)) return word;
+    }
+    return null;
   }
 
   /// Validates all [records]. Returns them unchanged if all pass.

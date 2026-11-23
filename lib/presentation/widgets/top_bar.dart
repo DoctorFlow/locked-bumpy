@@ -25,21 +25,23 @@ class TopBar extends StatelessWidget implements PreferredSizeWidget {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           // Gestational week chip
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: palette.paperRaised.withValues(alpha: 0.25),
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(
-                color: palette.moonlight.withValues(alpha: 0.3),
+          Flexible(
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: palette.paperRaised.withValues(alpha: 0.25),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(
+                  color: palette.moonlight.withValues(alpha: 0.3),
+                ),
               ),
-            ),
-            child: Text(
-              week,
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.bold,
-                color: palette.moonlight,
+              child: Text(
+                week,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.bold,
+                  color: palette.moonlight,
+                ),
               ),
             ),
           ),
@@ -53,11 +55,20 @@ class TopBar extends StatelessWidget implements PreferredSizeWidget {
                     : 'Switch to Halloween mode',
                 button: true,
                 child: IconButton(
-                  icon: Icon(
-                    state.isHalloween
-                        ? Icons.lightbulb_outline
-                        : Icons.lightbulb,
-                    color: palette.moon,
+                  iconSize: 36,
+                  icon: Image.asset(
+                    'assets/images/nursery-lamp.png',
+                    width: 36,
+                    height: 36,
+                    excludeFromSemantics: true,
+                    color: palette.isHalloween ? palette.moonlightSoft : null,
+                    colorBlendMode: BlendMode.srcIn,
+                    errorBuilder: (_, _, _) => Icon(
+                      state.isHalloween
+                          ? Icons.lightbulb_outline
+                          : Icons.lightbulb,
+                      color: palette.moon,
+                    ),
                   ),
                   onPressed: state.toggleMode,
                   tooltip: state.isHalloween

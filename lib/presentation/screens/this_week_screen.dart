@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import '../../content/content_loader.dart';
 import '../../core/constants/app_constants.dart';
 import '../../core/theme/palette.dart';
 import '../../domain/models/app_state.dart';
@@ -39,10 +39,8 @@ class _ThisWeekScreenState extends State<ThisWeekScreen> {
   }
 
   Future<void> _loadCards() async {
-    final raw = await rootBundle.loadString('assets/content/week_cards.json');
-    if (mounted) {
-      setState(() => _cards = WeekCard.listFromJsonString(raw));
-    }
+    final cards = await ContentLoader.loadWeekCards();
+    if (mounted) setState(() => _cards = cards);
   }
 
   @override
@@ -61,65 +59,75 @@ class _ThisWeekScreenState extends State<ThisWeekScreen> {
       mode: mode,
     );
 
-    return Column(
-      children: [
-        const SizedBox(height: 16),
+    return CustomScrollView(
+      slivers: [
+        SliverFillRemaining(
+          hasScrollBody: false,
+          child: Column(
+            children: [
+              const SizedBox(height: 16),
 
-        // Week dot strip
-        _WeekDots(
-          selected: _selectedWeek,
-          min: _minWeek,
-          max: _maxWeek,
-          current: _currentWeek(),
-          palette: palette,
-        ),
-        const SizedBox(height: 16),
+              // Week dot strip
+              _WeekDots(
+                selected: _selectedWeek,
+                min: _minWeek,
+                max: _maxWeek,
+                current: _currentWeek(),
+                palette: palette,
+              ),
+              const SizedBox(height: 16),
 
-        // Card + arrows
-        Expanded(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Column(
-              children: [
-                Expanded(
-                  child: _WeekCardView(
-                    week: _selectedWeek,
-                    card: card,
-                    palette: palette,
-                    isCurrentWeek: _selectedWeek == _currentWeek(),
+              // Card + arrows
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Column(
+                    children: [
+                      Expanded(
+                        child: _WeekCardView(
+                          week: _selectedWeek,
+                          card: card,
+                          palette: palette,
+                          isCurrentWeek: _selectedWeek == _currentWeek(),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          _NavButton(
+                            icon: Icons.arrow_back_ios_new,
+                            label: 'Previous week',
+                            enabled: _selectedWeek > _minWeek,
+                            palette: palette,
+                            onTap: () => setState(() => _selectedWeek--),
+                          ),
+                          Flexible(
+                            child: Text(
+                              'Week $_selectedWeek',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.bold,
+                                color: palette.moonlight,
+                              ),
+                            ),
+                          ),
+                          _NavButton(
+                            icon: Icons.arrow_forward_ios,
+                            label: 'Next week',
+                            enabled: _selectedWeek < _maxWeek,
+                            palette: palette,
+                            onTap: () => setState(() => _selectedWeek++),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 20),
+                    ],
                   ),
                 ),
-                const SizedBox(height: 16),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    _NavButton(
-                      icon: Icons.arrow_back_ios_new,
-                      label: 'Previous week',
-                      enabled: _selectedWeek > _minWeek,
-                      palette: palette,
-                      onTap: () => setState(() => _selectedWeek--),
-                    ),
-                    Text(
-                      'Week $_selectedWeek',
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.bold,
-                        color: palette.moonlight,
-                      ),
-                    ),
-                    _NavButton(
-                      icon: Icons.arrow_forward_ios,
-                      label: 'Next week',
-                      enabled: _selectedWeek < _maxWeek,
-                      palette: palette,
-                      onTap: () => setState(() => _selectedWeek++),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 20),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ],
@@ -247,7 +255,7 @@ class _WeekCardView extends StatelessWidget {
             style: TextStyle(
               fontSize: 28,
               fontWeight: FontWeight.bold,
-              color: palette.moon,
+              color: palette.accent,
             ),
           ),
           const SizedBox(height: 16),

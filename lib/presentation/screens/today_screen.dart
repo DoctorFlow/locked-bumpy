@@ -57,8 +57,14 @@ class _TodayScreenState extends State<TodayScreen>
   }
 
   Future<void> _loadRecords() async {
-    final records = await ContentLoader.load('assets/content/today_lines.json');
-    if (mounted) setState(() => _records = records);
+    try {
+      final records = await ContentLoader.load(
+        'assets/content/today_lines.json',
+      );
+      if (mounted) setState(() => _records = records);
+    } on ContentGateException {
+      // Keep check-ins available while dialogue awaits review.
+    }
   }
 
   void _onStateChanged() {
@@ -79,6 +85,7 @@ class _TodayScreenState extends State<TodayScreen>
 
     if (mounted &&
         id == widget.state.todayNeed.name &&
+        widget.state.isChecked(id) &&
         !wasChecked &&
         !_hopping &&
         !MediaQuery.disableAnimationsOf(context)) {
@@ -96,33 +103,19 @@ class _TodayScreenState extends State<TodayScreen>
     bool allDone,
     AppPalette palette,
   ) {
-    if (allDone) return _goodbye(palette);
-    final category = needTicked ? 'thank_you' : 'greeting';
-    final mode = palette.isHalloween ? 'halloween' : 'everyday';
-    if (_records != null) {
-      final r = ContentLoader.find(
-        records: _records!,
-        need: need.needName,
-        category: category,
-        mode: mode,
-      );
-      if (r != null) return r.text;
-    }
-    // Fallback while records are loading (first frame only).
-    return needTicked ? 'Thank you!' : need.foodHint;
-  }
-
-  String _goodbye(AppPalette palette) {
-    if (_records != null) {
-      final r = ContentLoader.find(
-        records: _records!,
-        need: 'ALL',
-        category: 'goodbye',
-        mode: palette.isHalloween ? 'halloween' : 'everyday',
-      );
-      if (r != null) return r.text;
-    }
-    return "That's us for today.";
+    final records = _records;
+    if (records == null) return '';
+    return ContentLoader.find(
+          records: records,
+          need: allDone ? 'ALL' : need.needName,
+          category: allDone
+              ? 'goodbye'
+              : needTicked
+              ? 'thank_you'
+              : 'greeting',
+          mode: palette.isHalloween ? 'halloween' : 'everyday',
+        )?.text ??
+        '';
   }
 
   // ── Build ─────────────────────────────────────────────────────────────────
@@ -249,7 +242,7 @@ class _TodayScreenState extends State<TodayScreen>
                   ? '${need.needName} · Need of the Day'
                   : item.label,
               subtitle: item.foodHint,
-              needColor: item.color,
+              need: item,
               isTicked: state.isChecked(item.name),
               palette: palette,
               onTap: () => _onCheckIn(item.name),
@@ -280,7 +273,7 @@ class _CheckInTile extends StatelessWidget {
     super.key,
     required this.title,
     required this.subtitle,
-    required this.needColor,
+    required this.need,
     required this.isTicked,
     required this.palette,
     required this.onTap,
@@ -288,7 +281,7 @@ class _CheckInTile extends StatelessWidget {
 
   final String title;
   final String subtitle;
-  final Color needColor;
+  final MaternalNeed need;
   final bool isTicked;
   final AppPalette palette;
   final VoidCallback onTap;
@@ -318,14 +311,11 @@ class _CheckInTile extends StatelessWidget {
           ),
           child: Row(
             children: [
-              Container(
-                width: 14,
-                height: 14,
-                decoration: BoxDecoration(
-                  color: needColor,
-                  shape: BoxShape.circle,
-                  border: Border.all(color: palette.ink, width: 1.5),
-                ),
+              Image.asset(
+                need.iconPath,
+                width: 32,
+                height: 32,
+                excludeFromSemantics: true,
               ),
               const SizedBox(width: 14),
               Expanded(
@@ -347,8 +337,20 @@ class _CheckInTile extends StatelessWidget {
                   ],
                 ),
               ),
+              if (isTicked)
+                ExcludeSemantics(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 6),
+                    child: Text(
+                      'Done',
+                      style: TextStyle(fontSize: 12, color: palette.ink),
+                    ),
+                  ),
+                ),
               AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
+                duration: MediaQuery.disableAnimationsOf(context)
+                    ? Duration.zero
+                    : const Duration(milliseconds: 200),
                 width: 28,
                 height: 28,
                 decoration: BoxDecoration(
