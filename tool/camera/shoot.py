@@ -462,6 +462,20 @@ SCENARIOS = [
         *[st for _ in range(10) for st in (scroll(), wait(150))], wait(400),
         shot(f"this-week-end-wk{n}"),
     ], shot=None, note="guide-answer: end of This Week clears the week bar") for n in (9, 20)],
+    # Topic guides (roles/topic-guides.md): the week's own question at weeks
+    # 9, 20 and 36. Drafts: they show only with --review.
+    S("topic-guides-list", {"week": 20}, [
+        tap("Guides", "tab"), wait(600), reveal("Feeling sick", at=0.3), wait(300),
+    ], note="topic-guides: the rows under the six need guides"),
+    *[S(f"topic-{key}", {"week": w}, [
+        tap("Guides", "tab"), wait(600), tap(title, find=True), wait(1000),
+    ], note=f"topic-guides: the {key} guide, top") for key, w, title in [
+        ("sick", 9, "Feeling sick"), ("scan", 20, "The mid-pregnancy scan"),
+        ("time", 36, "Is it time?")]],
+    S("topic-chapter-wk20", {"week": 20}, [
+        tap("This Week", "tab"), wait(600),
+        reveal("The mid-pregnancy scan", at=0.6), wait(300),
+    ], note="topic-guides: week 20 chapter, the new link under the curious question"),
 ]
 
 # Three key moments for sheet__journey.png: first existing shot name of each.

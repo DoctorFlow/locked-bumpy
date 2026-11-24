@@ -5,6 +5,7 @@ import '../../core/constants/app_constants.dart';
 import '../../core/theme/app_text.dart';
 import '../../core/theme/palette.dart';
 import '../../core/theme/paper.dart';
+import '../../domain/models/app_line.dart';
 import '../../domain/models/app_state.dart';
 import '../../domain/models/guide.dart';
 import '../../domain/models/need.dart';
@@ -30,6 +31,7 @@ class GuidesScreen extends StatefulWidget {
 
 class _GuidesScreenState extends State<GuidesScreen> {
   late final _guides = ContentLoader.loadGuides();
+  late final _topics = ContentLoader.loadTopicGuides();
 
   @override
   Widget build(BuildContext context) {
@@ -82,6 +84,12 @@ class _GuidesScreenState extends State<GuidesScreen> {
                     VisitTopics.edit(context, widget.state, include: need),
               ),
             ),
+          TopicGuideList(
+            topics: _topics,
+            palette: palette,
+            onOpen: (topic) =>
+                GuideScreen.openTopic(context, widget.state, topic),
+          ),
           const SizedBox(height: AppSpace.s),
           Text(
             AppConstants.disclaimer,
@@ -476,4 +484,166 @@ class CostumeTag extends StatelessWidget {
       ),
     ),
   );
+}
+
+/// The topic guides under the six need guides: a heading (an app line) and
+/// one row per guide, labelled with the guide's own title. Nothing at all
+/// when the gate shows no topic guide (every normal build tonight).
+class TopicGuideList extends StatelessWidget {
+  const TopicGuideList({
+    super.key,
+    required this.topics,
+    required this.palette,
+    required this.onOpen,
+  });
+
+  final Future<List<TopicGuideEntry>> topics;
+  final AppPalette palette;
+  final void Function(TopicGuideEntry topic) onOpen;
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<List<TopicGuideEntry>>(
+      future: topics,
+      initialData: ContentLoader.loadedTopicGuides,
+      builder: (context, snapshot) {
+        final shown = snapshot.data ?? const <TopicGuideEntry>[];
+        if (shown.isEmpty) return const SizedBox.shrink();
+        final heading =
+            ContentLoader.loadedAppLines?[AppLines.topicGuidesTitle];
+        return Padding(
+          key: const ValueKey('topic-guides'),
+          padding: const EdgeInsets.only(bottom: AppSpace.l),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (heading != null) ...[
+                Wrap(
+                  spacing: AppSpace.s,
+                  runSpacing: AppSpace.xs,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                    Semantics(
+                      header: true,
+                      child: Text(
+                        heading.text,
+                        style: AppText.heading.copyWith(
+                          color: palette.moonlight,
+                        ),
+                      ),
+                    ),
+                    if (heading.isDraft) DraftTag(palette: palette),
+                  ],
+                ),
+                const SizedBox(height: AppSpace.m),
+              ],
+              for (final (i, topic) in shown.indexed) ...[
+                if (i > 0) const SizedBox(height: AppSpace.m),
+                TopicGuideRow(
+                  key: ValueKey('topic-row-${topic.guide.id}'),
+                  title: topic.title.text,
+                  isDraft: topic.guide.isDraft || topic.title.isDraft,
+                  palette: palette,
+                  onTap: () => onOpen(topic),
+                ),
+              ],
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+/// One paper row that opens a topic guide: the guide's title, a book icon
+/// and an arrow; at least 56 px tall. Used on the Guides screen and on a
+/// chapter page.
+class TopicGuideRow extends StatelessWidget {
+  const TopicGuideRow({
+    super.key,
+    required this.title,
+    required this.isDraft,
+    required this.palette,
+    required this.onTap,
+    this.iconTile,
+    this.iconColor,
+  });
+
+  final String title;
+  final bool isDraft;
+  final AppPalette palette;
+  final VoidCallback onTap;
+
+  /// The icon tile's colour and the icon's colour; default the paper accent.
+  final Color? iconTile, iconColor;
+
+  @override
+  Widget build(BuildContext context) {
+    return PaperCard(
+      raised: true,
+      child: Semantics(
+        button: true,
+        onTap: onTap,
+        child: InkWell(
+          onTap: onTap,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: AppSpace.row),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpace.m,
+                AppSpace.m,
+                AppSpace.s,
+                AppSpace.m,
+              ),
+              child: Row(
+                children: [
+                  ExcludeSemantics(
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        color: iconTile ?? palette.accent,
+                        borderRadius: AppRadii.tag,
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(AppSpace.s),
+                        child: Icon(
+                          Icons.menu_book_rounded,
+                          size: 24,
+                          color: iconColor ?? palette.paper,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: AppSpace.m),
+                  Expanded(
+                    child: Wrap(
+                      spacing: AppSpace.s,
+                      runSpacing: AppSpace.xs,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      children: [
+                        Text(
+                          title,
+                          style: AppText.bodyStrong.copyWith(
+                            color: palette.ink,
+                          ),
+                        ),
+                        if (isDraft) DraftTag(palette: palette),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: AppSpace.s),
+                  ExcludeSemantics(
+                    child: Icon(
+                      Icons.arrow_forward_rounded,
+                      size: 24,
+                      color: palette.inkSoft,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }

@@ -29,6 +29,9 @@ class AppLines {
   /// `from_week` is later than the parent's week.
   static const urgentLaterTitle = 'urgent_later_title';
 
+  /// The Guides screen's heading over the topic guides.
+  static const topicGuidesTitle = 'topic_guides_title';
+
   static const maxWords = 20;
 
   static final _appBanned = RegExp(

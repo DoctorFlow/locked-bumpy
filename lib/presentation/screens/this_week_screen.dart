@@ -20,6 +20,7 @@ import '../widgets/need_word.dart';
 import '../widgets/nursery_scene.dart';
 import '../widgets/visit_topics.dart';
 import 'guide_screen.dart';
+import 'guides_screen.dart' show TopicGuideRow;
 import 'urgent_screen.dart';
 
 part 'this_week_chapter.dart';

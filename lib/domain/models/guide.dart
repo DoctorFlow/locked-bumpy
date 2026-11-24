@@ -404,3 +404,225 @@ class Guide {
     return null;
   }
 }
+
+/// A guide for one week's own big question (feeling sick, the scan, signs it
+/// is time), from `assets/content/topic_guides.json`. Like a [Guide] it has
+/// facts with sources, ideas, questions and the call lines, but no need and
+/// no costume. Its title is an app line ([titleLine]); [chapter] is the id of
+/// the chapter page that links to it. Pointers only: no wording of its own.
+class TopicGuide {
+  const TopicGuide({
+    required this.id,
+    required this.titleLine,
+    required this.chapter,
+    required this.isDraft,
+    required this.lastChecked,
+    required this.point,
+    required this.ifHard,
+    required this.callToday,
+    required this.closing,
+    required this.facts,
+    required this.tryThis,
+    required this.questions,
+    required this.sources,
+  });
+
+  final String id, titleLine, chapter;
+
+  /// True when this guide is visible only because this is a review build.
+  final bool isDraft;
+  final String lastChecked, point, ifHard, callToday, closing;
+  final List<GuideFact> facts;
+  final List<String> tryThis, questions;
+  final List<GuideSource> sources;
+
+  static const assetPath = 'assets/content/topic_guides.json';
+
+  /// The guides the gate lets through, in file order. A broken record hides
+  /// only itself; two records with one id hide that id. Never throws.
+  static List<TopicGuide> reviewAll(String json, {bool? drafts}) {
+    final shows = drafts ?? ContentGate.showsDrafts;
+    final Object? rows;
+    try {
+      rows = jsonDecode(json);
+    } catch (_) {
+      return const [];
+    }
+    if (rows is! List) return const [];
+    final ids = <Object?, int>{};
+    for (final row in rows) {
+      final id = row is Map ? row['id'] : null;
+      ids[id] = (ids[id] ?? 0) + 1;
+    }
+    final out = <TopicGuide>[];
+    for (final row in rows) {
+      if (row is! Map || ids[row['id']] != 1) continue;
+      TopicGuide? guide;
+      try {
+        guide = _tryParse(row, shows);
+      } catch (_) {
+        guide = null;
+      }
+      if (guide != null) out.add(guide);
+    }
+    return List.unmodifiable(out);
+  }
+
+  /// The first rule [row] breaks, or null when every rule passes.
+  static String? ruleIssue(Map<dynamic, dynamic> row) {
+    try {
+      return _ruleIssue(row);
+    } catch (e) {
+      return 'unreadable record: $e';
+    }
+  }
+
+  static TopicGuide? _tryParse(Map row, bool drafts) {
+    final status = row['status'];
+    final reviewer = row['approved_by'] ?? '';
+    final date = row['approved_date'] ?? '';
+    if (status is! String || reviewer is! String || date is! String) {
+      return null;
+    }
+    final verdict = ContentGate.review(
+      status: status,
+      reviewer: reviewer,
+      date: date,
+      rulesPass: ruleIssue(row) == null,
+      drafts: drafts,
+    );
+    if (verdict == Review.hidden) return null;
+    final sources = [
+      for (final s in row['sources'] as List)
+        GuideSource(
+          key: s['key'] as String,
+          org: s['org'] as String,
+          title: s['title'] as String,
+          url: s['url'] as String,
+        ),
+    ];
+    final orgs = {for (final s in sources) s.key: s.org};
+    return TopicGuide(
+      id: row['id'] as String,
+      titleLine: row['title_line'] as String,
+      chapter: row['chapter'] as String? ?? '',
+      isDraft: verdict == Review.draft,
+      lastChecked: row['last_checked'] as String,
+      point: (row['point'] as String).trim(),
+      ifHard: (row['if_hard'] as String).trim(),
+      callToday: (row['call_today'] as String? ?? '').trim(),
+      closing: (row['closing'] as String).trim(),
+      facts: List.unmodifiable([
+        for (final f in row['facts'] as List)
+          GuideFact(
+            id: f['id'] as String,
+            kind: f['kind'] as String,
+            text: (f['text'] as String).trim(),
+            sourceOrg: orgs[f['source']]!,
+          ),
+      ]),
+      tryThis: List.unmodifiable([
+        for (final t in row['try_this'] as List) (t as String).trim(),
+      ]),
+      questions: List.unmodifiable([
+        for (final q in row['questions'] as List) (q as String).trim(),
+      ]),
+      sources: List.unmodifiable(sources),
+    );
+  }
+
+  static String? _ruleIssue(Map row) {
+    final id = row['id'];
+    if (id is! String || id.trim().isEmpty) return 'id is empty';
+    final title = row['title_line'];
+    if (title is! String || title.trim().isEmpty) return 'title_line is empty';
+    final chapter = row['chapter'] ?? '';
+    if (chapter is! String) return 'chapter is not an id';
+    final checked = row['last_checked'];
+    if (checked is! String || !ContentGate.isCalendarDate(checked)) {
+      return 'last_checked is not a date';
+    }
+    final sources = row['sources'];
+    if (sources is! List || sources.isEmpty) return 'no sources';
+    final keys = <String>{};
+    for (final s in sources) {
+      if (s is! Map) return 'a source is not a record';
+      for (final field in ['key', 'org', 'title', 'url']) {
+        final v = s[field];
+        if (v is! String || v.trim().isEmpty) return 'a source has no $field';
+      }
+      if (!keys.add(s['key'] as String)) return 'two sources share a key';
+    }
+    final point = row['point'];
+    if (point is! String) return 'point is missing';
+    final pointIssue =
+        Guide._appVoiceIssue('point', point) ??
+        Guide._sentencesIssue('point', point, 2);
+    if (pointIssue != null) return pointIssue;
+
+    // Any fact kind is accepted: a kind the app does not know still shows
+    // as a plain fact. What matters is the words and the source.
+    final facts = row['facts'];
+    if (facts is! List || facts.isEmpty || facts.length > 6) {
+      return 'facts must number one to six';
+    }
+    final factIds = <String>{};
+    for (var i = 0; i < facts.length; i++) {
+      final f = facts[i];
+      if (f is! Map) return 'fact ${i + 1} is not a record';
+      if (f['kind'] is! String) return 'fact ${i + 1} has no kind';
+      final fid = f['id'];
+      if (fid is! String || fid.trim().isEmpty || !factIds.add(fid)) {
+        return 'fact ${i + 1} needs its own id';
+      }
+      final text = f['text'];
+      if (text is! String) return 'fact ${i + 1} has no text';
+      final textIssue =
+          Guide._appVoiceIssue('fact ${i + 1}', text) ??
+          Guide._sentencesIssue('fact ${i + 1}', text, 1);
+      if (textIssue != null) return textIssue;
+      if (Guide._words(text) > 20) return 'fact ${i + 1} is over 20 words';
+      if (!keys.contains(f['source'])) {
+        return 'fact ${i + 1} source is not in sources';
+      }
+    }
+    final tryThis = row['try_this'];
+    if (tryThis is! List || tryThis.length > 5) {
+      return 'try_this holds at most five ideas';
+    }
+    for (final t in tryThis) {
+      if (t is! String) return 'a try_this idea is not text';
+      final issue = Guide._appVoiceIssue('try_this', t);
+      if (issue != null) return issue;
+    }
+    final ifHard = row['if_hard'];
+    if (ifHard is! String) return 'if_hard is missing';
+    final hardIssue =
+        Guide._appVoiceIssue('if_hard', ifHard) ??
+        Guide._sentencesIssue('if_hard', ifHard, 2);
+    if (hardIssue != null) return hardIssue;
+    final questions = row['questions'];
+    if (questions is! List || questions.isEmpty || questions.length > 3) {
+      return 'questions must number one to three';
+    }
+    for (final q in questions) {
+      if (q is! String) return 'a question is not text';
+      final issue = Guide._appVoiceIssue('a question', q);
+      if (issue != null) return issue;
+      if (!q.trim().endsWith('?')) return 'a question does not end with "?"';
+    }
+    final callToday = row['call_today'] ?? '';
+    if (callToday is! String) return 'call_today is not text';
+    if (callToday.trim().isNotEmpty &&
+        (!callToday.startsWith(Guide.callTodayStart) ||
+            !callToday.trimRight().endsWith(Guide.callTodayEnd))) {
+      return 'call_today must begin "${Guide.callTodayStart}" and end '
+          '"${Guide.callTodayEnd}"';
+    }
+    final closing = row['closing'];
+    if (closing is! String || !Guide.closings.contains(closing.trim())) {
+      return 'closing is not one of the two fixed lines';
+    }
+    return null;
+  }
+}

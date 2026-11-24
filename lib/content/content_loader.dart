@@ -8,6 +8,9 @@ import '../domain/models/need.dart';
 import '../domain/models/week_card.dart';
 import 'content_paths.dart';
 
+/// A topic guide the gate lets through, with the app line that titles it.
+typedef TopicGuideEntry = ({TopicGuide guide, AppLine title});
+
 /// Loads and validates content packs from bundled JSON assets.
 ///
 /// All assets are offline (bundled with the app via `rootBundle`).
@@ -47,6 +50,7 @@ class ContentLoader {
     _guides = null;
     _held = null;
     _appLines = null;
+    _topicGuides = null;
   }
 
   // A value, not a Future, for the same reason as the hold list below.
@@ -134,6 +138,38 @@ class ContentLoader {
       return const {};
     }
   }
+
+  // A value, not a Future, for the same reason as the hold list.
+  static List<TopicGuideEntry>? _topicGuides;
+
+  /// The topic guides the gate lets through, each with its title line, in
+  /// file order. A guide shows only when its title line shows too. A missing
+  /// or broken file shows none. Never throws.
+  static Future<List<TopicGuideEntry>> loadTopicGuides() async {
+    final cached = _topicGuides;
+    if (cached != null) return cached;
+    final lines = await loadAppLines();
+    List<TopicGuide> guides;
+    try {
+      guides = TopicGuide.reviewAll(
+        await rootBundle.loadString(TopicGuide.assetPath),
+      );
+    } catch (_) {
+      guides = const [];
+    }
+    return _topicGuides = List.unmodifiable([
+      for (final g in guides)
+        if (lines[g.titleLine] case final title?) (guide: g, title: title),
+    ]);
+  }
+
+  /// The topic guides already loaded, or null before [loadTopicGuides].
+  static List<TopicGuideEntry>? get loadedTopicGuides => _topicGuides;
+
+  /// Replaces the loaded topic guides (null clears). Tests only.
+  @visibleForTesting
+  static void debugSetTopicGuides(List<TopicGuideEntry>? guides) =>
+      _topicGuides = guides;
 
   // ── Query helpers ─────────────────────────────────────────────────────────
 

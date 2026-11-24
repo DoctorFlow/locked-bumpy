@@ -14,5 +14,37 @@
     "approved_date": "",
     "where": "Urgent list (page and guide card 5): title of the last group, which holds signs whose from_week is later than the parent's current week. Never hides a sign.",
     "text": "Later in pregnancy or after birth"
+  },
+  {
+    "id": "topic_guides_title",
+    "status": "draft",
+    "approved_by": "",
+    "approved_date": "",
+    "where": "Guides screen: heading over the topic guides, under the six need guides.",
+    "text": "More guides"
+  },
+  {
+    "id": "topic_title_sick",
+    "status": "draft",
+    "approved_by": "",
+    "approved_date": "",
+    "where": "Title of the feeling sick guide (topic_guides.json guide_sick): its row on the Guides screen, its page title, and its link on the chapter for weeks 8 to 11.",
+    "text": "Feeling sick"
+  },
+  {
+    "id": "topic_title_scan",
+    "status": "draft",
+    "approved_by": "",
+    "approved_date": "",
+    "where": "Title of the mid-pregnancy scan guide (topic_guides.json guide_scan): its row on the Guides screen, its page title, and its link on the chapter for weeks 20 to 23.",
+    "text": "The mid-pregnancy scan"
+  },
+  {
+    "id": "topic_title_time",
+    "status": "draft",
+    "approved_by": "",
+    "approved_date": "",
+    "where": "Title of the signs it is time guide (topic_guides.json guide_time): its row on the Guides screen, its page title, and its link on the chapter for weeks 36 to 39.",
+    "text": "Is it time?"
   }
 ]

@@ -30,10 +30,28 @@ class GuideScreen extends StatelessWidget {
     this.urgent,
     this.urgentFromBundle = false,
     this.answerFact,
-  });
+  }) : topic = null;
+
+  /// A topic guide's page: the same cards, with no need and no costume.
+  const GuideScreen.topic({
+    super.key,
+    required this.state,
+    required TopicGuideEntry this.topic,
+    this.urgent,
+    this.urgentFromBundle = false,
+  }) : need = null,
+       guide = null,
+       answerFact = null;
 
   final AppState state;
-  final MaternalNeed need;
+
+  /// Null for a topic guide.
+  final MaternalNeed? need;
+
+  /// Set for a topic guide (then [need] and [guide] are null).
+  final TopicGuideEntry? topic;
+
+  MaternalNeed get _need => need!;
 
   /// Null when the gate hides this need's guide.
   final Guide? guide;
@@ -73,19 +91,34 @@ class GuideScreen extends StatelessWidget {
     );
   }
 
+  /// Opens a topic guide's page.
+  static Future<void> openTopic(
+    BuildContext context,
+    AppState state,
+    TopicGuideEntry topic,
+  ) => Navigator.of(context).push(
+    MaterialPageRoute<void>(
+      builder: (_) =>
+          GuideScreen.topic(state: state, topic: topic, urgentFromBundle: true),
+    ),
+  );
+
   @override
   Widget build(BuildContext context) {
     final palette = AppPalette.of(context);
     final copy = guide;
+    final shown = topic;
     return PageOnTable(
-      title: '${needWord(need)} guide',
+      title: shown != null ? shown.title.text : '${needWord(_need)} guide',
       builder: (context) => ListenableBuilder(
         listenable: state,
         builder: (context, _) => Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: copy == null
+          children: shown != null
+              ? _cards(_GuideBody.ofTopic(shown), palette)
+              : copy == null
               ? _notReady(context, palette)
-              : _cards(copy, palette),
+              : _cards(_GuideBody.of(copy), palette),
         ),
       ),
     );
@@ -95,7 +128,7 @@ class GuideScreen extends StatelessWidget {
   /// costume, and in the Everyday look Bumpy simply wears it by day.
   Widget _bumpy(AppPalette palette) => Center(
     child: BumpyAvatar(
-      need: need,
+      need: _need,
       palette: palette.copyWith(isHalloween: true) as AppPalette,
       happy: false,
       skinTone: state.skinTone,
@@ -106,22 +139,22 @@ class GuideScreen extends StatelessWidget {
     GuideCard(
       palette: palette,
       marker: null,
-      title: needWord(need),
-      costume: need.costume,
+      title: needWord(_need),
+      costume: _need.costume,
       isDraft: false,
       children: [
         _bumpy(palette),
         const SizedBox(height: AppSpace.s),
         Text(
           'This guide is still being checked. You can still add '
-          '${need.label} to your visit list.',
+          '${_need.label} to your visit list.',
           style: _body(palette),
         ),
         const SizedBox(height: AppSpace.l),
         VisitListButton(
-          onPressed: () => VisitTopics.edit(context, state, include: need),
-          saved: state.visitTopics.contains(need),
-          label: state.visitTopics.contains(need)
+          onPressed: () => VisitTopics.edit(context, state, include: _need),
+          saved: state.visitTopics.contains(_need),
+          label: state.visitTopics.contains(_need)
               ? 'On my visit list'
               : 'Add to my visit list',
         ),
@@ -129,43 +162,47 @@ class GuideScreen extends StatelessWidget {
     ),
   ];
 
-  List<Widget> _cards(Guide g, AppPalette palette) {
+  List<Widget> _cards(_GuideBody g, AppPalette palette) {
     const gap = SizedBox(height: AppSpace.l);
     final draft = g.isDraft;
+    final need = this.need;
+    final costumeLine = g.costumeLine;
     return [
       // 1. The point
       GuideCard(
         key: const ValueKey('guide-card-point'),
         palette: palette,
         marker: '1',
-        title: needWord(need),
-        costume: need.costume,
+        title: g.title ?? needWord(_need),
+        costume: need?.costume,
         isDraft: draft,
         children: [
-          _bumpy(palette),
-          const SizedBox(height: AppSpace.m),
-          Semantics(
-            label: 'Bumpy says: ${g.costumeLine}',
-            excludeSemantics: true,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Bumpy says',
-                  style: AppText.label.copyWith(color: palette.inkSoft),
-                ),
-                const SizedBox(height: AppSpace.xs),
-                Text(
-                  g.costumeLine,
-                  style: AppText.bumpyStory.copyWith(color: palette.ink),
-                ),
-              ],
+          if (need != null && costumeLine != null) ...[
+            _bumpy(palette),
+            const SizedBox(height: AppSpace.m),
+            Semantics(
+              label: 'Bumpy says: $costumeLine',
+              excludeSemantics: true,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Bumpy says',
+                    style: AppText.label.copyWith(color: palette.inkSoft),
+                  ),
+                  const SizedBox(height: AppSpace.xs),
+                  Text(
+                    costumeLine,
+                    style: AppText.bumpyStory.copyWith(color: palette.ink),
+                  ),
+                ],
+              ),
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: AppSpace.l),
-            child: Divider(height: 1, thickness: 1, color: palette.rule),
-          ),
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: AppSpace.l),
+              child: Divider(height: 1, thickness: 1, color: palette.rule),
+            ),
+          ],
           // The point in a larger reading size, not bold: calm, not shouting.
           Text(
             g.point,
@@ -232,17 +269,19 @@ class GuideScreen extends StatelessWidget {
                     padding: const EdgeInsets.only(bottom: AppSpace.m),
                     child: Row(
                       children: [
-                        ExcludeSemantics(
-                          child: Image.asset(
-                            need.iconPath,
-                            key: const ValueKey('guide-try-this-icon'),
-                            width: 28,
-                            height: 28,
-                            errorBuilder: (_, _, _) =>
-                                const SizedBox(width: 28, height: 28),
+                        if (need != null) ...[
+                          ExcludeSemantics(
+                            child: Image.asset(
+                              need.iconPath,
+                              key: const ValueKey('guide-try-this-icon'),
+                              width: 28,
+                              height: 28,
+                              errorBuilder: (_, _, _) =>
+                                  const SizedBox(width: 28, height: 28),
+                            ),
                           ),
-                        ),
-                        const SizedBox(width: AppSpace.s),
+                          const SizedBox(width: AppSpace.s),
+                        ],
                         Expanded(
                           child: Semantics(
                             header: true,
@@ -740,7 +779,9 @@ class _QuestionRow extends StatefulWidget {
   });
 
   final AppState state;
-  final MaternalNeed need;
+
+  /// Null for a question from a topic guide.
+  final MaternalNeed? need;
   final String question;
   final AppPalette palette;
 
@@ -881,4 +922,63 @@ class _QuestionRowState extends State<_QuestionRow> {
       ),
     );
   }
+}
+
+/// What the guide cards show, from a need's [Guide] or a [TopicGuide].
+class _GuideBody {
+  const _GuideBody({
+    required this.title,
+    required this.costumeLine,
+    required this.isDraft,
+    required this.lastChecked,
+    required this.point,
+    required this.ifHard,
+    required this.callToday,
+    required this.closing,
+    required this.facts,
+    required this.tryThis,
+    required this.questions,
+    required this.sources,
+  });
+
+  factory _GuideBody.of(Guide g) => _GuideBody(
+    title: null,
+    costumeLine: g.costumeLine,
+    isDraft: g.isDraft,
+    lastChecked: g.lastChecked,
+    point: g.point,
+    ifHard: g.ifHard,
+    callToday: g.callToday,
+    closing: g.closing,
+    facts: g.facts,
+    tryThis: g.tryThis,
+    questions: g.questions,
+    sources: g.sources,
+  );
+
+  /// A topic guide: its title line heads card 1, and there is no costume
+  /// line. Draft when the guide or its title is a draft.
+  factory _GuideBody.ofTopic(TopicGuideEntry t) => _GuideBody(
+    title: t.title.text,
+    costumeLine: null,
+    isDraft: t.guide.isDraft || t.title.isDraft,
+    lastChecked: t.guide.lastChecked,
+    point: t.guide.point,
+    ifHard: t.guide.ifHard,
+    callToday: t.guide.callToday,
+    closing: t.guide.closing,
+    facts: t.guide.facts,
+    tryThis: t.guide.tryThis,
+    questions: t.guide.questions,
+    sources: t.guide.sources,
+  );
+
+  /// Null for a need's guide (card 1 then shows the need's word).
+  final String? title;
+  final String? costumeLine;
+  final bool isDraft;
+  final String lastChecked, point, ifHard, callToday, closing;
+  final List<GuideFact> facts;
+  final List<String> tryThis, questions;
+  final List<GuideSource> sources;
 }

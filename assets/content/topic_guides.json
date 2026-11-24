@@ -1,0 +1,268 @@
+[
+  {
+    "id": "guide_sick",
+    "title_line": "topic_title_sick",
+    "chapter": "chapter_8",
+    "status": "draft",
+    "approved_by": "",
+    "approved_date": "",
+    "last_checked": "2026-11-24",
+    "point": "Feeling sick is very common in early pregnancy, at any time of day. Small plain meals, sips and rest may help, and your doctor or midwife can help if it gets hard.",
+    "facts": [
+      {
+        "id": "sick-f1",
+        "kind": "why",
+        "text": "Feeling sick is very common early in pregnancy, and it can come at any time of day or night.",
+        "source": "nhs-vomiting",
+        "claims": [
+          "SICK-01"
+        ]
+      },
+      {
+        "id": "sick-f2",
+        "kind": "food",
+        "text": "Small, frequent meals of dry, plain foods like crackers or potatoes may be easier to manage.",
+        "source": "medlineplus-nausea",
+        "claims": [
+          "SICK-02"
+        ]
+      },
+      {
+        "id": "sick-f3",
+        "kind": "pairing",
+        "text": "Tiredness can make feeling sick worse, so getting plenty of rest may help.",
+        "source": "nhs-vomiting",
+        "claims": [
+          "SICK-03"
+        ]
+      },
+      {
+        "id": "sick-f4",
+        "kind": "care_team",
+        "text": "If home ideas do not help, your doctor or midwife can talk with you about treatment.",
+        "source": "nhs-vomiting",
+        "claims": [
+          "SICK-04"
+        ]
+      },
+      {
+        "id": "sick-f5",
+        "kind": "good_to_know",
+        "text": "Usual pregnancy sickness does not put your baby at any greater risk.",
+        "source": "nhs-vomiting",
+        "claims": [
+          "SICK-05"
+        ]
+      },
+      {
+        "id": "sick-f6",
+        "kind": "good_to_know",
+        "text": "For most people, feeling sick eases in the middle months of pregnancy.",
+        "source": "nhs-vomiting",
+        "claims": [
+          "SICK-06"
+        ]
+      }
+    ],
+    "try_this": [
+      "Eat small, plain meals often",
+      "Keep plain crackers close by",
+      "Choose cold foods if smells bother you",
+      "Sip drinks little and often",
+      "Rest whenever you can"
+    ],
+    "if_hard": "Hard weeks of sickness are real, and you deserve help and support. If you cannot keep fluids down, open When to get help right away.",
+    "questions": [
+      "I feel sick most days. What can I try, and when is it worth calling you?",
+      "Is ginger or a wristband worth trying for me?",
+      "If home ideas stop working, what treatment could help me?"
+    ],
+    "call_today": "Call your doctor or midwife today if you are being sick and your pee is very dark, or there is blood in your vomit, even if you are not sure.",
+    "closing": "Your doctor or midwife decides what is right for you.",
+    "sources": [
+      {
+        "key": "nhs-vomiting",
+        "org": "NHS",
+        "title": "Vomiting and morning sickness",
+        "url": "https://www.nhs.uk/pregnancy/related-conditions/common-symptoms/vomiting-and-morning-sickness/"
+      },
+      {
+        "key": "medlineplus-nausea",
+        "org": "MedlinePlus (US National Library of Medicine)",
+        "title": "Nausea and vomiting during pregnancy",
+        "url": "https://medlineplus.gov/ency/article/001499.htm"
+      },
+      {
+        "key": "nhs-severe-vomiting",
+        "org": "NHS",
+        "title": "Severe vomiting in pregnancy (hyperemesis gravidarum)",
+        "url": "https://www.nhs.uk/pregnancy/related-conditions/complications/severe-vomiting/"
+      }
+    ]
+  },
+  {
+    "id": "guide_scan",
+    "title_line": "topic_title_scan",
+    "chapter": "chapter_20",
+    "status": "draft",
+    "approved_by": "",
+    "approved_date": "",
+    "last_checked": "2026-11-24",
+    "point": "The mid-pregnancy scan is a medical check of your baby's body. It is offered to you, and it is your choice.",
+    "facts": [
+      {
+        "id": "scan-f1",
+        "kind": "why",
+        "text": "The scan mainly looks at your baby's body, such as the heart, kidneys and limbs.",
+        "source": "medlineplus-second-trimester"
+      },
+      {
+        "id": "scan-f2",
+        "kind": "in_the_room",
+        "text": "A gel goes on your belly, and a small handheld tool moves over it.",
+        "source": "owh-prenatal-tests"
+      },
+      {
+        "id": "scan-f3",
+        "kind": "choice",
+        "text": "This scan is your choice, and you can talk it over with your doctor or midwife first.",
+        "source": "nhs-20-week-scan"
+      },
+      {
+        "id": "scan-f4",
+        "kind": "care_team",
+        "text": "If something needs a closer look, you will be told and may be offered more scans or tests.",
+        "source": "nhs-20-week-scan"
+      },
+      {
+        "id": "scan-f5",
+        "kind": "good_to_know",
+        "text": "The scan cannot find every condition, and some are easier to see than others.",
+        "source": "nhs-20-week-scan"
+      },
+      {
+        "id": "scan-f6",
+        "kind": "good_to_know",
+        "text": "There is no known risk to you or your baby from this scan.",
+        "source": "nhs-20-week-scan"
+      }
+    ],
+    "try_this": [
+      "Ask if someone can come with you",
+      "Decide if you want to know the sex",
+      "Ask if pictures are offered",
+      "Wear loose clothes that lift easily",
+      "Write your questions down to bring along"
+    ],
+    "if_hard": "If you feel worried before the scan, or about what it might show, you can tell your doctor or midwife. You can ask them to explain anything again.",
+    "questions": [
+      "What does my scan look at, and what can it not show?",
+      "Can someone come with me, and could I find out the sex?",
+      "If the scan shows something, who will explain it to me?"
+    ],
+    "call_today": "",
+    "closing": "Your doctor or midwife decides what is right for you.",
+    "sources": [
+      {
+        "key": "nhs-20-week-scan",
+        "org": "NHS",
+        "title": "20-week screening scan",
+        "url": "https://www.nhs.uk/pregnancy/your-pregnancy-care/20-week-scan/"
+      },
+      {
+        "key": "medlineplus-second-trimester",
+        "org": "MedlinePlus (US National Library of Medicine)",
+        "title": "Prenatal care in your second trimester",
+        "url": "https://medlineplus.gov/ency/patientinstructions/000557.htm"
+      },
+      {
+        "key": "owh-prenatal-tests",
+        "org": "US Office on Women's Health",
+        "title": "Prenatal care and tests",
+        "url": "https://www.womenshealth.gov/pregnancy/youre-pregnant-now-what/prenatal-care-and-tests"
+      }
+    ]
+  },
+  {
+    "id": "guide_time",
+    "title_line": "topic_title_time",
+    "chapter": "chapter_36",
+    "status": "draft",
+    "approved_by": "",
+    "approved_date": "",
+    "last_checked": "2026-11-24",
+    "point": "Near the end, it can be hard to tell practice tightenings from labour. Your doctor or midwife can tell you when to call and where to go.",
+    "facts": [
+      {
+        "id": "time-f1",
+        "kind": "why",
+        "text": "Signs that labour may be starting include tightenings, backache, and an urge to go to the toilet.",
+        "source": "nhs-signs-labour",
+        "claims": []
+      },
+      {
+        "id": "time-f2",
+        "kind": "good_to_know",
+        "text": "Practice tightenings can feel uncomfortable, but they are usually painless, short, and do not build up.",
+        "source": "nhs-signs-labour",
+        "claims": []
+      },
+      {
+        "id": "time-f3",
+        "kind": "good_to_know",
+        "text": "Labour contractions keep coming whatever you do, and grow stronger and closer together over time.",
+        "source": "medlineplus-am-i-in-labor",
+        "claims": []
+      },
+      {
+        "id": "time-f4",
+        "kind": "care_team",
+        "text": "If you think labour has started, call your doctor or midwife, who can tell you when to come in.",
+        "source": "nhs-signs-labour",
+        "claims": []
+      },
+      {
+        "id": "time-f5",
+        "kind": "good_to_know",
+        "text": "At the end of pregnancy, early labour can take hours or days, and you may be advised to stay home.",
+        "source": "nhs-signs-labour",
+        "claims": []
+      },
+      {
+        "id": "time-f6",
+        "kind": "good_to_know",
+        "text": "The plug of mucus at the neck of your womb can come away days before labour gets going.",
+        "source": "medlineplus-am-i-in-labor",
+        "claims": []
+      }
+    ],
+    "try_this": [
+      "Ask who to call, day or night",
+      "Save that number in your phone",
+      "Plan how you would get there",
+      "End of pregnancy, early labour: move, sip, snack"
+    ],
+    "if_hard": "If you are not sure whether it is labour, or you are worried, call your doctor or midwife. Waters breaking, bleeding and a baby moving less are on When to get help right away.",
+    "questions": [
+      "How will I know it is time to call you, and who do I call?",
+      "Once labour starts, when would you like me to come in?",
+      "Is there anything about me or my baby that changes when I call?"
+    ],
+    "call_today": "",
+    "closing": "Your doctor or midwife decides what is right for you.",
+    "sources": [
+      {
+        "key": "nhs-signs-labour",
+        "org": "NHS",
+        "title": "Signs that labour has begun",
+        "url": "https://www.nhs.uk/pregnancy/labour-and-birth/signs-of-labour/signs-that-labour-has-begun/"
+      },
+      {
+        "key": "medlineplus-am-i-in-labor",
+        "org": "MedlinePlus (US National Library of Medicine)",
+        "title": "Am I in labor?",
+        "url": "https://medlineplus.gov/ency/patientinstructions/000508.htm"
+      }
+    ]
+  }
+]

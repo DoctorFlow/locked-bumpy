@@ -96,7 +96,8 @@ class _ChapterPage extends StatelessWidget {
       state.visitQuestions,
       dueDate: state.dueDate,
     );
-    final showSuggestion = chapter.suggestedQuestion.trim().isNotEmpty &&
+    final showSuggestion =
+        chapter.suggestedQuestion.trim().isNotEmpty &&
         !state.hasVisitQuestion(chapter.suggestedQuestion);
     final bumpy = BumpyAvatar(
       need: state.costumeOverride ?? state.todayNeed,
@@ -252,6 +253,13 @@ class _ChapterPage extends StatelessWidget {
                     chapter.curiousNeed,
                     answerFact: chapter.curiousAnswerFact,
                   ),
+                ),
+                _ChapterTopicLinks(
+                  chapterId: chapter.id,
+                  state: state,
+                  palette: palette,
+                  band: band,
+                  onBand: onBand,
                 ),
               ],
             ),
@@ -1205,6 +1213,56 @@ class _AddQuestionState extends State<_AddQuestion> {
             ),
           ),
       ],
+    );
+  }
+}
+
+/// The topic guides that belong to this chapter (`chapter` in
+/// `topic_guides.json`): one more row each under the curious question,
+/// labelled with the guide's own title. Nothing when the gate shows none.
+class _ChapterTopicLinks extends StatelessWidget {
+  const _ChapterTopicLinks({
+    required this.chapterId,
+    required this.state,
+    required this.palette,
+    required this.band,
+    required this.onBand,
+  });
+
+  final String chapterId;
+  final AppState state;
+  final AppPalette palette;
+  final Color band;
+  final Color onBand;
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<List<TopicGuideEntry>>(
+      future: ContentLoader.loadTopicGuides(),
+      initialData: ContentLoader.loadedTopicGuides,
+      builder: (context, snapshot) {
+        final mine = [
+          for (final t in snapshot.data ?? const <TopicGuideEntry>[])
+            if (t.guide.chapter == chapterId) t,
+        ];
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            for (final topic in mine) ...[
+              const SizedBox(height: AppSpace.m),
+              TopicGuideRow(
+                key: ValueKey('chapter-topic-${topic.guide.id}'),
+                title: topic.title.text,
+                isDraft: topic.guide.isDraft || topic.title.isDraft,
+                palette: palette,
+                iconTile: band,
+                iconColor: onBand,
+                onTap: () => GuideScreen.openTopic(context, state, topic),
+              ),
+            ],
+          ],
+        );
+      },
     );
   }
 }
