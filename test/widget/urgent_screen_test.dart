@@ -8,6 +8,7 @@ import 'package:little_bumpy/content/content_loader.dart';
 import 'package:little_bumpy/content/urgent_loader.dart';
 import 'package:little_bumpy/core/theme/app_theme.dart';
 import 'package:little_bumpy/core/theme/palette.dart';
+import 'package:little_bumpy/core/theme/paper.dart';
 import 'package:little_bumpy/domain/models/app_state.dart';
 import 'package:little_bumpy/domain/models/guide.dart';
 import 'package:little_bumpy/domain/models/need.dart';
@@ -313,6 +314,41 @@ void main() {
       });
     }
   });
+
+  for (final halloween in [false, true]) {
+    final look = halloween ? 'Halloween' : 'Everyday';
+    testWidgets('the page has one frame, not a card in a card, and every '
+        'sign still shows in the file order ($look)', (t) async {
+      tallView(t);
+      final state = await boot(halloween: halloween);
+      final list = urgentList();
+      await t.pumpWidget(
+        MaterialApp(
+          theme: buildTheme(
+            halloween ? AppPalette.halloween : AppPalette.everyday,
+          ),
+          home: UrgentScreen(state: state, urgent: list),
+        ),
+      );
+      await t.pumpAndSettle();
+      final block = find.byKey(const ValueKey('urgent-signs'));
+      expect(block, findsOneWidget);
+      // No paper card around the ink-edged block: one frame only.
+      expect(
+        find.ancestor(of: block, matching: find.byType(PaperCard)),
+        findsNothing,
+      );
+      // Every sign shows, none hidden, in the file's order.
+      final signs = [for (final s in signTexts) find.text(s)];
+      for (final s in signs) {
+        expect(s, findsOneWidget);
+        expect(find.descendant(of: block, matching: s), findsOneWidget);
+      }
+      final tops = [for (final s in signs) top(t, s)];
+      expect(tops, orderedEquals([...tops]..sort()));
+      expect(t.takeException(), isNull);
+    });
+  }
 
   testWidgets('the page shows the fallback when the list is hidden', (t) async {
     tallView(t);

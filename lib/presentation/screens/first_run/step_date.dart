@@ -426,7 +426,9 @@ class _WeekPreviewState extends State<_WeekPreview> {
 // ── The three ways in, one under the other ────────────────────────────────
 
 /// One row per way, full width, so the longer labels fit at 320 px and grow
-/// with the text. Selected = accent fill plus a tick, never colour alone.
+/// with the text. Selected = a 2 px outline plus a tick, never
+/// colour alone, and no fill: the date button below stays the one filled
+/// pumpkin piece on the step. Screen readers hear the selected state.
 class _WayChoice extends StatelessWidget {
   const _WayChoice({
     required this.palette,
@@ -440,8 +442,23 @@ class _WayChoice extends StatelessWidget {
   final int selectedIndex;
   final ValueChanged<int> onSelect;
 
+  /// The colour of the selected outline and tick: the look's accent when it
+  /// stands out from the night sky (3:1, Halloween pumpkin), else moonlight
+  /// (the Everyday plum is too close to its sky to mark a choice).
+  static Color selectedMark(AppPalette palette) {
+    double lum(Color c) => c.computeLuminance();
+    final hi = lum(palette.accent) > lum(palette.skyTop)
+        ? lum(palette.accent)
+        : lum(palette.skyTop);
+    final lo = lum(palette.accent) > lum(palette.skyTop)
+        ? lum(palette.skyTop)
+        : lum(palette.accent);
+    return (hi + 0.05) / (lo + 0.05) >= 3 ? palette.accent : palette.moonlight;
+  }
+
   @override
   Widget build(BuildContext context) {
+    final mark = selectedMark(palette);
     return Container(
       padding: const EdgeInsets.all(AppSpace.xs),
       decoration: BoxDecoration(
@@ -452,32 +469,38 @@ class _WayChoice extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: List.generate(options.length, (i) {
           final active = i == selectedIndex;
-          final ink = active ? palette.accentText : palette.moonlight;
+          final ink = palette.moonlight;
           return Padding(
             padding: EdgeInsets.only(top: i == 0 ? 0 : AppSpace.xs),
             child: PaperChoice(
               label: options[i],
               selected: active,
               onTap: () => onSelect(i),
-              focusColor: active ? palette.accentText : palette.moonlight,
+              focusColor: palette.moonlight,
               borderRadius: AppRadii.tag,
               child: Container(
+                key: ValueKey('way-choice-$i'),
                 constraints: const BoxConstraints(minHeight: AppSpace.target),
                 alignment: Alignment.centerLeft,
+                // The 2 px border (clear when not chosen) is inside this
+                // room, so the rows keep their old size and nothing moves.
                 padding: const EdgeInsets.symmetric(
-                  vertical: AppSpace.s,
-                  horizontal: AppSpace.m,
+                  vertical: AppSpace.s - 2,
+                  horizontal: AppSpace.m - 2,
                 ),
                 decoration: BoxDecoration(
-                  color: active ? palette.accent : Colors.transparent,
                   borderRadius: AppRadii.tag,
+                  border: Border.all(
+                    color: active ? mark : Colors.transparent,
+                    width: 2,
+                  ),
                 ),
                 child: Row(
                   children: [
                     SizedBox(
                       width: 22,
                       child: active
-                          ? Icon(Icons.check_rounded, size: 18, color: ink)
+                          ? Icon(Icons.check_rounded, size: 18, color: mark)
                           : null,
                     ),
                     const SizedBox(width: AppSpace.xs),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:little_bumpy/domain/models/app_state.dart';
@@ -106,14 +107,20 @@ void main() {
 
     final strip = find.byKey(_strip);
     expect(strip, findsOneWidget);
-    // One line: the quiet label, then the words in quotes.
-    final quote = t.widget<Text>(
-      find.byKey(const ValueKey('own-words-strip-question')),
+    // The quiet label on its own line above, then the words in quotes with
+    // up to two lines; the ellipsis only past two lines.
+    final label = find.byKey(const ValueKey('own-words-strip-label'));
+    expect(t.widget<Text>(label).data, 'My question');
+    final quoteFinder = find.byKey(const ValueKey('own-words-strip-question'));
+    final quote = t.widget<Text>(quoteFinder);
+    expect(quote.data, '“$_own”');
+    expect(
+      t.getRect(label).bottom,
+      lessThanOrEqualTo(t.getRect(quoteFinder).top),
     );
-    expect(quote.textSpan!.toPlainText(), 'My question  “$_own”');
     final checkIns = find.byKey(const ValueKey('today-check-ins'));
     expect(t.getRect(strip).bottom, lessThan(t.getRect(checkIns).top));
-    expect(quote.maxLines, 1);
+    expect(quote.maxLines, 2);
     expect(quote.overflow, TextOverflow.ellipsis);
 
     final card = find.byKey(const ValueKey('visit-card'));
@@ -132,6 +139,44 @@ void main() {
     );
     await t.pumpWidget(const SizedBox());
   });
+
+  for (final halloween in [false, true]) {
+    final look = halloween ? 'Halloween' : 'Everyday';
+    for (final size in [const Size(375, 812), const Size(320, 568)]) {
+      testWidgets('a longer question shows on two lines, not cut to one, at '
+          '${size.width.toInt()} px ($look)', (t) async {
+        await _phone(t, size);
+        final state = await _start(halloween: halloween);
+        const long = 'Is it normal to feel this tired in the afternoons?';
+        await state.addVisitQuestion(long);
+        await _reopen(t);
+        final quote = find.byKey(const ValueKey('own-words-strip-question'));
+        final paragraph = t.renderObject<RenderParagraph>(quote);
+        final boxes = paragraph.getBoxesForSelection(
+          TextSelection(baseOffset: 0, extentOffset: long.length + 2),
+        );
+        final lineTops = {for (final b in boxes) b.top.round()};
+        expect(lineTops.length, 2);
+        // Nothing is cut: the whole question and its closing quote show.
+        expect(paragraph.didExceedMaxLines, isFalse);
+        expect(t.widget<Text>(quote).data, '“$long”');
+        // The label sits above, so the question has the strip's full width.
+        final label = t.getRect(
+          find.byKey(const ValueKey('own-words-strip-label')),
+        );
+        expect(label.bottom, lessThanOrEqualTo(t.getRect(quote).top));
+        expect(t.getRect(quote).left, closeTo(label.left, 0.5));
+        expect(t.takeException(), isNull);
+        // Still the one way to "Show at my visit".
+        await t.ensureVisible(find.byKey(_strip));
+        await t.pumpAndSettle();
+        await t.tap(find.byKey(_strip));
+        await t.pumpAndSettle();
+        expect(find.byType(VisitScreen), findsOneWidget);
+        await t.pumpWidget(const SizedBox());
+      });
+    }
+  }
 
   testWidgets('with that one question only, the card offers to add another', (
     t,
@@ -186,7 +231,8 @@ void main() {
       await _reopen(t);
       final tabTop = t.getRect(find.byType(AppNavBar)).top;
       final strip = t.getRect(find.byKey(_strip));
-      expect(strip.height, lessThanOrEqualTo(56));
+      // The label line plus at most two lines of the question.
+      expect(strip.height, lessThanOrEqualTo(80));
       expect(strip.bottom, lessThan(tabTop));
       final rows = state.dailyCheckIns;
       for (final need in rows.take(2)) {

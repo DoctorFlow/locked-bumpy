@@ -13,8 +13,8 @@ import '../widgets/whole_word_text.dart';
 /// One clean page to hold up at the visit: the questions in large type, then
 /// the topics as plain words. Only a close control and a quiet Edit.
 ///
-/// The plainest page in the app: flat paper, no cards, no pictures, and the
-/// largest reading type, so it can be held up across a desk.
+/// A plain page: each question on its own raised paper slip, no pictures,
+/// and the largest reading type, so it can be held up across a desk.
 class VisitScreen extends StatelessWidget {
   const VisitScreen({super.key, required this.state});
 
@@ -168,6 +168,12 @@ class VisitScreen extends StatelessWidget {
                           OutlinedButton.icon(
                             key: const ValueKey('visit-copy'),
                             onPressed: () => _copy(context),
+                            // Full width, like every main button in the app.
+                            style: OutlinedButton.styleFrom(
+                              minimumSize: const Size.fromHeight(
+                                AppSpace.target,
+                              ),
+                            ),
                             icon: const Icon(Icons.copy_outlined),
                             label: const Text('Copy my list'),
                           ),
@@ -299,22 +305,32 @@ class _ShownQuestion extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final origin = visitOriginLine(question);
+    // Each question on its own raised paper slip, the same slip as the
+    // Today visit card, 12 apart.
     return Padding(
       key: ValueKey('visit-show-${question.text}'),
-      padding: const EdgeInsets.only(bottom: AppSpace.l),
-      child: MergeSemantics(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(question.text, style: style),
-            if (origin != null) ...[
-              const SizedBox(height: AppSpace.xs),
-              Text(
-                origin,
-                style: AppText.body.copyWith(color: palette.inkSoft),
-              ),
-            ],
-          ],
+      padding: const EdgeInsets.only(bottom: AppSpace.m),
+      child: SizedBox(
+        width: double.infinity,
+        child: PaperCard(
+          key: ValueKey('visit-show-card-${question.text}'),
+          raised: true,
+          padding: const EdgeInsets.all(AppSpace.l),
+          child: MergeSemantics(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(question.text, style: style),
+                if (origin != null) ...[
+                  const SizedBox(height: AppSpace.xs),
+                  Text(
+                    origin,
+                    style: AppText.body.copyWith(color: palette.inkSoft),
+                  ),
+                ],
+              ],
+            ),
+          ),
         ),
       ),
     );
