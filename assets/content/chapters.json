@@ -1,0 +1,92 @@
+[
+  {
+    "id": "chapter_12",
+    "from_week": 12,
+    "to_week": 15,
+    "status": "draft",
+    "approved_by": "",
+    "approved_date": "",
+    "title": "Tuning in",
+    "accent": "#D4684F",
+    "illustration": "chapter-12",
+    "art_brief": "Bumpy curled up holding one end of a paper tin-can telephone, its string looping out of the picture toward a few folded paper music notes, under a pale paper sky by day and a deep blue sky with paper stars by night.",
+    "bumpy_line": "Hello out there! My ears are getting ready. Hum me something, any tune at all.",
+    "know": {
+      "text": "Around the end of this stretch, your baby starts to hear. In time they may pick up your heartbeat, the gurgles of your tummy and the voices close by.",
+      "source_org": "NHS",
+      "source_title": "15 weeks pregnant guide - Best Start in Life - NHS",
+      "url": "https://www.nhs.uk/best-start-in-life/pregnancy/week-by-week-guide-to-pregnancy/2nd-trimester/week-15/"
+    },
+    "ready": {
+      "text": "Choose a song, rhyme or short story you like and keep it handy to share with your bump. Anyone close to you can join in. No voice is too off-key.",
+      "suggested_question": "What will happen at my next visit, and how can I reach you between visits if I have a question?"
+    },
+    "look_forward": {
+      "text": "Around now, some parents give their bump a nickname, and it can start to feel like a little someone. Bumpy thinks nicknames are a wonderful idea."
+    },
+    "curious": {
+      "question": "What is my baby's brain busy building right now?",
+      "need": "BRAIN"
+    }
+  },
+  {
+    "id": "chapter_20",
+    "from_week": 20,
+    "to_week": 23,
+    "status": "draft",
+    "approved_by": "",
+    "approved_date": "",
+    "title": "Middle of the map",
+    "accent": "#B98016",
+    "illustration": "chapter-20",
+    "art_brief": "Bumpy sitting right at the centre fold of an open paper map, beside a tiny paper flag on a dotted path that runs from one edge of the map to the other, under a paper sun by day and a paper moon by night.",
+    "bumpy_line": "Look at us, right in the middle of the map! I'm busy wiggling, napping and listening for you.",
+    "know": {
+      "text": "Around now, your baby moves around a lot and is settling into waking and sleeping times of their own. Their busy times may not match yours, and that is common.",
+      "source_org": "NHS",
+      "source_title": "21 weeks pregnant guide - Best Start in Life - NHS",
+      "url": "https://www.nhs.uk/best-start-in-life/pregnancy/week-by-week-guide-to-pregnancy/2nd-trimester/week-21/"
+    },
+    "ready": {
+      "text": "Make a little rest corner: a cushion, a blanket, a glass of water and something to read. Somewhere to put your feet up for a moment.",
+      "suggested_question": "When might I start feeling my baby move, and who do I call if I'm ever unsure?"
+    },
+    "look_forward": {
+      "text": "Many parents first feel their baby move somewhere in this stretch, often like a soft flutter or bubble. In a first pregnancy it can come a little later."
+    },
+    "curious": {
+      "question": "Why does my baby seem wide awake just when I want to sleep?",
+      "need": "REST"
+    }
+  },
+  {
+    "id": "chapter_32",
+    "from_week": 32,
+    "to_week": 35,
+    "status": "draft",
+    "approved_by": "",
+    "approved_date": "",
+    "title": "Making the nest",
+    "accent": "#C8607C",
+    "illustration": "chapter-32",
+    "art_brief": "Bumpy tucked into a round cut-paper bird's nest lined with paper leaves and a tiny folded paper blanket, resting on a paper branch, with a pale sky by day and a paper crescent moon and small glowing paper lantern by night.",
+    "bumpy_line": "Getting snug in here! Tell me about home. Is it noisy, cozy, full of plants? I'm curious.",
+    "know": {
+      "text": "Your baby keeps moving right up to and during labour. If their usual pattern of movements ever changes, call your midwife, doctor or maternity unit straight away, even at night.",
+      "source_org": "NHS",
+      "source_title": "Your baby's movements",
+      "url": "https://www.nhs.uk/pregnancy/keeping-well/your-babys-movements/"
+    },
+    "ready": {
+      "text": "Save the numbers for your doctor or midwife and your birth unit in your phone, and share them with someone close. Easy to find, any hour.",
+      "suggested_question": "Where do I go, and who do I call, when labour starts or if something feels different?"
+    },
+    "look_forward": {
+      "text": "Many parents start to picture the first hello around now. Daydream about it as much or as little as you like. Bumpy is daydreaming too."
+    },
+    "curious": {
+      "question": "Are my baby's bones still getting stronger right now?",
+      "need": "BONES"
+    }
+  }
+]
