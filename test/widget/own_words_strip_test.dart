@@ -286,4 +286,55 @@ void main() {
     });
 
   }
+
+  testWidgets('the visit sheet groups the questions under the show view\'s '
+      'two headings, keeps the origin lines and shows topics as chips', (
+    t,
+  ) async {
+    await _phone(t, const Size(375, 812));
+    final state = await _start();
+    await state.addVisitQuestion(_picked, need: MaternalNeed.iron);
+    await state.addVisitQuestion(_own);
+    await state.saveVisitTopics({MaternalNeed.rest});
+    await _reopen(t);
+    await t.tap(find.byKey(_strip));
+    await t.pumpAndSettle();
+    await t.tap(find.text('Edit'));
+    await t.pumpAndSettle();
+    final sheet = find.byType(BottomSheet);
+    Finder inSheet(Finder f) => find.descendant(of: sheet, matching: f);
+    final order = [
+      inSheet(find.text(VisitScreen.ownWordsHeading)),
+      inSheet(find.text(_own)),
+      inSheet(find.text(VisitScreen.pickedHeading)),
+      inSheet(find.text(_picked)),
+      inSheet(find.text('From the iron guide · 23 Nov')),
+      inSheet(find.text('Topics')),
+    ];
+    for (var i = 0; i < order.length; i++) {
+      expect(order[i], findsOneWidget, reason: '$i');
+      if (i > 0) {
+        expect(
+          t.getTopLeft(order[i]).dy,
+          greaterThan(t.getTopLeft(order[i - 1]).dy),
+          reason: '$i',
+        );
+      }
+    }
+    expect(find.byType(CheckboxListTile), findsNothing);
+    final rest = find.byKey(const ValueKey('visit-topic-rest'));
+    await t.ensureVisible(rest);
+    await t.pumpAndSettle();
+    expect(t.widget<FilterChip>(rest).selected, isTrue);
+    expect(t.getSize(rest).height, greaterThanOrEqualTo(48));
+    await t.tap(find.byKey(const ValueKey('visit-topic-water')));
+    await t.pumpAndSettle();
+    expect(
+      t
+          .widget<FilterChip>(find.byKey(const ValueKey('visit-topic-water')))
+          .selected,
+      isTrue,
+    );
+    await t.pumpWidget(const SizedBox());
+  });
 }
