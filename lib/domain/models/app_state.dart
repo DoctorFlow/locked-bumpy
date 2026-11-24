@@ -19,6 +19,14 @@ class AppState extends ChangeNotifier {
       _nickname = _prefs.nickname {
     _day = _now();
     _completedCheckIns = _prefs.loadTodayCheckIns(_day);
+    _savedPaused = _isPaused;
+    // Interrupted Erase: some data may already be gone. Fail closed — stay
+    // hidden, never show First Run over leftovers, and offer a retry.
+    if (_prefs.eraseInProgress) {
+      _erasePending = true;
+      _eraseFailed = true;
+      _isPaused = true;
+    }
   }
 
   final PrefsService _prefs;
@@ -29,7 +37,10 @@ class AppState extends ChangeNotifier {
   DateTime? _dueDate;
   DateTime? _originalDueDate;
   DateTime? get dueDate => _dueDate;
-  bool get isFirstRun => _dueDate == null;
+
+  /// Never true while an Erase is unfinished on disk: leftover data must not
+  /// sit behind a fresh setup.
+  bool get isFirstRun => _dueDate == null && !_erasePending;
 
   Future<void> saveDueDate(DateTime date) async {
     refreshDay();
@@ -102,15 +113,56 @@ class AppState extends ChangeNotifier {
   }
 
   // ── Pause ────────────────────────────────────────────────────────────────
+  //
+  // The screen hides first; storage follows. Writes are queued in order by
+  // PrefsService, so a stale write cannot land after a newer one. A failed
+  // write never un-hides anything: the app stays paused in memory and the
+  // write is retried by [savePendingPause] (app lifecycle) or the next action.
 
   bool _isPaused;
   bool get isPaused => _isPaused;
 
-  Future<void> togglePause() async {
-    _isPaused = !_isPaused;
-    if (!_isPaused) refreshDay();
+  /// What storage last confirmed for the pause flag; null when unknown.
+  bool? _savedPaused;
+
+  /// True while the on-device pause flag may not match the screen.
+  bool get pauseSavePending => _savedPaused != _isPaused;
+
+  /// Idempotent: a double tap cannot flip Pause back off.
+  Future<void> pause() async {
+    // Erase already shows Pause and owns the pause key until it settles.
+    if (_erasing != null) return;
+    if (!_isPaused) {
+      _isPaused = true;
+      notifyListeners();
+    }
+    await _savePause();
+  }
+
+  /// Idempotent, and ignored while an Erase is running or unfinished on disk
+  /// (data may be half removed; the only way out is to finish Erase).
+  Future<void> resume() async {
+    if (!_isPaused || _erasing != null || _erasePending) return;
+    _isPaused = false;
+    _eraseFailed = false;
+    refreshDay();
     notifyListeners();
-    await _prefs.saveIsPaused(_isPaused);
+    await _savePause();
+  }
+
+  /// Kept for tests and older callers; UI uses [pause] and [resume].
+  Future<void> togglePause() => _isPaused ? resume() : pause();
+
+  /// Retries a pause write that failed earlier. Safe to call any time.
+  Future<void> savePendingPause() async {
+    if (_erasing == null && pauseSavePending) await _savePause();
+  }
+
+  Future<void> _savePause() async {
+    final target = _isPaused;
+    final ok = await _prefs.saveIsPaused(target);
+    // Writes complete in request order, so this is the latest confirmed one.
+    _savedPaused = ok ? target : null;
   }
 
   // ── Tab ──────────────────────────────────────────────────────────────────
@@ -195,18 +247,64 @@ class AppState extends ChangeNotifier {
 
   /// Clears today's check-ins and unpauses. Used by Start Fresh.
   Future<void> clearTodayCheckIns() async {
+    if (_erasing != null || _erasePending) return;
     _day = _now();
     _completedCheckIns = {};
     _costumeOverride = null;
     _isPaused = false;
+    _eraseFailed = false;
     _currentTab = 0;
     notifyListeners();
+    // Queue the pause write now, not after the check-in write: a Pause tapped
+    // in between must be queued after this one, so it wins on disk.
+    final pauseSaved = _savePause();
     await _prefs.saveTodayCheckIns(_day, {});
-    await _prefs.saveIsPaused(false);
+    await pauseSaved;
   }
 
-  /// Wipes all data and returns the app to First Run. Used by Erase.
-  Future<void> eraseAll() async {
+  // ── Erase ────────────────────────────────────────────────────────────────
+
+  Future<bool>? _erasing;
+  bool _eraseFailed = false;
+  bool _erasePending = false;
+
+  /// True when the last Erase could not confirm every removal. The app stays
+  /// paused and Erase can be tried again.
+  bool get eraseFailed => _eraseFailed;
+
+  /// True when an Erase began on disk (marker persisted) and is not confirmed
+  /// finished. Resume and Start Fresh are refused; only Erase retry proceeds.
+  bool get erasePending => _erasePending;
+
+  /// Wipes Little Bumpy's data and returns to First Run. Used by Erase.
+  ///
+  /// The screen is hidden at once (paused). First Run is shown only after
+  /// storage confirms every removal; otherwise this returns false, the app
+  /// stays paused with data intact in memory, and Erase can be retried.
+  /// A second call while one is running joins it.
+  Future<bool> eraseAll() => _erasing ??= _erase().whenComplete(() {
+    _erasing = null;
+  });
+
+  Future<bool> _erase() async {
+    _eraseFailed = false;
+    _isPaused = true;
+    _costumeOverride = null;
+    notifyListeners();
+    // Queued after any earlier pause writes, so none of them can land later.
+    final ok = await _prefs.clearAll();
+    if (!ok) {
+      _eraseFailed = true;
+      // Reflects disk after reload: false only if the marker never landed,
+      // which also means nothing was deleted and Resume is safe.
+      _erasePending = _prefs.eraseInProgress;
+      // Storage state is unknown now; record pause so a restart stays hidden.
+      _savedPaused = null;
+      notifyListeners();
+      await _savePause();
+      return false;
+    }
+    _erasePending = false;
     _dueDate = null;
     _originalDueDate = null;
     _visitRevision++;
@@ -215,11 +313,11 @@ class AppState extends ChangeNotifier {
     _isHalloween = true;
     _skinTone = SkinTone.peach;
     _isPaused = false;
+    _savedPaused = false; // no key stored means not paused
     _currentTab = 0;
     _completedCheckIns = {};
-    _costumeOverride = null;
     notifyListeners();
-    await _prefs.clearAll();
+    return true;
   }
 
   // ── Factory ───────────────────────────────────────────────────────────────
@@ -228,4 +326,10 @@ class AppState extends ChangeNotifier {
     final prefs = await PrefsService.create();
     return AppState._(prefs, now);
   }
+
+  @visibleForTesting
+  static AppState withPrefs(
+    PrefsService prefs, {
+    DateTime Function() now = DateTime.now,
+  }) => AppState._(prefs, now);
 }

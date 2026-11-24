@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../constants/app_constants.dart';
 import '../../domain/models/need.dart';
@@ -10,11 +11,38 @@ import '../../domain/models/need_rotation.dart';
 class PrefsService {
   PrefsService._(this._prefs);
 
+  /// Lets tests wrap a store that fails or stalls on purpose.
+  @visibleForTesting
+  PrefsService.wrap(SharedPreferences prefs) : this._(prefs);
+
   final SharedPreferences _prefs;
 
   static Future<PrefsService> create() async {
     final prefs = await SharedPreferences.getInstance();
     return PrefsService._(prefs);
+  }
+
+  // ── Privacy writes ───────────────────────────────────────────────────────
+  //
+  // Pause and Erase writes run one at a time, in the order they were asked
+  // for, so an older write can never land after a newer one. Each reports
+  // success instead of throwing: a failed platform write still updates the
+  // in-memory cache, so callers must trust the returned bool, not a read-back.
+
+  Future<void> _privacyTail = Future<void>.value();
+
+  Future<bool> _privacyWrite(Future<bool> Function() op) {
+    final result = _privacyTail.then((_) => _attempt(op));
+    _privacyTail = result;
+    return result;
+  }
+
+  static Future<bool> _attempt(Future<bool> Function() op) async {
+    try {
+      return await op();
+    } catch (_) {
+      return false;
+    }
   }
 
   // ── Due date ─────────────────────────────────────────────────────────────
@@ -53,8 +81,9 @@ class PrefsService {
 
   bool get isPaused => _prefs.getBool(AppConstants.prefsIsPausedKey) ?? false;
 
-  Future<void> saveIsPaused(bool value) =>
-      _prefs.setBool(AppConstants.prefsIsPausedKey, value);
+  /// Queued behind earlier Pause/Erase writes. True only if storage confirmed.
+  Future<bool> saveIsPaused(bool value) =>
+      _privacyWrite(() => _prefs.setBool(AppConstants.prefsIsPausedKey, value));
 
   Set<MaternalNeed> get visitTopics {
     final saved = _prefs.getStringList(AppConstants.prefsVisitTopicsKey) ?? [];
@@ -117,25 +146,74 @@ class PrefsService {
 
   // ── Nuclear erase ────────────────────────────────────────────────────────
 
-  /// Clears Little Bumpy's current and legacy keys on this device.
-  Future<void> clearAll() async {
-    const ownedKeys = [
-      AppConstants.prefsDueDateKey,
-      AppConstants.prefsVisitTopicsKey,
-      AppConstants.prefsCorrectedDueDateKey,
-      AppConstants.prefsSkinToneKey,
-      AppConstants.prefsIsHalloweenKey,
-      AppConstants.prefsIsPausedKey,
-      AppConstants.prefsNicknameKey,
-      AppConstants.prefsDailyNeedsKey,
-      AppConstants.prefsCheckInDateKey,
-      AppConstants.prefsCheckInIdsKey,
-    ];
-    await Future.wait([
-      for (final key in ownedKeys)
-        if (_prefs.containsKey(key)) _prefs.remove(key),
-    ]);
+  static const _ownedKeys = [
+    AppConstants.prefsVisitTopicsKey,
+    AppConstants.prefsDueDateKey,
+    AppConstants.prefsCorrectedDueDateKey,
+    AppConstants.prefsSkinToneKey,
+    AppConstants.prefsIsHalloweenKey,
+    AppConstants.prefsIsPausedKey,
+    AppConstants.prefsNicknameKey,
+    AppConstants.prefsDailyNeedsKey,
+    AppConstants.prefsCheckInDateKey,
+    AppConstants.prefsCheckInIdsKey,
+  ];
+
+  /// Set when a reload failed, so the cache can't be trusted to show whether
+  /// the erase marker is on disk. Fails closed: treated as marker present.
+  bool _diskUnknown = false;
+
+  /// True when an Erase started and has not been confirmed finished on disk
+  /// (or disk state is unknown). The app must stay hidden and offer retry.
+  bool get eraseInProgress =>
+      _diskUnknown ||
+      (_prefs.getBool(AppConstants.prefsEraseInProgressKey) ?? false);
+
+  /// Replaces the cache with what is actually stored. The legacy plugin
+  /// mutates its cache before the platform write succeeds, so only a reload
+  /// tells us what is on disk.
+  Future<bool> _reloadFromDisk() async {
+    try {
+      await _prefs.reload();
+      _diskUnknown = false;
+      return true;
+    } catch (_) {
+      _diskUnknown = true;
+      return false;
+    }
   }
+
+  bool _anyOwnedKeyStored() => _ownedKeys.any(_prefs.containsKey);
+
+  /// Clears Little Bumpy's current and legacy keys on this device, leaving any
+  /// other keys alone. Returns true only if storage, re-read after the
+  /// removals, holds no owned key and no erase marker.
+  ///
+  /// 1. Persist the erase marker. If that fails, nothing is deleted.
+  /// 2. Remove every owned key unconditionally (a failed removal already
+  ///    looks gone in the cache, so a `containsKey` filter would skip it).
+  /// 3. Reload from disk and verify every owned key is gone.
+  /// 4. Only then remove the marker, and reload to confirm it is gone.
+  /// A crash or failure anywhere leaves the marker, so the next start fails
+  /// closed instead of showing a fresh setup over leftover data.
+  Future<bool> clearAll() => _privacyWrite(() async {
+    final marked = await _attempt(
+      () => _prefs.setBool(AppConstants.prefsEraseInProgressKey, true),
+    );
+    if (!marked) {
+      await _reloadFromDisk(); // learn whether the marker landed anyway
+      return false;
+    }
+    await Future.wait([
+      for (final key in _ownedKeys) _attempt(() => _prefs.remove(key)),
+    ]);
+    if (!await _reloadFromDisk() || _anyOwnedKeyStored()) return false;
+
+    await _attempt(() => _prefs.remove(AppConstants.prefsEraseInProgressKey));
+    if (!await _reloadFromDisk()) return false;
+    return !_prefs.containsKey(AppConstants.prefsEraseInProgressKey) &&
+        !_anyOwnedKeyStored();
+  });
 
   // ── Helpers ───────────────────────────────────────────────────────────────
 

@@ -89,7 +89,7 @@ class TopBar extends StatelessWidget implements PreferredSizeWidget {
                     Icons.pause_circle_outline,
                     color: palette.moonlightSoft,
                   ),
-                  onPressed: state.togglePause,
+                  onPressed: state.pause,
                   tooltip: 'Pause',
                 ),
               ),

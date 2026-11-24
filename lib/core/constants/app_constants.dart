@@ -26,6 +26,10 @@ class AppConstants {
   static const String prefsCheckInIdsKey = 'checkin_ids';
   static const String prefsDailyNeedsKey = 'daily_needs_v2';
 
+  /// Written before Erase deletes anything; removed only after every owned
+  /// key is confirmed gone on disk. Present at startup = interrupted Erase.
+  static const String prefsEraseInProgressKey = 'erase_in_progress';
+
   // ── Gestational bounds ──────────────────────────────────────────────────
   static const int minWeek = 4;
   static const int maxWeek = 42;

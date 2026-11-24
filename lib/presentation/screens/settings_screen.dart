@@ -92,7 +92,7 @@ class SettingsScreen extends StatelessWidget {
                     Tooltip(
                       message: 'Pause',
                       child: TextButton.icon(
-                        onPressed: state.togglePause,
+                        onPressed: state.pause,
                         style: TextButton.styleFrom(
                           foregroundColor: palette.moonlight,
                         ),

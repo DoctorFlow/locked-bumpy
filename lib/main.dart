@@ -61,6 +61,8 @@ class _LittleBumpyAppState extends State<LittleBumpyApp>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
+    // Retry a pause write that failed, before the app can be closed.
+    widget.state.savePendingPause();
     if (state == AppLifecycleState.resumed) {
       widget.state.refreshDay();
       _scheduleMidnight();

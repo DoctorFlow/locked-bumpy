@@ -54,13 +54,54 @@ class PausedScreen extends StatelessWidget {
                   ),
                   textAlign: TextAlign.center,
                 ),
+                if (state.eraseFailed) ...[
+                  const SizedBox(height: 16),
+                  Text(
+                    state.erasePending
+                        ? "Erase didn't finish. Some of your data may "
+                              'already be removed, so the app stays paused '
+                              'until Erase finishes.'
+                        : "Erase didn't finish, so your data is still on "
+                              'this device. Please try Erase again.',
+                    style: TextStyle(
+                      fontSize: 14,
+                      height: 1.4,
+                      color: palette.moonlight,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 16),
+                  // Already confirmed once; retry goes straight to Erase.
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: state.eraseAll,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppPalette.eraseAccent,
+                        foregroundColor: AppPalette.eraseInk,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        minimumSize: const Size(double.infinity, 48),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                      ),
+                      child: const Text(
+                        'Try Erase again',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
                 const SizedBox(height: 36),
 
-                // Resume
+                // Resume (disabled while an Erase is unfinished on disk)
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: state.togglePause,
+                    onPressed: state.erasePending ? null : state.resume,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: palette.accent,
                       foregroundColor: palette.accentText,
@@ -85,7 +126,9 @@ class PausedScreen extends StatelessWidget {
                 SizedBox(
                   width: double.infinity,
                   child: OutlinedButton(
-                    onPressed: () => confirmStartFresh(context, state),
+                    onPressed: state.erasePending
+                        ? null
+                        : () => confirmStartFresh(context, state),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: palette.moonlightSoft,
                       side: BorderSide(
