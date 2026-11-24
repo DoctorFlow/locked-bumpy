@@ -29,6 +29,7 @@ class _TodayScreenState extends State<TodayScreen>
   List<ContentRecord>? _records;
 
   bool _hopping = false;
+  DateTime? _reviewingDay;
 
   @override
   void initState() {
@@ -124,6 +125,7 @@ class _TodayScreenState extends State<TodayScreen>
     final needTicked = state.isChecked(need.name);
     final allDone = state.allChecked;
     final checkIns = state.dailyCheckIns;
+    final reviewing = DateUtils.isSameDay(_reviewingDay, state.today);
     final babyLine = _babyLine(need, needTicked, allDone, palette);
 
     return LayoutBuilder(
@@ -221,54 +223,71 @@ class _TodayScreenState extends State<TodayScreen>
         final checkInsPanel = Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Semantics(
-              header: true,
-              child: Text(
-                "Today's check-ins",
-                style: TextStyle(
-                  fontSize: 17,
-                  fontWeight: FontWeight.bold,
-                  color: palette.moonlight,
+            if (allDone && !reviewing)
+              _SavedCheckIns(
+                needs: checkIns,
+                palette: palette,
+                onReview: () => setState(() => _reviewingDay = state.today),
+                onWeek: () => state.setTab(1),
+              )
+            else
+              Semantics(
+                header: true,
+                child: Text(
+                  allDone ? 'Saved check-ins' : "Today's check-ins",
+                  style: TextStyle(
+                    fontSize: 17,
+                    fontWeight: FontWeight.bold,
+                    color: palette.moonlight,
+                  ),
                 ),
               ),
-            ),
-            if (state.completedCheckIns.isEmpty) ...[
+            if (state.completedCheckIns.isEmpty || (allDone && reviewing)) ...[
               const SizedBox(height: 3),
               Text(
-                'Tap a row when you’ve done it.',
+                allDone
+                    ? 'Tap a checked row to undo it.'
+                    : 'Tap a row when you’ve done it.',
                 style: TextStyle(color: palette.moonlightSoft, fontSize: 14),
               ),
             ],
             const SizedBox(height: 10),
-            Material(
-              color: palette.paperRaised,
-              borderRadius: BorderRadius.circular(18),
-              clipBehavior: Clip.antiAlias,
-              child: Column(
-                children: [
-                  for (final item in checkIns) ...[
-                    if (item != checkIns.first)
-                      Divider(
-                        height: 1,
-                        indent: 56,
-                        endIndent: 16,
-                        color: palette.inkSoft.withValues(alpha: .22),
+            if (!allDone || reviewing)
+              Material(
+                color: palette.paperRaised,
+                borderRadius: BorderRadius.circular(18),
+                clipBehavior: Clip.antiAlias,
+                child: Column(
+                  children: [
+                    for (final item in checkIns) ...[
+                      if (item != checkIns.first)
+                        Divider(
+                          height: 1,
+                          indent: 56,
+                          endIndent: 16,
+                          color: palette.inkSoft.withValues(alpha: .22),
+                        ),
+                      _CheckInTile(
+                        key: ValueKey(item),
+                        title: item == need
+                            ? '${need.needName} · Need of the Day'
+                            : item.label,
+                        subtitle: item.foodHint,
+                        need: item,
+                        isTicked: state.isChecked(item.name),
+                        palette: palette,
+                        onTap: () => _onCheckIn(item.name),
                       ),
-                    _CheckInTile(
-                      key: ValueKey(item),
-                      title: item == need
-                          ? '${need.needName} · Need of the Day'
-                          : item.label,
-                      subtitle: item.foodHint,
-                      need: item,
-                      isTicked: state.isChecked(item.name),
-                      palette: palette,
-                      onTap: () => _onCheckIn(item.name),
-                    ),
+                    ],
                   ],
-                ],
+                ),
               ),
-            ),
+            if (allDone && reviewing)
+              TextButton(
+                style: TextButton.styleFrom(foregroundColor: palette.moonlight),
+                onPressed: () => setState(() => _reviewingDay = null),
+                child: const Text('Back to summary'),
+              ),
             const SizedBox(height: 8),
             Text(
               state.daysTogetherCount == 1
@@ -311,6 +330,83 @@ class _TodayScreenState extends State<TodayScreen>
           ),
         );
       },
+    );
+  }
+}
+
+class _SavedCheckIns extends StatelessWidget {
+  const _SavedCheckIns({
+    required this.needs,
+    required this.palette,
+    required this.onReview,
+    required this.onWeek,
+  });
+  final List<MaternalNeed> needs;
+  final AppPalette palette;
+  final VoidCallback onReview;
+  final VoidCallback onWeek;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: palette.paperRaised,
+      borderRadius: BorderRadius.circular(18),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Wrap(
+              spacing: 6,
+              children: [
+                for (final need in needs)
+                  Image.asset(
+                    need.iconPath,
+                    height: 26,
+                    width: 26,
+                    excludeFromSemantics: true,
+                  ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Semantics(
+              header: true,
+              child: Text(
+                'Today’s check-ins are saved',
+                style: TextStyle(
+                  color: palette.ink,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            const SizedBox(height: 3),
+            Text(
+              needs.map((need) => need.label).join(' · '),
+              style: TextStyle(color: palette.inkSoft, fontSize: 14),
+            ),
+            const SizedBox(height: 10),
+            OutlinedButton.icon(
+              style: OutlinedButton.styleFrom(
+                foregroundColor: palette.ink,
+                side: BorderSide(color: palette.inkSoft),
+                minimumSize: const Size.fromHeight(48),
+              ),
+              onPressed: onWeek,
+              icon: const Icon(Icons.menu_book_outlined, size: 18),
+              label: const Text(
+                'Open this week’s card',
+                textAlign: TextAlign.center,
+              ),
+            ),
+            TextButton(
+              style: TextButton.styleFrom(foregroundColor: palette.ink),
+              onPressed: onReview,
+              child: const Text('Review saved check-ins'),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

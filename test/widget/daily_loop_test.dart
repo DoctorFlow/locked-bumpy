@@ -26,6 +26,38 @@ void main() {
     await tester.pumpWidget(const SizedBox());
   });
 
+  testWidgets(
+    'a finished day reopens quietly, links to this week, and allows a correction',
+    (t) async {
+      SharedPreferences.setMockInitialValues({'due_date_iso': '2027-05-10'});
+      final date = DateTime(2026, 11, 23);
+      final opening = await AppState.load(now: () => date);
+      for (final need in opening.dailyCheckIns) {
+        await opening.toggleCheckIn(need.name);
+      }
+      final restored = await AppState.load(now: () => date);
+      await t.pumpWidget(LittleBumpyApp(state: restored));
+      await t.pumpAndSettle();
+      Future<void> tap(Finder f) async {
+        await t.ensureVisible(f);
+        await t.tap(f);
+        await t.pumpAndSettle();
+      }
+
+      expect(find.text("That's us for today."), findsOneWidget);
+      expect(find.byKey(ValueKey(restored.todayNeed)), findsNothing);
+      await tap(find.text('Open this week’s card'));
+      expect(find.text('You are here'), findsOneWidget);
+      await tap(find.text('Today'));
+      await tap(find.text('Review saved check-ins'));
+      await tap(find.byKey(ValueKey(restored.todayNeed)));
+      expect(find.text('Today’s check-ins are saved'), findsNothing);
+      expect(restored.completedCheckIns.length, 2);
+      expect(find.byKey(ValueKey(restored.todayNeed)), findsOneWidget);
+      await t.pumpWidget(const SizedBox());
+    },
+  );
+
   for (final day in List.generate(6, (i) => DateTime(2026, 11, 23 + i))) {
     testWidgets('three distinct check-ins and one goodbye on ${day.day} Nov', (
       tester,
