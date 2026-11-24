@@ -82,9 +82,13 @@ def tap_first(labels, find=False):
     return ("tap_first", tuple(labels), find)
 
 
-def reveal(label):
-    """Scroll down until `label` is on screen, without tapping it."""
-    return ("reveal", label)
+def reveal(label, at=0.3):
+    """Scroll until `label`'s top sits near `at` of the screen height (0 top,
+    1 bottom), without tapping it. Pick `at` so the card around the label is
+    in the photograph: a button at a card's foot wants a larger `at`. The
+    label must be its own semantics node (a button, a header with its own
+    node); plain text inside a card is not."""
+    return ("reveal", label, at)
 
 
 def expect(label):
@@ -174,6 +178,15 @@ def first_run_steps(prefix, look_label=None):
     ]
 
 
+def first_run_until(name, step):
+    """A fresh install played up to first-run step `step` (3 nickname,
+    4 look, 5 needs) with no shots on the way; the one shot is `name`."""
+    steps = first_run_steps("x")
+    end = next(i for i, st in enumerate(steps) if st[0] == "shot" and st[1].startswith(f"x-{step}-"))
+    return S(name, {"fresh_install": True}, [st for st in steps[:end] if st[0] != "shot"],
+             looks=["halloween"], note="a brand-new install has no saved look; shot once")
+
+
 SCENARIOS = [
     # The screens the camera always took.
     S("welcome", {"setup": False}),
@@ -217,7 +230,7 @@ SCENARIOS = [
     # the parent's own question and a "Show at my visit" button; show page
     # with Close and Edit).
     S("today-question", {"visit_topics": VISIT_WITH_QUESTIONS}, [
-        reveal("Show at my visit"), wait(300),
+        reveal("Show at my visit", at=0.62), wait(300),
     ], note="from lane-visit.md"),
     S("visit-show", {"visit_topics": VISIT_WITH_QUESTIONS}, [
         tap("Show at my visit", "button", find=True), wait(500), shot("visit-show"),
@@ -226,7 +239,7 @@ SCENARIOS = [
     S("visit-edit", {"visit_topics": VISIT_WITH_QUESTIONS}, [
         tap("Show at my visit", "button", find=True), wait(500), tap("Edit", "button"), wait(500),
     ], note="from lane-visit.md"),
-    S("visit-invite", {}, [reveal("A question for your doctor or midwife")],
+    S("visit-invite", {}, [reveal("A question for your doctor or midwife", at=0.45)],
       note="from lane-visit.md: empty list shows one quiet line"),
     # First run: brand-new install, from roles/lane-firstrun.md (five steps).
     # No look is saved yet, so it runs once; first-run-everyday picks the
@@ -235,6 +248,10 @@ SCENARIOS = [
       looks=["halloween"], note="a brand-new install has no saved look; shot once"),
     S("first-run-everyday", {"fresh_install": True}, first_run_steps("first-run-ev", "Everyday"),
       shot=None, looks=["halloween"], note="a brand-new install has no saved look; shot once"),
+    # One first-run step each, so --only can ask for just that screen.
+    first_run_until("first-run-step3", 3),
+    first_run_until("first-run-step4", 4),
+    first_run_until("first-run-step5", 5),
 ]
 
 # Three key moments for sheet__journey.png: first existing shot name of each.
@@ -415,8 +432,12 @@ async def drag_scroll(page, vw, vh, px):
     """Scroll by dragging a finger up the middle of the screen (Flutter
     reads raw pointer events), then fall back to a mouse wheel."""
     x = vw / 2
-    y0 = vh * 0.78
-    y1 = max(vh * 0.78 - px, vh * 0.08)
+    if px >= 0:
+        y0 = vh * 0.78
+        y1 = max(vh * 0.78 - px, vh * 0.08)
+    else:  # a negative px drags down: the page scrolls back up
+        y0 = vh * 0.20
+        y1 = min(vh * 0.20 - px, vh * 0.90)
     cdp = await page.context.new_cdp_session(page)
     try:
         steps = 12
@@ -465,6 +486,36 @@ async def do_tap(page, labels, role, find_scroll, xy, vw, vh, notes, timeout=6.0
         notes.append(f"tapped '{labels[0]}' by screen position {xy}")
         return True
     return False
+
+
+async def reveal_into_view(page, label, at, vw, vh, notes, tries=8):
+    """Scroll until `label`'s top sits within 12% of the screen around `at`
+    (or the page ends), so the card around it is in the picture too. The
+    old reveal stopped as soon as a sliver of the label peeked above the tab
+    bar, which left the card itself out of the photograph."""
+    await page.wait_for_timeout(500)
+    for _ in range(tries):
+        bottom = await usable_bottom(page, vh)
+        found = [m for m in await page.evaluate(FIND_JS, [label, ""]) if m["h"] <= vh * 0.45]
+        m = found[0] if found else None
+        lo, hi = max(vh * (at - 0.12), vh * 0.06), vh * (at + 0.12)
+        if m and lo <= m["y"] <= hi and m["y"] + m["h"] <= bottom - 8:
+            return True
+        if m is None:
+            px = vh * 0.55
+        elif m["y"] > hi or m["y"] + m["h"] > bottom - 8:
+            px = min(m["y"] - vh * at, vh * 0.65)
+        else:  # too high: drag the other way
+            px = max(m["y"] - vh * at, -vh * 0.65)
+        before = await page_fingerprint(page)
+        await drag_scroll(page, vw, vh, px)
+        if await page_fingerprint(page) == before:
+            # The page cannot move further: good enough if it shows at all.
+            if m and 8 <= m["y"] <= bottom - 16:
+                notes.append(f"'{label}' shown as high as the page scrolls")
+                return True
+            return False
+    return bool(m and 8 <= m["y"] <= bottom - 16)
 
 
 # ── one scenario at one size and look ───────────────────────────────────────
@@ -546,7 +597,7 @@ async def play(browser, url, out, run, start, counter, total, blocked):
                 await drag_scroll(page, w, h, step[1] or h * 0.7)
                 continue
             if kind == "reveal":
-                ok = await do_tap(page, [step[1]], None, True, None, w, h, notes, timeout=2.0, press=False)
+                ok = await reveal_into_view(page, step[1], step[2], w, h, notes)
             elif kind == "expect":
                 ok = await do_tap(page, [step[1]], None, False, None, w, h, notes, timeout=3.0, press=False)
             elif kind == "tap":
