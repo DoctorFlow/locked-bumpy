@@ -266,10 +266,13 @@ class _WeekCardView extends StatelessWidget {
               shape: BoxShape.circle,
               color: palette.moon.withValues(alpha: 0.3),
             ),
-            child: Icon(
-              Icons.nightlight_round,
-              color: palette.accent,
-              size: 22,
+            child: Padding(
+              padding: const EdgeInsets.all(7),
+              child: Image.asset(
+                'assets/images/need-rest.png',
+                fit: BoxFit.contain,
+                excludeFromSemantics: true,
+              ),
             ),
           ),
           const SizedBox(height: 16),

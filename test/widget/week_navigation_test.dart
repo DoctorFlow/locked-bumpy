@@ -45,6 +45,12 @@ void main() {
     t,
   ) async {
     await openWeek(t);
+    final moon = find.image(const AssetImage('assets/images/need-rest.png'));
+    expect(moon, findsAtLeastNWidgets(1));
+    expect(
+      t.widgetList<Image>(moon).every((image) => image.excludeFromSemantics),
+      isTrue,
+    );
     final card = find.text('You are here');
     expect(card, findsOneWidget);
     await t.drag(card, const Offset(-450, 0));
