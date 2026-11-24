@@ -290,6 +290,75 @@ void main() {
     expect(g.factFor(30).id, 'boat-f1');
   });
 
+  group('today_until_week (Amendment 4) with the bundled folic acid facts', () {
+    Map<MaternalNeed, Guide> bundled() => Guide.reviewAll(
+      File('assets/content/guides.json').readAsStringSync(),
+      drafts: true,
+    );
+    const folic = {'brain-f1', 'brain-f2', 'brain-f3', 'brain-f4'};
+    const vitaminFolic = {'vitamin-f1', 'vitamin-f5'};
+
+    test('the file sets the week on the folic acid facts only', () {
+      final g = bundled();
+      for (final need in [MaternalNeed.brain, MaternalNeed.vitamin]) {
+        for (final f in g[need]!.facts) {
+          final expected = folic.contains(f.id) || vitaminFolic.contains(f.id)
+              ? 12
+              : null;
+          expect(f.todayUntilWeek, expected, reason: f.id);
+        }
+      }
+    });
+
+    test('week 9: Today can still pick every fact, folic acid first', () {
+      final brain = bundled()[MaternalNeed.brain]!;
+      expect(brain.factFor(1, week: 9).id, 'brain-f1');
+      final picked = {
+        for (var d = 0; d < 6 * 12; d++) brain.factFor(d, week: 9).id,
+      };
+      expect(picked, {for (final f in brain.facts) f.id});
+    });
+
+    test('week 20: Today never picks a folic acid fact, and the guide '
+        'still lists all of them', () {
+      final g = bundled();
+      final brain = g[MaternalNeed.brain]!;
+      final vitamin = g[MaternalNeed.vitamin]!;
+      expect(brain.factFor(1, week: 20).id, 'brain-f5');
+      final brainPicks = {
+        for (var d = 0; d < 6 * 12; d++) brain.factFor(d, week: 20).id,
+      };
+      expect(brainPicks, {'brain-f5', 'brain-f6'});
+      final vitaminPicks = {
+        for (var d = 0; d < 6 * 12; d++) vitamin.factFor(d, week: 20).id,
+      };
+      expect(vitaminPicks, {
+        'vitamin-f2',
+        'vitamin-f3',
+        'vitamin-f4',
+        'vitamin-f6',
+      });
+      expect(brain.facts.map((f) => f.id), containsAll(folic));
+      expect(vitamin.facts.map((f) => f.id), containsAll(vitaminFolic));
+    });
+
+    test('week 12 is still inside; week unknown skips nothing', () {
+      final brain = bundled()[MaternalNeed.brain]!;
+      expect(brain.factFor(1, week: 12).id, 'brain-f1');
+      expect(brain.factFor(1).id, 'brain-f1');
+      expect(brain.factFor(1, week: 13).id, 'brain-f5');
+    });
+
+    test('if every fact were skipped, Today shows the plain pick', () {
+      final row = paperBoatGuide();
+      for (final f in row['facts'] as List) {
+        (f as Map)['today_until_week'] = 10;
+      }
+      final g = review([row])[MaternalNeed.iron]!;
+      expect(g.factFor(6, week: 30).id, g.factFor(6).id);
+    });
+  });
+
   test('the bundled guides file is an array the gate can read', () {
     final json = File('assets/content/guides.json').readAsStringSync();
     final rows = (jsonDecode(json) as List).cast<Map<String, dynamic>>();

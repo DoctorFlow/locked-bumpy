@@ -20,7 +20,19 @@ class _FactCard extends StatelessWidget {
   final AppState state;
   final MaternalNeed need;
   final Guide guide;
+
+  /// The plain pick the screen passes (no week). The card shows [shown].
   final GuideFact fact;
+
+  /// Today's fact for the parent's week: a fact whose `today_until_week` is
+  /// earlier than this week is skipped here (it stays in its guide). Week
+  /// unknown: the same fact as [fact].
+  GuideFact get shown => state.currentWeek == null
+      ? fact
+      : guide.factFor(
+          _TodayScreenState._dayNumber(state.today),
+          week: state.currentWeek,
+        );
   final AppPalette palette;
   final bool adding;
   final bool addFailed;
@@ -28,6 +40,7 @@ class _FactCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final fact = shown;
     final question = guide.questions.isEmpty ? null : guide.questions.first;
     final onList = question != null && state.hasVisitQuestion(question);
     // Links on paper: the theme's text button, tighter at the sides so the

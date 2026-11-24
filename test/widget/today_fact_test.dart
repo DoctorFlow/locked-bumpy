@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -210,6 +211,39 @@ void main() {
       await t.pumpAndSettle();
       expect(disclaimer.hitTestable(), findsOneWidget);
       expect(t.takeException(), isNull);
+      await t.pumpWidget(const SizedBox());
+    });
+  }
+
+  // Amendment 4 with the bundled guides: 24 Nov 2026 is day 1, a BRAIN day,
+  // whose plain pick is the first folic acid fact.
+  for (final (week, due, shows, hides) in [
+    (9, '2027-06-26', 'brain-f1', 'brain-f5'),
+    (20, '2027-04-10', 'brain-f5', 'brain-f1'),
+  ]) {
+    testWidgets('week $week: the Today fact card picks by the week '
+        '($shows, not $hides)', (t) async {
+      final rows =
+          (jsonDecode(File('assets/content/guides.json').readAsStringSync())
+                  as List)
+              .cast<Map<String, dynamic>>();
+      useGuides(rows, drafts: true);
+      String textOf(String id) => [
+        for (final r in rows)
+          for (final f in r['facts'] as List)
+            if (f['id'] == id) (f['text'] as String).trim(),
+      ].single;
+      SharedPreferences.setMockInitialValues({'due_date_iso': due});
+      final state = await AppState.load(now: () => DateTime(2026, 11, 24));
+      expect(state.currentWeek, week);
+      await t.pumpWidget(wrap(state));
+      await t.pumpAndSettle();
+      final card = find.byKey(const ValueKey('today-fact'));
+      expect(
+        find.descendant(of: card, matching: find.text(textOf(shows))),
+        findsOneWidget,
+      );
+      expect(find.text(textOf(hides)), findsNothing);
       await t.pumpWidget(const SizedBox());
     });
   }
