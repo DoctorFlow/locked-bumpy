@@ -122,7 +122,8 @@ void main() {
     await t.pumpAndSettle();
     expect(state.hasVisitQuestion(question), isTrue);
     expect(state.visitQuestions.single.origin, VisitOrigin.week);
-    expect(find.text('On your visit list'), findsOneWidget);
+    expect(find.text('On your list:'), findsOneWidget);
+    expect(find.text('“$question”'), findsOneWidget);
     expect(find.text('Add to my visit list'), findsNothing);
     expect(find.text('Write my own question'), findsOneWidget);
   });

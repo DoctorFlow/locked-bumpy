@@ -88,6 +88,11 @@ class _ChapterPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final (band, onBand) = _accentPair(chapter.accent);
     final body = AppText.body.copyWith(color: palette.ink);
+    final onList = chapterQuestionsOnList(
+      chapter,
+      state.visitQuestions,
+      dueDate: state.dueDate,
+    );
     final bumpy = BumpyAvatar(
       need: state.costumeOverride ?? state.todayNeed,
       palette: palette,
@@ -166,7 +171,10 @@ class _ChapterPage extends StatelessWidget {
                 const SizedBox(height: AppSpace.s),
                 Text(chapter.readyText, style: body),
                 const SizedBox(height: AppSpace.l),
-                if (chapter.suggestedQuestion.isNotEmpty) ...[
+                if (onList.isNotEmpty) ...[
+                  _OnYourList(questions: onList, palette: palette),
+                  const SizedBox(height: AppSpace.m),
+                ] else if (chapter.suggestedQuestion.isNotEmpty) ...[
                   PaperCard(
                     key: const ValueKey('chapter-question-piece'),
                     raised: true,
@@ -1263,4 +1271,80 @@ class _CuriousLink extends StatelessWidget {
 String chapterSourceLine(String org, String title) {
   final page = title.split(' - ').first.trim();
   return page.isEmpty ? 'Source: $org' : 'Source: $org, $page';
+}
+
+/// The questions already on the visit list that belong to [chapter]: its
+/// own suggested question, any question picked on one of its weeks, and the
+/// parent's own words added while they were in its weeks. The parent's own
+/// words first; at most three, the latest of each kind kept.
+List<VisitQuestion> chapterQuestionsOnList(
+  Chapter chapter,
+  List<VisitQuestion> list, {
+  DateTime? dueDate,
+}) {
+  final suggested = chapter.suggestedQuestion.trim();
+  bool belongs(VisitQuestion q) {
+    if (suggested.isNotEmpty && q.text == suggested) return true;
+    if (q.origin == VisitOrigin.week && q.week != null) {
+      return chapter.contains(q.week!);
+    }
+    final added = q.added;
+    if (q.isOwnWords && added != null && dueDate != null) {
+      return chapter.contains(
+        PregnancyCalculator.weekFromDueDate(
+          dueDate: dueDate,
+          currentDate: added,
+        ),
+      );
+    }
+    return false;
+  }
+
+  final mine = VisitQuestion.ownFirst(list.where(belongs));
+  return mine.length <= 3 ? mine : mine.sublist(mine.length - 3);
+}
+
+/// "On your list": the chapter's get-ready part shows back what the parent
+/// already saved, in place of offering the same question again.
+class _OnYourList extends StatelessWidget {
+  const _OnYourList({required this.questions, required this.palette});
+
+  final List<VisitQuestion> questions;
+  final AppPalette palette;
+
+  @override
+  Widget build(BuildContext context) {
+    return PaperCard(
+      key: const ValueKey('chapter-on-list'),
+      raised: true,
+      padding: const EdgeInsets.all(AppSpace.l),
+      child: Semantics(
+        liveRegion: true,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.check_circle_rounded, color: palette.ink, size: 24),
+                const SizedBox(width: AppSpace.s),
+                Expanded(
+                  child: Text(
+                    'On your list:',
+                    style: AppText.bodyStrong.copyWith(color: palette.ink),
+                  ),
+                ),
+              ],
+            ),
+            for (final q in questions) ...[
+              const SizedBox(height: AppSpace.s),
+              Text(
+                '“${q.text}”',
+                style: AppText.body.copyWith(color: palette.ink),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
 }

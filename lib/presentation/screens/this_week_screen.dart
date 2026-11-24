@@ -13,6 +13,7 @@ import '../../domain/models/chapter.dart';
 import '../../domain/models/content_record.dart';
 import '../../domain/models/need.dart';
 import '../../domain/models/week_card.dart';
+import '../../domain/pregnancy.dart';
 import '../widgets/bumpy_avatar.dart';
 import '../widgets/draft_tag.dart';
 import '../widgets/need_word.dart';

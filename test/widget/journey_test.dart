@@ -127,7 +127,9 @@ void main() {
     // Add the suggested question in one tap.
     await tapOn(t, find.text('Add to my visit list'));
     expect(state.hasVisitQuestion(_question), isTrue);
-    expect(find.text('On your visit list'), findsOneWidget);
+    // The get-ready part now shows it back instead of offering it again.
+    expect(find.text('On your list:'), findsOneWidget);
+    expect(find.text('“$_question”'), findsOneWidget);
 
     await t.ensureVisible(
       find.text('A picnic on the hill with a striped blanket.'),

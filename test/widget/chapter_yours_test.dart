@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:little_bumpy/content/chapter_loader.dart';
@@ -94,6 +96,53 @@ void main() {
       await t.pumpAndSettle();
       expect(find.text('Week 17'), findsOneWidget);
       expect(find.byKey(const ValueKey('chapter-strip-mine-16')), findsWidgets);
+    });
+  });
+
+  group('on your list', () {
+    const suggested = 'Which ribbon colour is the brightest?';
+    String q2(String text, String origin, {int? week, String? day}) =>
+        'q2:${jsonEncode({'t': text, 'o': origin, 'w': ?week, 'd': ?day})}';
+
+    testWidgets('the saved chapter question shows back, not offered again', (
+      t,
+    ) async {
+      await open(
+        t,
+        visit: [q2(suggested, 'week', week: 16, day: '2026-11-20')],
+      );
+      final piece = find.byKey(const ValueKey('chapter-on-list'));
+      await t.ensureVisible(piece);
+      await t.pumpAndSettle();
+      expect(find.text('On your list:'), findsOneWidget);
+      expect(find.text('“$suggested”'), findsOneWidget);
+      expect(find.text('Add to my visit list'), findsNothing);
+      expect(find.text('Write my own question'), findsOneWidget);
+    });
+
+    testWidgets('own words typed during these weeks show back', (t) async {
+      // Due 2027-05-11: 2026-11-24 is in week 16, 2026-10-01 in week 8.
+      await open(
+        t,
+        visit: [
+          q2('Can my partner come in with me?', 'own', day: '2026-11-24'),
+          q2('An old question from before', 'own', day: '2026-10-01'),
+        ],
+      );
+      final piece = find.byKey(const ValueKey('chapter-on-list'));
+      await t.ensureVisible(piece);
+      await t.pumpAndSettle();
+      expect(find.text('“Can my partner come in with me?”'), findsOneWidget);
+      expect(find.textContaining('An old question'), findsNothing);
+      expect(find.text('Add to my visit list'), findsNothing);
+    });
+
+    testWidgets('nothing from this chapter: the question is offered', (
+      t,
+    ) async {
+      await open(t, visit: [q2('From another chapter', 'week', week: 9)]);
+      expect(find.byKey(const ValueKey('chapter-on-list')), findsNothing);
+      expect(find.text('Add to my visit list'), findsOneWidget);
     });
   });
 }
