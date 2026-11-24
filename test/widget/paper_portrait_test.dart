@@ -52,10 +52,12 @@ void main() {
           if (name == 'everyday') '-sleepy',
         ]) {
           final path = 'assets/images/$name$expression.png';
+          printOnFailure("Rendering $path");
           final base = await pixels(paperPortrait(path, SkinTone.peach));
           for (final tone in SkinTone.values.where(
             (tone) => tone != SkinTone.peach,
           )) {
+            printOnFailure("Rendering $path / ${tone.name}");
             final tinted = await pixels(paperPortrait(path, tone));
             var differentSkinPixels = 0;
             var alphaChanges = 0;
@@ -72,5 +74,6 @@ void main() {
         }
       }
     },
+    timeout: const Timeout(Duration(minutes: 3)),
   );
 }
