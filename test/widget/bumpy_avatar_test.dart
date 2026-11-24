@@ -60,7 +60,7 @@ void main() {
       (
         AppPalette.halloween,
         'assets/images/nursery-halloween.webp',
-        (1190, 1190),
+        (941, 1672),
       ),
       (AppPalette.everyday, 'assets/images/nursery-everyday.webp', (941, 1672)),
     ]) {
