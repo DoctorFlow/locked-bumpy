@@ -107,6 +107,52 @@ void main() {
     expect(t.getSize(button).width, t.getSize(within).width - 2 * 16);
   }
 
+  testWidgets('guide page: every fact names its source in 14 px, and Try '
+      'this is a raised piece headed by the need icon', (t) async {
+    final state = await boot();
+    final guide = draftGuide();
+    await t.pumpWidget(
+      MaterialApp(
+        home: GuideScreen(state: state, need: MaternalNeed.iron, guide: guide),
+      ),
+    );
+    await t.pumpAndSettle();
+    for (final fact in guide.facts) {
+      final source = find.byKey(ValueKey('guide-fact-source-${fact.id}'));
+      await t.scrollUntilVisible(source, 200);
+      final text = t.widget<Text>(source);
+      expect(text.data, 'Source: ${fact.sourceOrg}');
+      expect(text.style!.fontSize, greaterThanOrEqualTo(14));
+      // Right under its own fact.
+      final factText = find.text(fact.text);
+      expect(
+        t.getTopLeft(source).dy - t.getBottomLeft(factText).dy,
+        inInclusiveRange(0, 8),
+      );
+    }
+    final piece = find.byKey(const ValueKey('guide-try-this'));
+    await t.scrollUntilVisible(piece, 200);
+    await t.pumpAndSettle();
+    final heading = find.descendant(of: piece, matching: find.text('Try this'));
+    final icon = find.byKey(const ValueKey('guide-try-this-icon'));
+    expect(t.widget<Text>(heading).style!.fontSize, 18);
+    expect(find.descendant(of: piece, matching: icon), findsOneWidget);
+    // The icon sits level with the heading, inside the piece's 16 inset.
+    expect(
+      (t.getCenter(icon).dy - t.getCenter(heading).dy).abs(),
+      lessThan(4),
+    );
+    expect(t.getTopLeft(icon).dx - t.getTopLeft(piece).dx, 16);
+    // No colour strip down the edge any more.
+    expect(
+      find.descendant(of: piece, matching: find.byType(ColoredBox)),
+      findsNothing,
+    );
+    for (final idea in guide.tryThis) {
+      expect(find.descendant(of: piece, matching: find.text(idea)), findsOne);
+    }
+  });
+
   testWidgets('a Guides card offers the visit list as the full-width '
       'outlined button', (t) async {
     await openGuides(t);
