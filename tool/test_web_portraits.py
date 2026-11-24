@@ -3,6 +3,7 @@ import base64
 from pathlib import Path
 import shutil
 import subprocess
+import sys
 import tempfile
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -56,10 +57,14 @@ def main():
                     encoded = base64.b64encode(path.read_bytes()).decode("ascii")
                     file.write(f"  '{path.relative_to(ROOT).as_posix()}': '{encoded}',\n")
             file.write("};\n")
-        return subprocess.run([
+        command = [
             flutter, "test", "--no-pub", "--platform", "chrome",
             entry.relative_to(ROOT).as_posix(), "--reporter=expanded",
-        ], cwd=ROOT).returncode
+        ]
+        if sys.platform == "win32":
+            from windows_chrome_test import run
+            return run(command, ROOT)
+        return subprocess.run(command, cwd=ROOT).returncode
     finally:
         entry.unlink(missing_ok=True)
 

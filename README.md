@@ -29,6 +29,13 @@ flutter test
 flutter run
 ```
 
+The native suite checks the art through the Flutter engine. The Linux CI job also
+runs `python tool/test_web_portraits.py` in Chromium against the same 15 source
+portraits at all five skin tones. The browser test stages its art temporarily
+because Flutter's web test server omits app assets. On Windows, the same command
+uses Python Playwright to serve the pinned local CanvasKit renderer to Chrome.
+Install that test dependency once with `python -m pip install playwright`.
+
 For an installable web release, run `python tool/prepare_offline_web.py --build`
 and serve `build/web/` over HTTPS or localhost. The command uses the local
 CanvasKit renderer and bundles the fonts, app shell, costumes and content for
