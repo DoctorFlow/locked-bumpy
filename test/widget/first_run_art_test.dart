@@ -19,7 +19,10 @@ void main() {
           w.image is AssetImage &&
           (w.image as AssetImage).assetName == 'assets/images/$path.png',
     );
-    expect(asset('body-vampire'), findsOneWidget);
+    expect(asset('body-vampire-happy'), findsOneWidget);
+    await tester.ensureVisible(find.text('Start'));
+    await tester.tap(find.text('Start'));
+    await tester.pumpAndSettle();
     await tester.ensureVisible(find.text('Choose due date'));
     await tester.tap(find.text('Choose due date'));
     await tester.pumpAndSettle();
@@ -32,17 +35,19 @@ void main() {
       await tester.pumpAndSettle();
     }
 
-    final personalize = find.text('Choose name and appearance first');
-    await tester.ensureVisible(personalize);
-    await tester.tap(personalize);
-    await tester.pumpAndSettle();
+    await next();
     await next();
     expect(asset('everyday'), findsOneWidget);
     expect(asset('body-vampire'), findsOneWidget);
     expect(find.text('Halloween'), findsOneWidget);
     await tester.tap(find.text('Everyday'));
     await tester.pumpAndSettle();
-    final start = find.text("Let's go");
+    await next();
+    // The Everyday look shows the six needs by icon, colour and word.
+    for (final need in ['iron', 'brain', 'bones', 'water', 'rest', 'vitamin']) {
+      expect(asset('need-$need'), findsOneWidget);
+    }
+    final start = find.text('Enter the nursery');
     await tester.ensureVisible(start);
     await tester.tap(start);
     await tester.pumpAndSettle();

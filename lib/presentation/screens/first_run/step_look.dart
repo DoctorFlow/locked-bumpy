@@ -1,56 +1,43 @@
 part of 'first_run_screen.dart';
 
-// ── Step 3: Look selector ─────────────────────────────────────────────────
+// ── Step 4: Look selector ─────────────────────────────────────────────────
 
-class _Step3Look extends StatelessWidget {
-  const _Step3Look({
+class _StepLook extends StatelessWidget {
+  const _StepLook({
     required this.palette,
     required this.skinTone,
     required this.onTone,
     required this.isHalloween,
-    required this.saving,
     required this.onToggle,
     required this.onBack,
-    required this.onConfirm,
+    required this.onNext,
   });
 
   final AppPalette palette;
   final bool isHalloween;
-  final bool saving;
   final SkinTone skinTone;
   final ValueChanged<SkinTone> onTone;
   final ValueChanged<bool> onToggle;
   final VoidCallback onBack;
-  final VoidCallback onConfirm;
+  final VoidCallback onNext;
 
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 24),
+      padding: _stepPadding,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(
-            'Pick a look.',
-            style: TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.bold,
-              color: palette.moonlight,
-              height: 1.2,
-            ),
-            textAlign: TextAlign.center,
+          _StepHeading(
+            title: 'Pick a look.',
+            subtitle: 'You can switch any time with the lamp.',
+            palette: palette,
           ),
-          const SizedBox(height: 8),
-          Text(
-            'You can switch any time with the lamp.',
-            style: TextStyle(fontSize: 14, color: palette.moonlightSoft),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 28),
+          const SizedBox(height: 20),
 
           LayoutBuilder(
             builder: (context, constraints) {
-              final largeText = MediaQuery.textScalerOf(context).scale(14) > 20;
+              final largeText = _isLargeText(context);
               final width = largeText
                   ? constraints.maxWidth
                   : (constraints.maxWidth - 12) / 2;
@@ -87,36 +74,11 @@ class _Step3Look extends StatelessWidget {
           ),
           const SizedBox(height: 24),
 
-          Row(
-            children: [
-              Expanded(
-                child: _SecondaryButton(
-                  label: 'Back',
-                  palette: palette,
-                  onPressed: onBack,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _PrimaryButton(
-                  label: "Let's go",
-                  palette: palette,
-                  onPressed: saving ? null : onConfirm,
-                  loading: saving,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 24),
-
-          Text(
-            AppConstants.disclaimer,
-            style: TextStyle(
-              fontSize: 11,
-              color: palette.moonlightSoft,
-              height: 1.4,
-            ),
-            textAlign: TextAlign.center,
+          _StepButtons(
+            palette: palette,
+            onBack: onBack,
+            primaryLabel: 'Next',
+            onPrimary: onNext,
           ),
         ],
       ),
@@ -153,7 +115,7 @@ class _LookCard extends StatelessWidget {
         duration: MediaQuery.disableAnimationsOf(context)
             ? Duration.zero
             : const Duration(milliseconds: 200),
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
           color: look.paper,
           borderRadius: BorderRadius.circular(18),
@@ -184,45 +146,55 @@ class _LookCard extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 8),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.bold,
-                color: look.ink,
-              ),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    label,
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: look.ink,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 6),
+                _SelectedMark(selected: selected, look: look),
+              ],
             ),
             const SizedBox(height: 4),
             Text(
               description,
-              style: TextStyle(fontSize: 11, color: look.inkSoft, height: 1.3),
+              style: TextStyle(fontSize: 16, color: look.inkSoft, height: 1.3),
             ),
-            const SizedBox(height: 10),
-            if (selected)
-              Container(
-                width: 20,
-                height: 20,
-                decoration: BoxDecoration(
-                  color: look.accent,
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(Icons.check, size: 13, color: look.accentText),
-              )
-            else
-              Container(
-                width: 20,
-                height: 20,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: look.ink.withValues(alpha: 0.3),
-                    width: 1.5,
-                  ),
-                ),
-              ),
           ],
         ),
       ),
+    );
+  }
+}
+
+class _SelectedMark extends StatelessWidget {
+  const _SelectedMark({required this.selected, required this.look});
+
+  final bool selected;
+  final AppPalette look;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 22,
+      height: 22,
+      decoration: BoxDecoration(
+        color: selected ? look.accent : null,
+        shape: BoxShape.circle,
+        border: selected
+            ? null
+            : Border.all(color: look.ink.withValues(alpha: 0.3), width: 1.5),
+      ),
+      child: selected
+          ? Icon(Icons.check, size: 15, color: look.accentText)
+          : null,
     );
   }
 }

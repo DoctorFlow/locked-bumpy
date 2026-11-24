@@ -32,18 +32,19 @@ void _expectFocused(WidgetTester tester, String label) {
 
 void main() {
   testWidgets(
-    'welcome sample has focus and both date modes are keyboard accessible',
+    'welcome Start has focus and both date modes are keyboard accessible',
     (tester) async {
       final state = await _showOnboarding(tester);
 
       await _press(tester, LogicalKeyboardKey.tab); // Pause
       await _press(tester, LogicalKeyboardKey.tab); // Lamp
       await _press(tester, LogicalKeyboardKey.tab);
-      _expectFocused(tester, 'Try a sample check-in');
+      _expectFocused(tester, 'Start');
       await _press(tester, LogicalKeyboardKey.enter);
-      expect(find.text('Sample only · nothing saved'), findsOneWidget);
-      expect(state.completedCheckIns, isEmpty);
+      expect(find.text('When am I due?'), findsOneWidget);
+      expect(state.isFirstRun, isTrue);
 
+      await _press(tester, LogicalKeyboardKey.tab); // Pause
       await _press(tester, LogicalKeyboardKey.tab);
       _expectFocused(tester, 'Due Date');
       await _press(tester, LogicalKeyboardKey.tab);
@@ -73,7 +74,7 @@ void main() {
     tester,
   ) async {
     final state = await _showOnboarding(tester);
-    tester.widget<PageView>(find.byType(PageView)).controller!.jumpToPage(2);
+    tester.widget<PageView>(find.byType(PageView)).controller!.jumpToPage(3);
     await tester.pumpAndSettle();
 
     await _press(tester, LogicalKeyboardKey.tab); // Pause

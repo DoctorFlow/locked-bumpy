@@ -2,13 +2,20 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:little_bumpy/core/theme/palette.dart';
 import 'package:little_bumpy/domain/models/app_state.dart';
+import 'package:little_bumpy/domain/models/need.dart';
 import 'package:little_bumpy/main.dart';
 import 'package:little_bumpy/presentation/screens/first_run_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-Future<AppState> _freshState() async {
-  SharedPreferences.setMockInitialValues({'is_halloween': true});
-  return AppState.load();
+const _welcome = 'Hello, I’m your Little Bumpy.';
+const _whatItIs =
+    'I dress up as six everyday needs, share a chapter each week, '
+    'and keep your questions for your doctor or midwife.';
+const _private = 'Private: everything stays on this device.';
+
+Future<AppState> _freshState({bool halloween = true}) async {
+  SharedPreferences.setMockInitialValues({'is_halloween': halloween});
+  return AppState.load(now: () => DateTime(2026, 11, 23));
 }
 
 Widget _wrap(AppState state) {
@@ -20,6 +27,26 @@ Widget _wrap(AppState state) {
     home: FirstRunScreen(state: state),
   );
 }
+
+Future<void> _tap(WidgetTester tester, Finder target) async {
+  await tester.ensureVisible(target);
+  await tester.pumpAndSettle();
+  await tester.tap(target);
+  await tester.pumpAndSettle();
+}
+
+Future<void> _pickDueDate(WidgetTester tester) async {
+  await _tap(tester, find.text('Choose due date'));
+  await tester.tap(find.text('OK'));
+  await tester.pumpAndSettle();
+}
+
+Finder _asset(String path) => find.byWidgetPredicate(
+  (w) =>
+      w is Image &&
+      w.image is AssetImage &&
+      (w.image as AssetImage).assetName == 'assets/images/$path.png',
+);
 
 void main() {
   group('FirstRunScreen', () {
@@ -36,7 +63,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('Everything is paused.'), findsOneWidget);
       expect(find.text('Start Fresh'), findsNothing);
-      expect(find.text('Hello, Little Bumpy.'), findsNothing);
+      expect(find.text(_welcome), findsNothing);
 
       await tester.pumpWidget(const SizedBox());
       final restored = await AppState.load();
@@ -46,21 +73,58 @@ void main() {
       expect(find.text('Everything is paused.'), findsOneWidget);
       await tester.tap(find.text('Resume'));
       await tester.pumpAndSettle();
-      expect(find.text('Choose due date'), findsOneWidget);
+      expect(find.text(_welcome), findsOneWidget);
       expect((await AppState.load()).isPaused, isFalse);
       await tester.pumpWidget(const SizedBox());
     });
 
-    testWidgets('step 1 renders hello message and date picker', (tester) async {
+    testWidgets(
+      'the welcome says what the app is, privately, with one button',
+      (tester) async {
+        final state = await _freshState();
+        await tester.pumpWidget(_wrap(state));
+        await tester.pumpAndSettle();
+
+        expect(find.text(_welcome), findsOneWidget);
+        expect(find.text(_whatItIs), findsOneWidget);
+        expect(find.text(_private), findsOneWidget);
+        expect(find.text('1 of 5'), findsOneWidget);
+        expect(find.byType(ElevatedButton), findsOneWidget);
+        expect(find.text('Start'), findsOneWidget);
+        expect(find.text('Back'), findsNothing);
+        expect(
+          find.bySemanticsLabel('Bumpy in a vampire costume, smiling'),
+          findsOneWidget,
+        );
+        expect(
+          tester
+              .getSemantics(find.text(_welcome))
+              .getSemanticsData()
+              .flagsCollection
+              .isHeader,
+          isTrue,
+        );
+        expect(find.text('Choose due date'), findsNothing);
+      },
+    );
+
+    testWidgets('step 2 asks for the date and holds Next until one is chosen', (
+      tester,
+    ) async {
       final state = await _freshState();
       await tester.pumpWidget(_wrap(state));
-      await tester.pump();
+      await tester.pumpAndSettle();
+      await _tap(tester, find.text('Start'));
 
-      expect(find.text('Hello, Little Bumpy.'), findsOneWidget);
+      expect(find.text('2 of 5'), findsOneWidget);
+      expect(find.text('When am I due?'), findsOneWidget);
       expect(find.text('Due Date'), findsOneWidget);
       expect(find.text('Last Period'), findsOneWidget);
       expect(find.text('Choose due date'), findsOneWidget);
-      expect(find.text('Enter the nursery'), findsNothing);
+      final next = find.widgetWithText(ElevatedButton, 'Next');
+      expect(tester.widget<ElevatedButton>(next).onPressed, isNull);
+      await _pickDueDate(tester);
+      expect(tester.widget<ElevatedButton>(next).onPressed, isNotNull);
     });
 
     testWidgets('shows gestational week preview after a date is chosen', (
@@ -68,7 +132,8 @@ void main() {
     ) async {
       final state = await _freshState();
       await tester.pumpWidget(_wrap(state));
-      await tester.pump();
+      await tester.pumpAndSettle();
+      await _tap(tester, find.text('Start'));
 
       // No preview chip before a date is picked.
       expect(find.textContaining('You are at week'), findsNothing);
@@ -89,10 +154,11 @@ void main() {
       expect(find.text('You are at week 20 right now.'), findsOneWidget);
     });
 
-    testWidgets('medical disclaimer present on step 1', (tester) async {
+    testWidgets('medical disclaimer present on the date step', (tester) async {
       final state = await _freshState();
       await tester.pumpWidget(_wrap(state));
-      await tester.pump();
+      await tester.pumpAndSettle();
+      await _tap(tester, find.text('Start'));
 
       expect(
         find.text(
@@ -109,26 +175,141 @@ void main() {
         final state = await _freshState();
         await tester.pumpWidget(_wrap(state));
         await tester.pumpAndSettle();
-        await tester.tap(find.text('Try daylight'));
+        final lamp = find.text('Try daylight');
+        expect(
+          tester
+              .getSize(
+                find.ancestor(of: lamp, matching: find.byType(FilledButton)),
+              )
+              .shortestSide,
+          greaterThanOrEqualTo(48),
+        );
+        await tester.tap(lamp);
         await tester.pumpAndSettle();
         expect(find.text('Try moonlight'), findsOneWidget);
         expect(state.isFirstRun, isTrue);
       },
     );
 
-    testWidgets('step 3 shows both look cards', (tester) async {
+    testWidgets('step 4 shows both look cards', (tester) async {
       final state = await _freshState();
       await tester.pumpWidget(_wrap(state));
       await tester.pump();
 
-      tester.widget<PageView>(find.byType(PageView)).controller!.jumpToPage(2);
+      tester.widget<PageView>(find.byType(PageView)).controller!.jumpToPage(3);
       await tester.pumpAndSettle();
+      expect(find.text('4 of 5'), findsOneWidget);
       expect(find.text('Halloween'), findsOneWidget);
       expect(find.text('Everyday'), findsOneWidget);
       await tester.tap(find.text('Everyday'));
       await tester.pumpAndSettle();
       // Looking at a choice is reversible until the final confirmation.
       expect(state.isHalloween, isTrue);
+    });
+
+    for (final halloween in [true, false]) {
+      final look = halloween ? 'Halloween' : 'Everyday';
+      testWidgets('step 5 shows the six needs in the $look look', (
+        tester,
+      ) async {
+        final state = await _freshState(halloween: halloween);
+        await tester.pumpWidget(_wrap(state));
+        await tester.pump();
+        tester
+            .widget<PageView>(find.byType(PageView))
+            .controller!
+            .jumpToPage(4);
+        await tester.pumpAndSettle();
+
+        expect(find.text('5 of 5'), findsOneWidget);
+        expect(
+          find.text(
+            halloween
+                ? 'Six costumes, six everyday needs'
+                : 'Six everyday needs',
+          ),
+          findsOneWidget,
+        );
+        for (final need in MaternalNeed.values) {
+          final tile = find.byKey(ValueKey('first-run-need-${need.name}'));
+          expect(tile, findsOneWidget);
+          expect(
+            find.descendant(of: tile, matching: find.text(need.label)),
+            findsOneWidget,
+          );
+          final picture = halloween
+              ? 'body-${need.costume.toLowerCase()}'
+              : 'need-${need.name}';
+          expect(
+            find.descendant(of: tile, matching: _asset(picture)),
+            findsOneWidget,
+            reason: '${need.name} picture in $look',
+          );
+        }
+        // Six needs only: no amounts, foods or explanations on this step.
+        for (final need in MaternalNeed.values) {
+          expect(find.textContaining(need.foodHint), findsNothing);
+        }
+        expect(find.text('Enter the nursery'), findsOneWidget);
+        expect(find.text('Back'), findsOneWidget);
+      });
+    }
+
+    testWidgets('tapping straight through finishes and saves the choices', (
+      tester,
+    ) async {
+      final state = await _freshState();
+      await tester.pumpWidget(_wrap(state));
+      await tester.pumpAndSettle();
+      await _tap(tester, find.text('Start'));
+      await _pickDueDate(tester);
+      await _tap(tester, find.text('Next'));
+      expect(find.text('3 of 5'), findsOneWidget);
+      await _tap(tester, find.text('Next'));
+      expect(find.text('4 of 5'), findsOneWidget);
+      await _tap(tester, find.text('Next'));
+      expect(find.text('5 of 5'), findsOneWidget);
+      expect(state.isFirstRun, isTrue);
+      final enter = find.text('Enter the nursery');
+      await tester.ensureVisible(enter);
+      await tester.pumpAndSettle();
+      await tester.tap(enter);
+      // Outside the app shell the screen keeps its saving spinner turning.
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
+      expect(state.isFirstRun, isFalse);
+      expect(state.isHalloween, isTrue);
+      expect(state.nickname, '');
+    });
+
+    testWidgets('Back and the system back both work on every step', (
+      tester,
+    ) async {
+      final state = await _freshState();
+      await tester.pumpWidget(_wrap(state));
+      await tester.pumpAndSettle();
+      await _tap(tester, find.text('Start'));
+      await _pickDueDate(tester);
+      await _tap(tester, find.text('Next'));
+      await _tap(tester, find.text('Next'));
+      await _tap(tester, find.text('Next'));
+      expect(find.text('5 of 5'), findsOneWidget);
+      for (final expected in ['4 of 5', '3 of 5', '2 of 5', '1 of 5']) {
+        await _tap(tester, find.text('Back'));
+        expect(find.text(expected), findsOneWidget);
+      }
+      // The picked date survives going back and forward.
+      await _tap(tester, find.text('Start'));
+      expect(find.text('Choose due date'), findsNothing);
+      await _tap(tester, find.text('Next'));
+      await _tap(tester, find.text('Next'));
+      expect(find.text('4 of 5'), findsOneWidget);
+      for (final expected in ['3 of 5', '2 of 5', '1 of 5']) {
+        await tester.binding.handlePopRoute();
+        await tester.pumpAndSettle();
+        expect(find.text(expected), findsOneWidget);
+      }
+      expect(state.isFirstRun, isTrue);
     });
 
     testWidgets(
@@ -155,6 +336,50 @@ void main() {
         expect(hwInkWells, equals(ewInkWells));
       },
     );
+
+    testWidgets('new first-run words keep the voice rules', (tester) async {
+      const banned = [
+        'should',
+        'must',
+        'need to',
+        'have to',
+        'missed',
+        'forgot',
+        'failed',
+        'weight',
+        'diet',
+        'lesson',
+        'learn',
+        'teach',
+      ];
+      for (final halloween in [true, false]) {
+        final state = await _freshState(halloween: halloween);
+        await tester.pumpWidget(_wrap(state));
+        await tester.pumpAndSettle();
+        for (var page = 0; page < 5; page++) {
+          tester
+              .widget<PageView>(find.byType(PageView))
+              .controller!
+              .jumpToPage(page);
+          await tester.pumpAndSettle();
+          for (final text in tester.widgetList<Text>(find.byType(Text))) {
+            final words = (text.data ?? '').toLowerCase();
+            for (final word in banned) {
+              expect(
+                RegExp('\\b$word\\b').hasMatch(words),
+                isFalse,
+                reason: '"$word" in "${text.data}"',
+              );
+            }
+            // "doctor" never stands alone in the new lines.
+            if (words.contains('doctor') && !words.contains('not medical')) {
+              expect(words, contains('doctor or midwife'));
+            }
+          }
+        }
+        await tester.pumpWidget(const SizedBox());
+      }
+    });
   });
 
   group('AppState nickname', () {

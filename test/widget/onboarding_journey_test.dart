@@ -6,7 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
-  testWidgets('one date opens the daylight nursery and its first check-in', (
+  testWidgets('one date and the six needs open the daylight nursery', (
     tester,
   ) async {
     SharedPreferences.setMockInitialValues({});
@@ -14,15 +14,17 @@ void main() {
     final state = await AppState.load(now: () => now);
     await tester.pumpWidget(LittleBumpyApp(state: state));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Try a sample check-in'));
-    await tester.pumpAndSettle();
-    expect(find.text('Cape on. Thank you!'), findsOneWidget);
     expect(state.isFirstRun, isTrue);
     expect(state.completedCheckIns, isEmpty);
     for (final label in [
       'Try daylight',
+      'Start',
       'Choose due date',
       'OK',
+      'Next',
+      'Next',
+      'Next',
+      'Six everyday needs',
       'Enter the nursery',
     ]) {
       final target = find.text(label);
@@ -63,17 +65,24 @@ void main() {
     )) {
       expect(dot.duration, Duration.zero);
     }
+    await tester.ensureVisible(find.text('Start'));
+    await tester.tap(find.text('Start'));
+    await tester.pump();
+    expect(
+      tester.widget<PageView>(find.byType(PageView)).controller!.page,
+      1.0,
+    );
     await tester.ensureVisible(find.text('Choose due date'));
     await tester.tap(find.text('Choose due date'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('OK'));
     await tester.pumpAndSettle();
-    await tester.ensureVisible(find.text('Choose name and appearance first'));
-    await tester.tap(find.text('Choose name and appearance first'));
+    await tester.ensureVisible(find.text('Next'));
+    await tester.tap(find.text('Next'));
     await tester.pump();
     expect(
       tester.widget<PageView>(find.byType(PageView)).controller!.page,
-      1.0,
+      2.0,
     );
     await tester.pumpWidget(const SizedBox());
   });
@@ -104,17 +113,41 @@ void main() {
         expect(tester.takeException(), isNull);
       }
 
+      void expectTargets() {
+        for (final button in [
+          ...tester.widgetList(find.byType(ElevatedButton)),
+          ...tester.widgetList(find.byType(OutlinedButton)),
+        ]) {
+          expect(
+            tester.getSize(find.byWidget(button)).shortestSide,
+            greaterThanOrEqualTo(48),
+          );
+        }
+      }
+
+      expectTargets();
+      await tap(find.text('Start'));
+      expectTargets();
       await tap(find.text('Choose due date'));
       await tap(find.text('OK'));
-      await tap(find.text('Choose name and appearance first'));
+      await tap(find.text('Next'));
       final field = find.byType(TextField);
       await tester.ensureVisible(field);
       await tester.enterText(field, 'Clover');
       await tester.testTextInput.receiveAction(TextInputAction.done);
       await tester.pumpAndSettle();
+      expectTargets();
       await tap(find.text('Next').hitTestable());
       await tap(find.textContaining('Everyday').first);
-      await tap(find.text("Let's go"));
+      expectTargets();
+      await tap(find.text('Next'));
+      expect(find.text('Six everyday needs'), findsOneWidget);
+      expectTargets();
+      // Large text lays the six out one per row, each fully on screen width.
+      final iron = find.byKey(const ValueKey('first-run-need-iron'));
+      final water = find.byKey(const ValueKey('first-run-need-water'));
+      expect(tester.getTopLeft(iron).dx, tester.getTopLeft(water).dx);
+      await tap(find.text('Enter the nursery'));
       expect(state.nickname, 'Clover');
       expect(state.isHalloween, isFalse);
       expect(state.isFirstRun, isFalse);
