@@ -20,6 +20,15 @@ void main() {
     return state;
   }
 
+  testWidgets('the due date reads "Due around", never as an exact date', (
+    t,
+  ) async {
+    await settings(t);
+    expect(find.text('Due around'), findsOneWidget);
+    expect(find.text('Due date'), findsNothing);
+    await t.pumpWidget(const SizedBox());
+  });
+
   testWidgets('correct the due date without losing a saved check-in', (
     t,
   ) async {

@@ -14,8 +14,11 @@ import 'pick_date_helper.dart';
 
 const _welcome = 'Hello, I’m your Little Bumpy.';
 const _whatItIs =
-    'I dress up as six everyday needs, share a chapter each week, '
+    'I dress up as six everyday needs, share our weeks in chapters, '
     'and keep your questions for your doctor or midwife.';
+// Chapters cover four weeks: the welcome no longer promises one each week,
+// and says so in as few words as before.
+const _oldWhatItIs = 'share a chapter each week';
 const _private = 'Private: everything stays on this device.';
 
 Future<AppState> _freshState({bool halloween = true}) async {
@@ -91,6 +94,16 @@ void main() {
 
         expect(find.text(_welcome), findsOneWidget);
         expect(find.text(_whatItIs), findsOneWidget);
+        expect(find.textContaining(_oldWhatItIs), findsNothing);
+        expect(
+          _whatItIs.split(' ').length,
+          lessThanOrEqualTo(
+            'I dress up as six everyday needs, share a chapter each week, '
+                    'and keep your questions for your doctor or midwife.'
+                .split(' ')
+                .length,
+          ),
+        );
         expect(find.text(_private), findsOneWidget);
         expect(find.text('1 of 5'), findsOneWidget);
         expect(find.byType(ElevatedButton), findsOneWidget);
