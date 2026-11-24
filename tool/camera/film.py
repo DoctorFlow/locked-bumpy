@@ -10,8 +10,9 @@ A parent 20 weeks along, on a phone (375x812 at device scale 3):
   1. Today: Bumpy in the nursery, then the fact card.
   2. This Week: the chapter and its picture, "One thing to know",
      "One thing to get ready".
-  3. "Add to my visit list" on the chapter's question; it turns into
-     "On your visit list". Then "Something to look forward to".
+  3. "Add to my visit list" on the chapter's question; the
+     whole question piece is replaced by the "On your list:" card (it lists
+     the saved question). Then "Something to look forward to".
   4. The curious question opens its guide; scroll to "When to call".
   5. Back, Today, the "For your visit" card, "Show at my visit"; hold on the
      parent's own question.
@@ -419,9 +420,9 @@ class Story:
             if m and "x" in m:
                 await self.hold(0.3)
                 await tap_at(p, m["x"] + m["w"] / 2, m["y"] + m["h"] / 2)
-                done = await wait_for(p, ["On your visit list"], timeout=4)
-                self.mark("3 tap 'Add to my visit list', see 'On your visit list'", bool(done),
-                          "see 'On your visit list'")
+                done = await wait_for(p, ["On your list:"], timeout=4)
+                self.mark("3 tap 'Add to my visit list', see 'On your list:'", bool(done),
+                          "see 'On your list:'")
                 await self.hold(2.1)
             else:
                 self.mark("3 tap 'Add to my visit list'", False, "tap 'Add to my visit list'")
