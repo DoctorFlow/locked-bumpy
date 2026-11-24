@@ -115,6 +115,18 @@ class _NurseryCard extends StatelessWidget {
                   ),
                 ],
                 const SizedBox(height: 6),
+                FilledButton.tonalIcon(
+                  onPressed: () => state.setTab(1),
+                  icon: const Icon(Icons.auto_stories_outlined, size: 20),
+                  label: Text(
+                    'Get ready for week ${state.currentWeek ?? AppConstants.minWeek}',
+                  ),
+                  style: FilledButton.styleFrom(
+                    foregroundColor: palette.accentText,
+                    backgroundColor: palette.accent,
+                    minimumSize: const Size(0, 48),
+                  ),
+                ),
                 Semantics(
                   liveRegion: true,
                   child: TextButton.icon(
