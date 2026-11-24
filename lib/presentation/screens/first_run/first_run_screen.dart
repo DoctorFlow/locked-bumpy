@@ -13,6 +13,7 @@ import '../../widgets/paper_choice.dart';
 import '../../widgets/pregnancy_date_picker.dart';
 import '../../widgets/paper_portrait.dart';
 import '../../widgets/bumpy_avatar.dart';
+import '../../widgets/need_word.dart';
 import '../../widgets/nursery_scene.dart';
 import '../../widgets/skin_tone_picker.dart';
 import '../../../domain/models/skin_tone.dart';
@@ -233,6 +234,7 @@ class _FirstRunScreenState extends State<FirstRunScreen> {
                               ),
                               _StepNickname(
                                 palette: palette,
+                                skinTone: _skinTone,
                                 controller: _nicknameController,
                                 onBack: _back,
                                 onNext: () => _goTo(3),

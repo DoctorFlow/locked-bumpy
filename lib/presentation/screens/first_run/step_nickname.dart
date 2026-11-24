@@ -5,12 +5,14 @@ part of 'first_run_screen.dart';
 class _StepNickname extends StatelessWidget {
   const _StepNickname({
     required this.palette,
+    required this.skinTone,
     required this.controller,
     required this.onBack,
     required this.onNext,
   });
 
   final AppPalette palette;
+  final SkinTone skinTone;
   final TextEditingController controller;
   final VoidCallback onBack;
   final VoidCallback onNext;
@@ -24,8 +26,15 @@ class _StepNickname extends StatelessWidget {
         children: [
           _StepHeading(
             title: 'Give the baby a nickname?',
-            subtitle: 'Optional — skip if you prefer Little Bumpy.',
+            subtitle: 'Optional. Leave it blank if you prefer Little Bumpy.',
             palette: palette,
+          ),
+          const SizedBox(height: AppSpace.xl),
+          // Bumpy on a paper card, wearing the name as it is typed.
+          _NamedBumpy(
+            palette: palette,
+            skinTone: skinTone,
+            controller: controller,
           ),
           const SizedBox(height: AppSpace.xl),
 
@@ -54,6 +63,73 @@ class _StepNickname extends StatelessWidget {
             onBack: onBack,
             primaryLabel: 'Next',
             onPrimary: onNext,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Bumpy on a card with a paper name tag that follows the field: the
+/// nickname as typed, or "Little Bumpy" while it is empty.
+class _NamedBumpy extends StatelessWidget {
+  const _NamedBumpy({
+    required this.palette,
+    required this.skinTone,
+    required this.controller,
+  });
+
+  final AppPalette palette;
+  final SkinTone skinTone;
+  final TextEditingController controller;
+
+  @override
+  Widget build(BuildContext context) {
+    // A short phone keeps the field and Next on the first screen.
+    final short = MediaQuery.sizeOf(context).height < 700;
+    return PaperCard(
+      key: const ValueKey('first-run-nickname-bumpy'),
+      padding: EdgeInsets.all(short ? AppSpace.m : AppSpace.l),
+      child: Column(
+        children: [
+          ExcludeSemantics(
+            child: SizedBox.square(
+              dimension: short ? 72 : 112,
+              child: FittedBox(
+                child: BumpyAvatar(
+                  need: MaternalNeed.iron,
+                  palette: palette,
+                  happy: true,
+                  skinTone: skinTone,
+                ),
+              ),
+            ),
+          ),
+          SizedBox(height: short ? AppSpace.s : AppSpace.m),
+          ValueListenableBuilder<TextEditingValue>(
+            valueListenable: controller,
+            builder: (context, value, _) {
+              final name = value.text.trim();
+              return DecoratedBox(
+                key: const ValueKey('first-run-name-tag'),
+                decoration: BoxDecoration(
+                  color: palette.paperRaised,
+                  borderRadius: AppRadii.tag,
+                  border: Border.all(color: palette.edge),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpace.m,
+                    vertical: AppSpace.s,
+                  ),
+                  child: Text(
+                    name.isEmpty ? 'Little Bumpy' : name,
+                    textAlign: TextAlign.center,
+                    style: AppText.bodyStrong.copyWith(color: palette.ink),
+                  ),
+                ),
+              );
+            },
           ),
         ],
       ),

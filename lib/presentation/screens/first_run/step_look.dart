@@ -129,30 +129,30 @@ class _LookCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Center(
-              child: Image(
-                image: paperPortrait(
-                  MaternalNeed.iron.assetPath(look),
-                  skinTone,
-                ),
-                width: 96,
-                height: 96,
-                excludeFromSemantics: true,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Row(
+            // The mark sits in the picture's corner, so the look's name has
+            // the card's whole width and never breaks mid-word at 320 px.
+            Stack(
               children: [
-                Expanded(
-                  child: Text(
-                    label,
-                    style: AppText.heading.copyWith(color: look.ink),
+                Center(
+                  child: Image(
+                    image: paperPortrait(
+                      MaternalNeed.iron.assetPath(look),
+                      skinTone,
+                    ),
+                    width: 96,
+                    height: 96,
+                    excludeFromSemantics: true,
                   ),
                 ),
-                const SizedBox(width: AppSpace.s),
-                _SelectedMark(selected: selected, look: look),
+                PositionedDirectional(
+                  top: 0,
+                  end: 0,
+                  child: _SelectedMark(selected: selected, look: look),
+                ),
               ],
             ),
+            const SizedBox(height: AppSpace.s),
+            Text(label, style: AppText.heading.copyWith(color: look.ink)),
             const SizedBox(height: 4),
             Text(
               description,

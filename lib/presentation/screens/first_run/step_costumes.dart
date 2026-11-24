@@ -28,6 +28,25 @@ class _StepCostumes extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          if (!halloween) ...[
+            // In the Everyday look the tiles are icons, so Bumpy stands
+            // above them and says the line under the title.
+            Center(
+              child: SizedBox.square(
+                key: const ValueKey('first-run-needs-bumpy'),
+                dimension: 96,
+                child: FittedBox(
+                  child: BumpyAvatar(
+                    need: MaternalNeed.iron,
+                    palette: palette,
+                    happy: true,
+                    skinTone: skinTone,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: AppSpace.s),
+          ],
           _StepHeading(
             title: halloween
                 ? 'Six costumes, six everyday needs'
@@ -43,27 +62,44 @@ class _StepCostumes extends StatelessWidget {
             builder: (context, constraints) {
               const gap = AppSpace.s;
               final width = constraints.maxWidth;
+              // Three across down to a 320 px phone (88 px tiles hold the
+              // 72 px picture); one per row at large text.
               final columns = _isLargeText(context)
                   ? 1
-                  : (width - 2 * gap) / 3 >= 96
+                  : (width - 2 * gap) / 3 >= 88
                   ? 3
                   : 2;
-              final tileWidth = (width - (columns - 1) * gap) / columns;
-              return Wrap(
-                spacing: gap,
-                runSpacing: gap,
+              const needs = MaternalNeed.values;
+              // Rows of equal height, so a two-line word ("Prenatal
+              // vitamin") never leaves its tile taller than its neighbours.
+              return Column(
                 children: [
-                  for (final need in MaternalNeed.values)
-                    SizedBox(
-                      width: tileWidth,
-                      child: _NeedTile(
-                        key: ValueKey('first-run-need-${need.name}'),
-                        need: need,
-                        palette: palette,
-                        skinTone: skinTone,
-                        wide: columns == 1,
+                  for (var i = 0; i < needs.length; i += columns) ...[
+                    if (i > 0) const SizedBox(height: gap),
+                    IntrinsicHeight(
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          for (var j = i; j < i + columns; j++) ...[
+                            if (j > i) const SizedBox(width: gap),
+                            Expanded(
+                              child: j < needs.length
+                                  ? _NeedTile(
+                                      key: ValueKey(
+                                        'first-run-need-${needs[j].name}',
+                                      ),
+                                      need: needs[j],
+                                      palette: palette,
+                                      skinTone: skinTone,
+                                      wide: columns == 1,
+                                    )
+                                  : const SizedBox.shrink(),
+                            ),
+                          ],
+                        ],
                       ),
                     ),
+                  ],
                 ],
               );
             },
@@ -123,18 +159,18 @@ class _NeedTile extends StatelessWidget {
             ),
     );
     final word = Text(
-      need.label,
+      needWord(need),
       textAlign: wide ? TextAlign.start : TextAlign.center,
       style: AppText.bodyStrong.copyWith(color: palette.ink),
     );
     return Semantics(
       container: true,
       label: halloween
-          ? '${need.label}, ${need.costume.toLowerCase()} costume'
-          : need.label,
+          ? '${needWord(need)}, ${need.costume.toLowerCase()} costume'
+          : needWord(need),
       excludeSemantics: true,
       child: PaperCard(
-        padding: const EdgeInsets.all(AppSpace.m),
+        padding: EdgeInsets.all(wide ? AppSpace.m : AppSpace.s),
         child: wide
             ? Row(
                 children: [
@@ -143,7 +179,14 @@ class _NeedTile extends StatelessWidget {
                   Expanded(child: word),
                 ],
               )
-            : Column(children: [picture, const SizedBox(height: 8), word]),
+            : Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  picture,
+                  const SizedBox(height: AppSpace.s),
+                  word,
+                ],
+              ),
       ),
     );
   }
