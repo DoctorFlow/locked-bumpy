@@ -211,14 +211,14 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.text('15').hitTestable().first);
       await tester.pumpAndSettle();
-      expect(find.text('15 June 2027'), findsOneWidget);
+      expect(find.text('15 May 2027'), findsOneWidget);
       // Lit: full strength, and the main action, not a second Cancel.
       expect(okColor().a, 1.0);
       expect(okColor(), isNot(cancelColor));
       await tester.tap(find.text('OK'));
       await tester.pumpAndSettle();
       expect(find.byType(PregnancyCalendarDialog), findsNothing);
-      expect(find.text('15 June 2027'), findsOneWidget);
+      expect(find.text('15 May 2027'), findsOneWidget);
       final next = find.widgetWithText(ElevatedButton, 'Next');
       expect(tester.widget<ElevatedButton>(next).onPressed, isNotNull);
     });

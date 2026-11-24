@@ -42,6 +42,13 @@ Future<void> _open(
     await tester.tap(f);
     await tester.pumpAndSettle();
   }
+  // The picker opens on April 2027 (the middle of its range); the checks
+  // below use May 2027, which needs six rows of days.
+  final next = find.byTooltip('Next month');
+  await tester.ensureVisible(next);
+  await tester.pumpAndSettle();
+  await tester.tap(next);
+  await tester.pumpAndSettle();
 }
 
 /// Every day number of the shown month sits whole inside its own cell,

@@ -40,12 +40,13 @@ String dayMonthYear(DateTime d, {bool withYear = true}) {
 /// The month the picker shows first.
 ///
 /// Not this month: a due date is months away. With no day chosen the picker
-/// opens on the month a parent 13 weeks along would be due in (today plus
-/// 27 weeks), or for a last period the month 13 weeks back. From there a
-/// parent anywhere from week 5 to week 21 is at most two month taps from
-/// their month on any day of the year (most days week 4 and 22 too), and
-/// the month list reaches any other month in two taps. A chosen day opens
-/// on its own month. The result is always a month inside [first] to [last].
+/// opens on the month in the middle of the offered range ([first] to
+/// [last]), so no month in the range is more than about five month taps
+/// away and a likely one (a parent at week 6 to week 38) is at most four,
+/// on any day of the year. The month list reaches any month in two taps.
+/// A chosen day opens on its own month. The result is always a month inside
+/// [first] to [last]. [today] and [useDueDate] are kept for callers; the
+/// range already carries both.
 DateTime pickerOpeningMonth({
   required DateTime today,
   required bool useDueDate,
@@ -53,13 +54,15 @@ DateTime pickerOpeningMonth({
   required DateTime last,
   DateTime? selected,
 }) {
+  // Whole days between the ends, counted in UTC so a clock change cannot
+  // shave an hour off and round a day away.
+  final span = DateTime.utc(
+    last.year,
+    last.month,
+    last.day,
+  ).difference(DateTime.utc(first.year, first.month, first.day)).inDays;
   final anchor =
-      selected ??
-      DateTime(
-        today.year,
-        today.month,
-        today.day + (useDueDate ? 7 * 27 : -7 * 13),
-      );
+      selected ?? DateTime(first.year, first.month, first.day + span ~/ 2);
   var month = DateTime(anchor.year, anchor.month);
   final firstMonth = DateTime(first.year, first.month);
   final lastMonth = DateTime(last.year, last.month);
