@@ -233,6 +233,7 @@ SCENARIOS = [
         tap("Guides", "tab"), tap("Iron", "button", find=True), wait(800),
         shot("c-guide"), scroll(), shot("c-guide-2"), scroll(), shot("c-guide-3"),
         scroll(), shot("c-guide-4"), scroll(), shot("c-guide-5"), scroll(), shot("c-guide-6"),
+        scroll(), shot("c-guide-7"), scroll(), shot("c-guide-8"),
     ], shot=None, note="polish-c: the whole Iron guide page"),
     S("c-guides", steps=[
         tap("Guides", "tab"), wait(500), shot("c-guides"), scroll(), shot("c-guides-2"),
