@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:little_bumpy/core/theme/app_theme.dart';
+import 'package:little_bumpy/core/theme/palette.dart';
+import 'package:little_bumpy/core/theme/paper.dart';
 import 'package:little_bumpy/domain/models/app_state.dart';
 import 'package:little_bumpy/main.dart';
 import 'package:little_bumpy/domain/models/skin_tone.dart';
 import 'package:little_bumpy/presentation/widgets/paper_portrait.dart';
+import 'package:little_bumpy/presentation/widgets/skin_tone_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
@@ -110,4 +114,48 @@ void main() {
       await t.pumpWidget(const SizedBox());
     },
   );
+
+  for (final palette in [AppPalette.everyday, AppPalette.halloween]) {
+    testWidgets(
+      'the settings preview is the whole Bumpy on a raised paper tile '
+      '(${palette.isHalloween ? 'Halloween' : 'Everyday'})',
+      (t) async {
+        await t.pumpWidget(
+          MaterialApp(
+            theme: buildTheme(palette),
+            home: Scaffold(
+              body: SkinTonePicker(
+                selected: SkinTone.honey,
+                onSelected: (_) {},
+                foreground: palette.ink,
+                showPreview: true,
+              ),
+            ),
+          ),
+        );
+        final tile = find.byKey(const ValueKey('skin-tone-preview-tile'));
+        expect(t.getSize(tile), const Size(80, 80));
+        final box = t.widget<Container>(tile).decoration! as BoxDecoration;
+        expect(box.color, palette.paperRaised);
+        expect(box.borderRadius, AppRadii.control);
+        expect(box.border, Border.all(color: palette.edge));
+        expect(box.boxShadow, paperShadows(palette, raised: true));
+        // Not cropped: no oval clip, no overflow, the art fits whole.
+        expect(
+          find.ancestor(
+            of: find.byKey(const ValueKey('skin-tone-preview')),
+            matching: find.byType(ClipOval),
+          ),
+          findsNothing,
+        );
+        expect(
+          t.widget<Image>(find.byKey(const ValueKey('skin-tone-preview'))).fit,
+          BoxFit.contain,
+        );
+        final art = t.getRect(find.byKey(const ValueKey('skin-tone-preview')));
+        expect(t.getRect(tile).contains(art.topLeft), isTrue);
+        expect(t.getRect(tile).inflate(0.01).contains(art.bottomRight), isTrue);
+      },
+    );
+  }
 }
