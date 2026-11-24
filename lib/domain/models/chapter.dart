@@ -40,6 +40,7 @@ class Chapter {
     required this.lookForward,
     required this.curiousQuestion,
     required this.curiousNeed,
+    this.curiousAnswerFact = '',
   });
 
   static const int bumpyLineWords = 20;
@@ -74,6 +75,11 @@ class Chapter {
   final String lookForward;
   final String curiousQuestion;
   final MaternalNeed curiousNeed;
+
+  /// The id of the guide fact that answers [curiousQuestion] (Amendment 3),
+  /// e.g. `water-f6`. Empty when the record names none; the guide then opens
+  /// at its top. Never shown.
+  final String curiousAnswerFact;
 
   /// Approved means a reviewer and a real review date are both written down.
   bool get isApproved =>
@@ -196,6 +202,11 @@ class Chapter {
         .where((n) => n.needName == needName)
         .firstOrNull;
     if (need == null) broken('curious.need "$needName" is not a need');
+    // Only a pointer: a wrong or unknown id simply opens the guide at its
+    // top, so it never hides the chapter.
+    final answerFact = curious['answer_fact'] is String
+        ? (curious['answer_fact'] as String).trim()
+        : '';
 
     final title = text(j, 'title');
     for (final shown in [
@@ -233,6 +244,7 @@ class Chapter {
       lookForward: lookForward,
       curiousQuestion: curiousQuestion,
       curiousNeed: need,
+      curiousAnswerFact: answerFact,
     );
   }
 }

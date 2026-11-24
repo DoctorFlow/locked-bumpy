@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart' show SemanticsService;
 import '../../content/content_loader.dart';
 import '../../core/constants/app_constants.dart';
 import '../../core/theme/app_text.dart';
@@ -28,6 +29,7 @@ class GuideScreen extends StatelessWidget {
     required this.guide,
     this.urgent,
     this.urgentFromBundle = false,
+    this.answerFact,
   });
 
   final AppState state;
@@ -43,12 +45,19 @@ class GuideScreen extends StatelessWidget {
   /// True: ignore [urgent] and use the bundled list ([open] sets this).
   final bool urgentFromBundle;
 
-  /// Opens [need]'s guide. The one entry point other screens call.
+  /// The id of the fact that answers the question the parent came with (a
+  /// chapter's curious question). That fact is scrolled into view, marked
+  /// and announced. Null or an unknown id: the guide opens at its top.
+  final String? answerFact;
+
+  /// Opens [need]'s guide. The one entry point other screens call. From a
+  /// chapter, pass [answerFact]; from the Guides list or Today, leave it out.
   static Future<void> open(
     BuildContext context,
     AppState state,
-    MaternalNeed need,
-  ) async {
+    MaternalNeed need, {
+    String? answerFact,
+  }) async {
     final guides = await ContentLoader.loadGuides();
     if (!context.mounted) return;
     await Navigator.of(context).push(
@@ -58,6 +67,7 @@ class GuideScreen extends StatelessWidget {
           need: need,
           guide: guides[need],
           urgentFromBundle: true,
+          answerFact: answerFact,
         ),
       ),
     );
@@ -177,22 +187,26 @@ class GuideScreen extends StatelessWidget {
         isDraft: draft,
         children: [
           for (final fact in g.facts)
-            _Bullet(
-              palette: palette,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(fact.text, style: _body(palette)),
-                  const SizedBox(height: AppSpace.xs),
-                  // Every fact shows where it comes from, legibly: `small`
-                  // (14 Regular) in inkSoft, the same "Source:" wording as
-                  // the chapter page. Quiet, but never a bare 13 px name.
-                  Text(
-                    'Source: ${fact.sourceOrg}',
-                    key: ValueKey('guide-fact-source-${fact.id}'),
-                    style: AppText.small.copyWith(color: palette.inkSoft),
-                  ),
-                ],
+            _markIfAnswer(
+              fact,
+              palette,
+              _Bullet(
+                palette: palette,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(fact.text, style: _body(palette)),
+                    const SizedBox(height: AppSpace.xs),
+                    // Every fact shows where it comes from, legibly: `small`
+                    // (14 Regular) in inkSoft, the same "Source:" wording as
+                    // the chapter page. Quiet, but never a bare 13 px name.
+                    Text(
+                      'Source: ${fact.sourceOrg}',
+                      key: ValueKey('guide-fact-source-${fact.id}'),
+                      style: AppText.small.copyWith(color: palette.inkSoft),
+                    ),
+                  ],
+                ),
               ),
             ),
           // "Try this" on its own raised piece, headed by the need's own
@@ -332,6 +346,18 @@ class GuideScreen extends StatelessWidget {
         style: AppText.small.copyWith(color: palette.moonlightSoft),
       ),
     ];
+  }
+
+  /// [bullet], marked when [fact] answers the parent's question.
+  Widget _markIfAnswer(GuideFact fact, AppPalette palette, Widget bullet) {
+    final id = answerFact;
+    if (id == null || id.isEmpty || fact.id != id) return bullet;
+    return AnswerMark(
+      key: ValueKey('guide-answer-${fact.id}'),
+      palette: palette,
+      announcement: fact.text,
+      child: bullet,
+    );
   }
 
   /// `2026-11-24` → `24 November 2026`.
@@ -584,6 +610,88 @@ class _Marker extends StatelessWidget {
       ),
     ),
   );
+}
+
+/// The fact that answers the question the parent followed from a chapter:
+/// a soft tint of the look's accent with a 4 px accent rule at its start
+/// edge (the rule is 3:1 or more on paper in both looks; ink stays 4.5:1 or
+/// more on the tint). On its first frame it scrolls itself into view, or
+/// jumps there when motion is reduced, and screen readers hear it first.
+class AnswerMark extends StatefulWidget {
+  const AnswerMark({
+    super.key,
+    required this.palette,
+    required this.announcement,
+    required this.child,
+  });
+
+  final AppPalette palette;
+
+  /// What screen readers announce on arrival: the fact's own text.
+  final String announcement;
+  final Widget child;
+
+  /// How strongly the accent tints the paper behind the fact.
+  static const double tintAlpha = 0.14;
+
+  /// The background behind the marked fact.
+  static Color tint(AppPalette p) =>
+      Color.alphaBlend(p.accent.withValues(alpha: tintAlpha), p.paper);
+
+  @override
+  State<AnswerMark> createState() => _AnswerMarkState();
+}
+
+class _AnswerMarkState extends State<AnswerMark> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _arrive());
+  }
+
+  void _arrive() {
+    if (!mounted) return;
+    final still = MediaQuery.disableAnimationsOf(context);
+    Scrollable.ensureVisible(
+      context,
+      alignment: 0.15,
+      duration: still ? Duration.zero : const Duration(milliseconds: 450),
+      curve: Curves.easeOutCubic,
+    );
+    final view = View.maybeOf(context);
+    if (view != null) {
+      SemanticsService.sendAnnouncement(
+        view,
+        widget.announcement,
+        Directionality.of(context),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final p = widget.palette;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppSpace.s),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: AnswerMark.tint(p),
+          border: BorderDirectional(
+            start: BorderSide(color: p.accent, width: 4),
+          ),
+        ),
+        child: Padding(
+          padding: const EdgeInsetsDirectional.fromSTEB(
+            AppSpace.m,
+            AppSpace.m,
+            AppSpace.m,
+            0,
+          ),
+          child: widget.child,
+        ),
+      ),
+    );
+  }
 }
 
 class _Bullet extends StatelessWidget {
