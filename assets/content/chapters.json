@@ -1,5 +1,65 @@
 [
   {
+    "id": "chapter_4",
+    "from_week": 4,
+    "to_week": 7,
+    "status": "draft",
+    "approved_by": "",
+    "approved_date": "",
+    "title": "Very early days",
+    "accent": "#A07466",
+    "illustration": "chapter-4",
+    "art_brief": "Bumpy curled up asleep inside a small cut-paper acorn cup tucked among a few paper leaves on soft paper ground, with a pale paper sky by day and a dark sky with one small paper star by night.",
+    "bumpy_line": "Hi. I'm very new and very small. We can take this one quiet day at a time.",
+    "know": {
+      "text": "Feeling tired, or even exhausted, is common in the early weeks. Rest when you can, and if it is hard going, your doctor or midwife can talk it through with you.",
+      "source_org": "NHS",
+      "source_title": "Tiredness and sleep problems in pregnancy",
+      "url": "https://www.nhs.uk/pregnancy/related-conditions/common-symptoms/tiredness/"
+    },
+    "ready": {
+      "text": "Think of one person you could lean on, if and when you want to. Who you tell, and when, is your choice.",
+      "suggested_question": "When is my first appointment, and who do I contact if I'm worried before then?"
+    },
+    "look_forward": {
+      "text": "Small comforts count here: a warm drink, an early night, a kind message. Bumpy will be right here for each one."
+    },
+    "curious": {
+      "question": "Which vitamin is worth taking in these early weeks?",
+      "need": "VITAMIN"
+    }
+  },
+  {
+    "id": "chapter_8",
+    "from_week": 8,
+    "to_week": 11,
+    "status": "draft",
+    "approved_by": "",
+    "approved_date": "",
+    "title": "Little sips",
+    "accent": "#9C6440",
+    "illustration": "chapter-8",
+    "art_brief": "Bumpy sitting on the rim of a big cut-paper teacup on a paper saucer, with a curl of paper steam rising beside them, under a pale paper sky by day and a deep blue sky with a paper moon by night.",
+    "bumpy_line": "Some days are wobbly ones. I'm here for the wobbly days and the steady ones. Little sips, little steps.",
+    "know": {
+      "text": "Feeling sick is common in these weeks, and it can happen at any time of day, not only mornings. If you cannot keep food or drink down, contact your doctor or midwife.",
+      "source_org": "NHS",
+      "source_title": "Vomiting and morning sickness - NHS",
+      "url": "https://www.nhs.uk/pregnancy/related-conditions/common-symptoms/vomiting-and-morning-sickness/"
+    },
+    "ready": {
+      "text": "Keep a glass or bottle of water within reach, by the bed or in your bag. Sipping little and often can feel easier than big drinks.",
+      "suggested_question": "What can I try if I feel sick a lot, and when is it worth calling you?"
+    },
+    "look_forward": {
+      "text": "Somewhere in these weeks, a few foods may start to feel kind again. Notice the ones that sit gently, and keep them close."
+    },
+    "curious": {
+      "question": "Does sipping water help when I feel sick?",
+      "need": "WATER"
+    }
+  },
+  {
     "id": "chapter_12",
     "from_week": 12,
     "to_week": 15,
@@ -18,7 +78,7 @@
       "url": "https://www.nhs.uk/best-start-in-life/pregnancy/week-by-week-guide-to-pregnancy/2nd-trimester/week-15/"
     },
     "ready": {
-      "text": "Choose a song, rhyme or short story you like and keep it handy to share with your bump. Anyone close to you can join in. No voice is too off-key.",
+      "text": "Choose a song, rhyme or story you like and keep it handy to share with your bump. Anyone close to you can join in. No voice is too off-key.",
       "suggested_question": "What will happen at my next visit, and how can I reach you between visits if I have a question?"
     },
     "look_forward": {
@@ -27,6 +87,36 @@
     "curious": {
       "question": "What is my baby's brain busy building right now?",
       "need": "BRAIN"
+    }
+  },
+  {
+    "id": "chapter_16",
+    "from_week": 16,
+    "to_week": 19,
+    "status": "draft",
+    "approved_by": "",
+    "approved_date": "",
+    "title": "Swinging along",
+    "accent": "#C8661A",
+    "illustration": "chapter-16",
+    "art_brief": "Bumpy sitting on a cut-paper swing hanging by two paper ropes from a simple paper tree branch, mid-swing, with a paper sun and clouds by day and a dark sky with paper stars by night.",
+    "bumpy_line": "Wheee! I'm swinging into the middle months. Hold on to something cozy and swing along with me.",
+    "know": {
+      "text": "Gums are more likely to get sore or bleed during pregnancy. Regular dental care is safe at any stage of pregnancy, so it is fine to keep up your check-ups.",
+      "source_org": "CDC",
+      "source_title": "Pregnancy and Oral Health Facts",
+      "url": "https://www.cdc.gov/oral-health/data-research/facts-stats/fast-facts-pregnancy-and-oral-health.html"
+    },
+    "ready": {
+      "text": "If you have a dentist, give them a quick call to say you are pregnant and ask about a check-up. A small errand, done whenever suits you.",
+      "suggested_question": "Is it okay to go ahead with dental check-ups, and is there anything my dentist ought to know?"
+    },
+    "look_forward": {
+      "text": "For many parents, sickness starts to ease and energy lifts a little in the middle months. If yours has not yet, that is common too."
+    },
+    "curious": {
+      "question": "Why do I hear so much about iron in the middle months?",
+      "need": "IRON"
     }
   },
   {
@@ -60,6 +150,66 @@
     }
   },
   {
+    "id": "chapter_24",
+    "from_week": 24,
+    "to_week": 27,
+    "status": "draft",
+    "approved_by": "",
+    "approved_date": "",
+    "title": "Peeking out",
+    "accent": "#8E8A2C",
+    "illustration": "chapter-24",
+    "art_brief": "Bumpy peeking out from between two cut-paper curtains at a small round paper window, with a paper sun shining through by day and a paper moon behind soft paper clouds by night.",
+    "bumpy_line": "Peekaboo! My eyes are getting ready to open. Blinking is next on my list.",
+    "know": {
+      "text": "Around now, your baby's eyes begin to open for the first time, and blinking comes next. There is a lot of busy activity going on in there.",
+      "source_org": "NHS",
+      "source_title": "26 weeks pregnant guide - Best Start in Life - NHS",
+      "url": "https://www.nhs.uk/best-start-in-life/pregnancy/week-by-week-guide-to-pregnancy/2nd-trimester/week-26/"
+    },
+    "ready": {
+      "text": "Think of one thing that would really help you in the months ahead, and tell someone close. A meal, a lift, a listening ear.",
+      "suggested_question": "What checks or tests are coming up in the next few weeks, and what are they for?"
+    },
+    "look_forward": {
+      "text": "Around now, some parents find a partner or close friend can feel movements from the outside too. It may happen now or later, in its own time."
+    },
+    "curious": {
+      "question": "Is my baby's brain already making sense of light and sound?",
+      "need": "BRAIN"
+    }
+  },
+  {
+    "id": "chapter_28",
+    "from_week": 28,
+    "to_week": 31,
+    "status": "draft",
+    "approved_by": "",
+    "approved_date": "",
+    "title": "Stepping stones",
+    "accent": "#B5473D",
+    "illustration": "chapter-28",
+    "art_brief": "Bumpy hopping across a row of round cut-paper stepping stones over a wavy paper stream with paper reeds on the bank, under a paper sun by day and a dark sky with tiny paper fireflies by night.",
+    "bumpy_line": "Hop, hop! We're stepping into the last part of our story together. I'm glad you're here.",
+    "know": {
+      "text": "Around now, many parents are offered a whooping cough vaccine. Your body passes protection across to your baby before birth, which helps protect them early in life.",
+      "source_org": "CDC",
+      "source_title": "Tdap Vaccination for Pregnant Women",
+      "url": "https://www.cdc.gov/pertussis/vaccines/tdap-vaccination-during-pregnancy.html"
+    },
+    "ready": {
+      "text": "Start a short list of who you might like with you at the birth, and anything you would like them to know. Change it any time.",
+      "suggested_question": "Which vaccines are offered to me in pregnancy, and when would I have them?"
+    },
+    "look_forward": {
+      "text": "Around now, some parents notice their baby moving in answer to a voice, a song or a hand on the bump. Bumpy loves a chat."
+    },
+    "curious": {
+      "question": "Is my prenatal vitamin still doing something this far along?",
+      "need": "VITAMIN"
+    }
+  },
+  {
     "id": "chapter_32",
     "from_week": 32,
     "to_week": 35,
@@ -87,6 +237,66 @@
     "curious": {
       "question": "Are my baby's bones still getting stronger right now?",
       "need": "BONES"
+    }
+  },
+  {
+    "id": "chapter_36",
+    "from_week": 36,
+    "to_week": 39,
+    "status": "draft",
+    "approved_by": "",
+    "approved_date": "",
+    "title": "Bag by the door",
+    "accent": "#9E4F7A",
+    "illustration": "chapter-36",
+    "art_brief": "Bumpy peeking out of a small open cut-paper bag that sits beside a simple paper door with a round paper knob, lit by a pale paper sun by day and a small paper wall lamp by night.",
+    "bumpy_line": "Pack a snack for me? Just kidding, I've got everything I want in here. Still growing, still listening.",
+    "know": {
+      "text": "Your baby's brain, lungs, liver and other important organs are still developing in these last weeks of pregnancy. There is plenty of growing still going on in there.",
+      "source_org": "March of Dimes",
+      "source_title": "Why at least 39 weeks is best for your baby",
+      "url": "https://www.marchofdimes.org/find-support/topics/pregnancy/why-least-39-weeks-best-your-baby"
+    },
+    "ready": {
+      "text": "Pack a small bag with a few comfy things you already have: something soft to wear, a snack, a phone charger and anything that soothes you.",
+      "suggested_question": "How will I know when it's time to come in, and what is worth bringing?"
+    },
+    "look_forward": {
+      "text": "Many parents start trying out names around now, out loud, in whispers, or not yet at all. Bumpy is listening for favourites."
+    },
+    "curious": {
+      "question": "I need the loo so often again. Is it still good to keep drinking water?",
+      "need": "WATER"
+    }
+  },
+  {
+    "id": "chapter_40",
+    "from_week": 40,
+    "to_week": 42,
+    "status": "draft",
+    "approved_by": "",
+    "approved_date": "",
+    "title": "In good time",
+    "accent": "#A86C9C",
+    "illustration": "chapter-40",
+    "art_brief": "Bumpy resting in a cut-paper hammock slung between two simple paper trees, with a paper sunrise behind them by day and a paper crescent moon with a few paper stars by night.",
+    "bumpy_line": "I'm taking my own sweet time in here. Let's rest, wait and wonder together a little longer.",
+    "know": {
+      "text": "If labour has not started on its own around now, your doctor or midwife will talk through all your options with you. The choice of what happens next is yours.",
+      "source_org": "NHS",
+      "source_title": "Inducing labour - NHS",
+      "url": "https://www.nhs.uk/pregnancy/labour-and-birth/signs-of-labour/inducing-labour/"
+    },
+    "ready": {
+      "text": "Pick a few gentle things for the waiting days: a short walk, a film, a call with a friend, a nap. Easy plans, easy to cancel.",
+      "suggested_question": "If my baby hasn't arrived yet, what are my options, and what would you suggest for me?"
+    },
+    "look_forward": {
+      "text": "Each waiting day brings the first hello a little closer. Until then, Bumpy is right here, keeping you company."
+    },
+    "curious": {
+      "question": "How can I rest well while I wait?",
+      "need": "REST"
     }
   }
 ]
