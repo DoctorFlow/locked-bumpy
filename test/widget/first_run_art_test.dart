@@ -4,6 +4,8 @@ import 'package:little_bumpy/domain/models/app_state.dart';
 import 'package:little_bumpy/main.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'pick_date_helper.dart';
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   testWidgets('the first visit shows Bumpy and a real preview of each look', (
@@ -26,8 +28,7 @@ void main() {
     await tester.ensureVisible(find.text('Choose due date'));
     await tester.tap(find.text('Choose due date'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('OK'));
-    await tester.pumpAndSettle();
+    await chooseDateInPicker(tester, dueIn140(state.today));
     Future<void> next() async {
       final button = find.widgetWithText(ElevatedButton, 'Next');
       await tester.ensureVisible(button);
@@ -47,7 +48,7 @@ void main() {
     for (final need in ['iron', 'brain', 'bones', 'water', 'rest', 'vitamin']) {
       expect(asset('need-$need'), findsOneWidget);
     }
-    final start = find.text('Enter the nursery');
+    final start = find.text('Meet Bumpy');
     await tester.ensureVisible(start);
     await tester.tap(start);
     await tester.pumpAndSettle();

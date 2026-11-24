@@ -23,7 +23,7 @@ class _StepWelcome extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           ClipRRect(
-            borderRadius: BorderRadius.circular(22),
+            borderRadius: AppRadii.card,
             child: NurseryScene(
               palette: palette,
               // Big on a tall phone, still leaving Start in view on a short one.
@@ -58,32 +58,25 @@ class _StepWelcome extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: AppSpace.xl),
+          // Bumpy introduces itself: the title in the story face, then
+          // Bumpy's own words (`bumpyStory`), never the app's face.
           Semantics(
             header: true,
             child: Text(
               'Hello, I’m your Little Bumpy.',
               textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 26,
-                fontWeight: FontWeight.bold,
-                color: palette.moonlight,
-                height: 1.2,
-              ),
+              style: AppText.title.copyWith(color: palette.moonlight),
             ),
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: AppSpace.s),
           Text(
             'I dress up as six everyday needs, share a chapter each week, '
             'and keep your questions for your doctor or midwife.',
             textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 17,
-              color: palette.moonlight,
-              height: 1.4,
-            ),
+            style: AppText.bumpyStory.copyWith(color: palette.moonlight),
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: AppSpace.l),
           MergeSemantics(
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -97,9 +90,7 @@ class _StepWelcome extends StatelessWidget {
                 Flexible(
                   child: Text(
                     'Private: everything stays on this device.',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
+                    style: AppText.bodyStrong.copyWith(
                       color: palette.moonlightSoft,
                     ),
                   ),
@@ -107,7 +98,7 @@ class _StepWelcome extends StatelessWidget {
               ],
             ),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: AppSpace.xl),
           _PrimaryButton(label: 'Start', palette: palette, onPressed: onStart),
         ],
       ),

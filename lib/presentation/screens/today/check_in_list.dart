@@ -43,7 +43,7 @@ class _CheckInsPanel extends StatelessWidget {
             header: true,
             child: Text(
               allDone ? 'Saved check-ins' : "Today's check-ins",
-              style: _T.heading.copyWith(color: palette.moonlight),
+              style: AppText.heading.copyWith(color: palette.moonlight),
             ),
           ),
         // Always shown, so the rows never jump under a finger mid-tap.
@@ -53,13 +53,12 @@ class _CheckInsPanel extends StatelessWidget {
             allDone
                 ? 'Tap a checked row to undo it.'
                 : 'Tick any that fit your day.',
-            style: _T.body.copyWith(color: palette.moonlightSoft),
+            style: AppText.body.copyWith(color: palette.moonlightSoft),
           ),
         ],
         const SizedBox(height: 8),
         if (!summary)
-          _PaperCard(
-            palette: palette,
+          PaperCard(
             raised: true,
             child: Column(
               children: [
@@ -67,9 +66,9 @@ class _CheckInsPanel extends StatelessWidget {
                   if (item != checkIns.first)
                     Divider(
                       height: 1,
-                      indent: 52,
+                      indent: 56,
                       endIndent: 12,
-                      color: palette.inkSoft.withValues(alpha: .22),
+                      color: palette.rule,
                     ),
                   _CheckInTile(
                     key: ValueKey(item),
@@ -90,35 +89,41 @@ class _CheckInsPanel extends StatelessWidget {
           Semantics(
             liveRegion: true,
             child: Padding(
-              padding: const EdgeInsets.only(top: 8),
-              child: Column(
-                children: [
-                  Text(
-                    state.checkInStatus == CheckInSaveStatus.saving
-                        ? 'Saving check-ins…'
-                        : 'Your check-ins couldn’t be saved on this device.',
-                    textAlign: TextAlign.center,
-                    style: _T.body.copyWith(color: palette.moonlight),
-                  ),
-                  if (state.checkInStatus == CheckInSaveStatus.failed)
-                    TextButton(
-                      onPressed: state.retryCheckIns,
-                      style: TextButton.styleFrom(
-                        minimumSize: const Size(48, 48),
-                        foregroundColor: palette.moonlight,
-                      ),
-                      child: const Text('Retry save'),
+              padding: const EdgeInsets.only(top: AppSpace.s),
+              // Never bare on the page: the save status is a paper piece.
+              child: PaperCard(
+                raised: true,
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpace.m,
+                  AppSpace.m,
+                  AppSpace.m,
+                  AppSpace.xs,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(
+                      state.checkInStatus == CheckInSaveStatus.saving
+                          ? 'Saving check-ins…'
+                          : 'Your check-ins couldn’t be saved on this device.',
+                      textAlign: TextAlign.center,
+                      style: AppText.body.copyWith(color: palette.ink),
                     ),
-                ],
+                    if (state.checkInStatus == CheckInSaveStatus.failed)
+                      TextButton(
+                        onPressed: state.retryCheckIns,
+                        child: const Text('Retry save'),
+                      )
+                    else
+                      const SizedBox(height: AppSpace.s),
+                  ],
+                ),
               ),
             ),
           ),
         if (allDone && reviewing)
           TextButton(
-            style: TextButton.styleFrom(
-              foregroundColor: palette.moonlight,
-              minimumSize: const Size(48, 48),
-            ),
+            style: TextButton.styleFrom(foregroundColor: palette.moonlight),
             onPressed: onEndReview,
             child: const Text('Back to summary'),
           ),
@@ -129,38 +134,39 @@ class _CheckInsPanel extends StatelessWidget {
             alignment: AlignmentDirectional.centerStart,
             child: OutlinedButton.icon(
               key: const ValueKey('today-week-link'),
+              // Outlined on the page: moonlight label, outline edge.
               style: OutlinedButton.styleFrom(
                 foregroundColor: palette.moonlight,
-                side: BorderSide(color: palette.moonlightSoft, width: 1.5),
-                minimumSize: const Size(48, 48),
-                shape: const RoundedRectangleBorder(
-                  borderRadius: _controlCorners,
-                ),
+                side: BorderSide(color: palette.outline, width: 1.5),
               ),
               onPressed: () => state.setTab(1),
               icon: const Icon(Icons.auto_stories_outlined, size: 22),
               label: Text(
                 'Get ready for week ${state.currentWeek ?? AppConstants.minWeek}',
-                style: _T.bodyStrong,
               ),
             ),
           ),
         ],
-        const SizedBox(height: 16),
-        Text(
-          state.daysTogetherCount == 1
-              ? '1 day together'
-              : '${state.daysTogetherCount} days together',
-          textAlign: TextAlign.center,
-          style: _T.body.copyWith(color: palette.moonlightSoft),
-        ),
-        const SizedBox(height: 16),
+        const SizedBox(height: AppSpace.xl),
         Text(
           TodayScreen.disclaimer,
-          style: _T.body.copyWith(color: palette.moonlightSoft),
+          style: AppText.small.copyWith(color: palette.moonlightSoft),
           textAlign: TextAlign.center,
         ),
-        const SizedBox(height: 8),
+        // Beside the safety line, a quiet link to the urgent signs: a text
+        // button (underlined, 48 px) in moonlight, which reads on the page in
+        // both looks.
+        Center(
+          child: TextButton(
+            key: const ValueKey('today-urgent-link'),
+            style: TextButton.styleFrom(foregroundColor: palette.moonlight),
+            onPressed: () => UrgentScreen.open(context, state),
+            child: const Text(
+              'When to get help right away',
+              textAlign: TextAlign.center,
+            ),
+          ),
+        ),
       ],
     );
   }
@@ -180,8 +186,7 @@ class _SavedCheckIns extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return _PaperCard(
-      palette: palette,
+    return PaperCard(
       raised: true,
       child: Padding(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
@@ -205,23 +210,18 @@ class _SavedCheckIns extends StatelessWidget {
               header: true,
               child: Text(
                 'Today’s check-ins are saved',
-                style: _T.heading.copyWith(color: palette.ink),
+                style: _cardTitle.copyWith(color: palette.ink),
               ),
             ),
             const SizedBox(height: 4),
             Text(
               needs.map(_needWord).join(' · '),
-              style: _T.body.copyWith(color: palette.inkSoft),
+              style: AppText.body.copyWith(color: palette.inkSoft),
             ),
             const SizedBox(height: 12),
             OutlinedButton.icon(
               style: OutlinedButton.styleFrom(
-                foregroundColor: palette.ink,
-                side: BorderSide(color: palette.inkSoft, width: 1.5),
-                minimumSize: const Size.fromHeight(48),
-                shape: const RoundedRectangleBorder(
-                  borderRadius: _controlCorners,
-                ),
+                minimumSize: const Size.fromHeight(AppSpace.target),
               ),
               onPressed: onWeek,
               icon: const Icon(Icons.auto_stories_outlined, size: 22),
@@ -231,10 +231,6 @@ class _SavedCheckIns extends StatelessWidget {
               ),
             ),
             TextButton(
-              style: TextButton.styleFrom(
-                foregroundColor: palette.ink,
-                minimumSize: const Size(48, 48),
-              ),
               onPressed: onReview,
               child: const Text('Review saved check-ins'),
             ),
@@ -291,13 +287,13 @@ class _CheckInTile extends StatelessWidget {
                   children: [
                     Text(
                       title,
-                      style: _T.bodyStrong.copyWith(color: palette.ink),
+                      style: AppText.bodyStrong.copyWith(color: palette.ink),
                     ),
                     // A one-line hint: DESIGN.md `small`, so a tick row stays
                     // short enough to tap whole at 200 percent text.
                     Text(
                       subtitle,
-                      style: _T.small.copyWith(color: palette.inkSoft),
+                      style: AppText.small.copyWith(color: palette.inkSoft),
                     ),
                   ],
                 ),
@@ -308,7 +304,7 @@ class _CheckInTile extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(horizontal: 8),
                     child: Text(
                       'Done',
-                      style: _T.label.copyWith(color: palette.ink),
+                      style: AppText.label.copyWith(color: palette.ink),
                     ),
                   ),
                 ),
@@ -317,20 +313,20 @@ class _CheckInTile extends StatelessWidget {
                     ? Duration.zero
                     : const Duration(milliseconds: 250),
                 curve: Curves.easeOutBack,
-                width: 28,
-                height: 28,
+                width: 32,
+                height: 32,
                 decoration: BoxDecoration(
                   color: isTicked ? palette.accent : Colors.transparent,
                   shape: BoxShape.circle,
                   border: Border.all(
-                    color: isTicked ? palette.accent : palette.inkSoft,
+                    color: isTicked ? palette.accent : palette.outline,
                     width: 2,
                   ),
                 ),
                 child: isTicked
                     ? Icon(
                         Icons.check_rounded,
-                        size: 18,
+                        size: 22,
                         color: palette.accentText,
                       )
                     : null,

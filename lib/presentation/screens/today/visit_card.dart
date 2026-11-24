@@ -35,11 +35,8 @@ class _VisitCard extends StatelessWidget {
         .toList();
     final empty = questions.isEmpty && topics.isEmpty;
     final quiet = TextButton.styleFrom(
-      foregroundColor: palette.ink,
-      minimumSize: const Size(48, 48),
-      padding: const EdgeInsets.symmetric(horizontal: 4),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpace.xs),
       alignment: AlignmentDirectional.centerStart,
-      shape: const RoundedRectangleBorder(borderRadius: _controlCorners),
     );
 
     final children = <Widget>[
@@ -47,7 +44,7 @@ class _VisitCard extends StatelessWidget {
         header: true,
         child: Text(
           'For your visit',
-          style: _T.bodyStrong.copyWith(color: palette.inkSoft),
+          style: _cardTitle.copyWith(color: palette.ink),
         ),
       ),
     ];
@@ -60,7 +57,7 @@ class _VisitCard extends StatelessWidget {
           icon: const Icon(Icons.edit_note, size: 24),
           label: Text(
             'A question for your doctor or midwife? Add it here.',
-            style: _T.body,
+            style: AppText.body,
           ),
         ),
       );
@@ -75,14 +72,14 @@ class _VisitCard extends StatelessWidget {
       final more = questions.length + topics.length - 1;
       children.addAll([
         const SizedBox(height: 4),
-        Text(first, style: _T.heading.copyWith(color: palette.ink)),
+        Text(first, style: AppText.heading.copyWith(color: palette.ink)),
         if (more > 0) ...[
           const SizedBox(height: 4),
           Text(
             more == 1
                 ? 'And 1 more on your list'
                 : 'And $more more on your list',
-            style: _T.body.copyWith(color: palette.inkSoft),
+            style: AppText.body.copyWith(color: palette.inkSoft),
           ),
         ],
       ]);
@@ -104,7 +101,6 @@ class _VisitCard extends StatelessWidget {
                   : savingTopic
                   ? 'Saving…'
                   : 'Save ${need.label} for my visit',
-              style: _T.body,
             ),
             onPressed: savingTopic
                 ? null
@@ -120,7 +116,7 @@ class _VisitCard extends StatelessWidget {
             liveRegion: true,
             child: Text(
               'Couldn’t save to your visit list. Tap to try again.',
-              style: _T.body.copyWith(color: palette.ink),
+              style: AppText.body.copyWith(color: palette.danger),
             ),
           ),
         );
@@ -129,12 +125,10 @@ class _VisitCard extends StatelessWidget {
     if (!empty) {
       children.addAll([
         const SizedBox(height: 12),
+        // The card's one main action: a plain accent button.
         FilledButton.icon(
           style: FilledButton.styleFrom(
-            backgroundColor: palette.ink,
-            foregroundColor: palette.paper,
-            minimumSize: const Size.fromHeight(48),
-            shape: const RoundedRectangleBorder(borderRadius: _controlCorners),
+            minimumSize: const Size.fromHeight(AppSpace.target),
           ),
           onPressed: () => VisitScreen.open(context, state),
           icon: const Icon(Icons.fullscreen, size: 22),
@@ -143,9 +137,8 @@ class _VisitCard extends StatelessWidget {
       ]);
     }
 
-    return _PaperCard(
+    return PaperCard(
       key: ValueKey(empty ? 'visit-empty' : 'visit-card'),
-      palette: palette,
       child: Padding(
         padding: EdgeInsets.fromLTRB(16, 16, 16, empty ? 8 : 16),
         child: Column(

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/theme/app_text.dart';
 import '../../domain/models/skin_tone.dart';
 import 'paper_portrait.dart';
 
@@ -21,11 +22,7 @@ class SkinTonePicker extends StatelessWidget {
       header: true,
       child: Text(
         'Bumpy’s skin tone',
-        style: TextStyle(
-          color: foreground,
-          fontSize: 16,
-          fontWeight: FontWeight.w600,
-        ),
+        style: AppText.heading.copyWith(color: foreground),
       ),
     );
     return Column(
@@ -65,7 +62,7 @@ class SkinTonePicker extends StatelessWidget {
         const SizedBox(height: 8),
         Wrap(
           spacing: 8,
-          runSpacing: 4,
+          runSpacing: 8,
           children: [
             for (final tone in SkinTone.values)
               ChoiceChip(

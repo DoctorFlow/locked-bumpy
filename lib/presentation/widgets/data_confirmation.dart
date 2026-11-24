@@ -56,36 +56,25 @@ class _ConfirmDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Title, body, paper and corners come from the dialog theme. Only the
+    // confirming button of Erase changes colour: `danger` on paper.
     return AlertDialog(
       scrollable: true,
-      backgroundColor: palette.paper,
-      title: Text(
-        title,
-        style: TextStyle(
-          color: palette.ink,
-          fontWeight: FontWeight.bold,
-          fontSize: 17,
-        ),
-      ),
-      content: Text(
-        body,
-        style: TextStyle(color: palette.inkSoft, fontSize: 14, height: 1.4),
-      ),
+      title: Text(title),
+      content: Text(body),
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(false),
-          child: Text('Never mind', style: TextStyle(color: palette.inkSoft)),
+          child: const Text('Never mind'),
         ),
         ElevatedButton(
           onPressed: () => Navigator.of(context).pop(true),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: confirmDestructive
-                ? AppPalette.eraseAccent
-                : palette.accent,
-            foregroundColor: confirmDestructive
-                ? AppPalette.eraseInk
-                : palette.accentText,
-          ),
+          style: confirmDestructive
+              ? ElevatedButton.styleFrom(
+                  backgroundColor: palette.danger,
+                  foregroundColor: palette.onDanger,
+                )
+              : null,
           child: Text(confirmLabel),
         ),
       ],

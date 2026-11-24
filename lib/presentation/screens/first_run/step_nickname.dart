@@ -27,34 +27,27 @@ class _StepNickname extends StatelessWidget {
             subtitle: 'Optional — skip if you prefer Little Bumpy.',
             palette: palette,
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: AppSpace.xl),
 
           TextField(
             controller: controller,
             maxLength: 24,
             maxLengthEnforcement: MaxLengthEnforcement.enforced,
             textCapitalization: TextCapitalization.words,
-            style: TextStyle(fontSize: 18, color: palette.ink),
+            style: AppText.body.copyWith(color: palette.ink),
+            // The themed field: raised paper, outline edge, control corners.
+            // Colours named so the contrast test can read them; only the
+            // counter differs, because it sits on the page.
             decoration: InputDecoration(
               hintText: 'e.g. Peanut, Sprout…',
-              hintStyle: TextStyle(color: palette.inkSoft),
-              filled: true,
-              fillColor: palette.paper,
-              counterStyle: TextStyle(
+              hintStyle: AppText.body.copyWith(color: palette.inkSoft),
+              fillColor: palette.paperRaised,
+              counterStyle: AppText.label.copyWith(
                 color: palette.moonlightSoft,
-                fontSize: 14,
-              ),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(14),
-                borderSide: BorderSide.none,
-              ),
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 18,
-                vertical: 16,
               ),
             ),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: AppSpace.l),
 
           _StepButtons(
             palette: palette,

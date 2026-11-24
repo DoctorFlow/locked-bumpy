@@ -1,11 +1,18 @@
 import 'package:flutter/material.dart';
+import '../../core/theme/app_text.dart';
 import '../../core/theme/palette.dart';
+import '../../core/theme/paper.dart';
 import '../../domain/models/app_state.dart';
 
 import '../widgets/data_confirmation.dart';
 
 /// Quiet, neutral Paused screen.
 /// App voice only — no baby, no costume, no animations.
+///
+/// Everything sits on one paper card, so the erase colours are the palette's
+/// `danger` / `onDanger` on paper in both looks (DESIGN.md section 8, item 5),
+/// and they stay right when the Everyday page turns light. "Resume" is the
+/// one main button; the other two actions sit 32 below it.
 class PausedScreen extends StatelessWidget {
   const PausedScreen({super.key, required this.state});
 
@@ -15,160 +22,123 @@ class PausedScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final palette = AppPalette.of(context);
 
-    return CustomScrollView(
-      slivers: [
-        SliverFillRemaining(
-          hasScrollBody: false,
+    // Centred when it fits; scrolls when large text makes it taller.
+    return LayoutBuilder(
+      builder: (context, bounds) => SingleChildScrollView(
+        child: ConstrainedBox(
+          constraints: BoxConstraints(minHeight: bounds.maxHeight),
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpace.page,
+              vertical: AppSpace.xxl,
+            ),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // Still moon mark — no animation while paused.
-                Container(
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: palette.moon.withValues(alpha: 0.8),
-                  ),
-                ),
-                const SizedBox(height: 28),
-                Text(
-                  'Everything is paused.',
-                  style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                    color: palette.moonlight,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  'Take all the time you need. '
-                  'We are right here whenever you are ready.',
-                  style: TextStyle(
-                    fontSize: 15,
-                    height: 1.4,
-                    color: palette.moonlightSoft,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                if (state.eraseFailed) ...[
-                  const SizedBox(height: 16),
-                  Text(
-                    state.erasePending
-                        ? "Erase didn't finish. Some of your data may "
-                              'already be removed, so the app stays paused '
-                              'until Erase finishes.'
-                        : "Erase didn't finish, so your data is still on "
-                              'this device. Please try Erase again.',
-                    style: TextStyle(
-                      fontSize: 14,
-                      height: 1.4,
-                      color: palette.moonlight,
+                ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 440),
+                  child: PaperCard(
+                    padding: const EdgeInsets.fromLTRB(
+                      AppSpace.xl,
+                      AppSpace.xl,
+                      AppSpace.xl,
+                      AppSpace.l,
                     ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 16),
-                  // Already confirmed once; retry goes straight to Erase.
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: state.eraseAll,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppPalette.eraseAccent,
-                        foregroundColor: AppPalette.eraseInk,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        minimumSize: const Size(double.infinity, 48),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        // Still moon mark — no animation while paused.
+                        Center(
+                          child: Container(
+                            width: 48,
+                            height: 48,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: palette.moon,
+                              border: Border.all(color: palette.edge),
+                              boxShadow: paperShadows(palette, raised: true),
+                            ),
+                          ),
                         ),
-                      ),
-                      child: const Text(
-                        'Try Erase again',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
+                        const SizedBox(height: AppSpace.xl),
+                        Text(
+                          'Everything is paused.',
+                          style: AppText.title.copyWith(color: palette.ink),
+                          textAlign: TextAlign.center,
                         ),
-                      ),
-                    ),
-                  ),
-                ],
-                const SizedBox(height: 36),
+                        const SizedBox(height: AppSpace.m),
+                        Text(
+                          'Take all the time you need. '
+                          'We are right here whenever you are ready.',
+                          style: AppText.body.copyWith(color: palette.inkSoft),
+                          textAlign: TextAlign.center,
+                        ),
+                        if (state.eraseFailed) ...[
+                          const SizedBox(height: AppSpace.l),
+                          Text(
+                            state.erasePending
+                                ? "Erase didn't finish. Some of your data may "
+                                      'already be removed, so the app stays '
+                                      'paused until Erase finishes.'
+                                : "Erase didn't finish, so your data is still "
+                                      'on this device. Please try Erase again.',
+                            style: AppText.body.copyWith(color: palette.ink),
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: AppSpace.l),
+                          // Already confirmed once; retry goes straight to
+                          // Erase.
+                          ElevatedButton(
+                            onPressed: state.eraseAll,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: palette.danger,
+                              foregroundColor: palette.onDanger,
+                              minimumSize: const Size.fromHeight(
+                                AppSpace.target,
+                              ),
+                            ),
+                            child: const Text('Try Erase again'),
+                          ),
+                        ],
+                        const SizedBox(height: AppSpace.xl),
 
-                // Resume (disabled while an Erase is unfinished on disk)
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: state.erasePending ? null : state.resume,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: palette.accent,
-                      foregroundColor: palette.accentText,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      minimumSize: const Size(double.infinity, 48),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                    ),
-                    child: const Text(
-                      'Resume',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ),
-                if (state.dueDate != null) ...[
-                  const SizedBox(height: 12),
+                        // Resume (disabled while an Erase is unfinished on
+                        // disk). The one main button.
+                        ElevatedButton(
+                          onPressed: state.erasePending ? null : state.resume,
+                          style: ElevatedButton.styleFrom(
+                            minimumSize: const Size.fromHeight(AppSpace.target),
+                          ),
+                          child: const Text('Resume'),
+                        ),
+                        const SizedBox(height: AppSpace.xxl),
+                        if (state.dueDate != null) ...[
+                          // Start Fresh: outlined, the theme's outline edge.
+                          OutlinedButton(
+                            onPressed: state.erasePending
+                                ? null
+                                : () => confirmStartFresh(context, state),
+                            style: OutlinedButton.styleFrom(
+                              minimumSize: const Size.fromHeight(
+                                AppSpace.target,
+                              ),
+                            ),
+                            child: const Text('Start Fresh'),
+                          ),
+                          const SizedBox(height: AppSpace.s),
+                        ],
 
-                  // Start Fresh
-                  SizedBox(
-                    width: double.infinity,
-                    child: OutlinedButton(
-                      onPressed: state.erasePending
-                          ? null
-                          : () => confirmStartFresh(context, state),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: palette.moonlightSoft,
-                        side: BorderSide(
-                          color: palette.moonlightSoft.withValues(alpha: 0.5),
+                        // Erase all data: a link in the danger colour.
+                        TextButton(
+                          onPressed: () => confirmErase(context, state),
+                          style: TextButton.styleFrom(
+                            foregroundColor: palette.danger,
+                            minimumSize: const Size.fromHeight(AppSpace.target),
+                          ),
+                          child: const Text('Erase all data'),
                         ),
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        minimumSize: const Size(double.infinity, 48),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                      ),
-                      child: const Text(
-                        'Start Fresh',
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-                const SizedBox(height: 8),
-
-                // Erase all data
-                SizedBox(
-                  width: double.infinity,
-                  child: TextButton(
-                    onPressed: () => confirmErase(context, state),
-                    style: TextButton.styleFrom(
-                      foregroundColor: AppPalette.eraseAccent,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      minimumSize: const Size(double.infinity, 48),
-                    ),
-                    child: const Text(
-                      'Erase all data',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                      ),
+                      ],
                     ),
                   ),
                 ),
@@ -176,7 +146,7 @@ class PausedScreen extends StatelessWidget {
             ),
           ),
         ),
-      ],
+      ),
     );
   }
 }

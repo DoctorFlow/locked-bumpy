@@ -12,9 +12,14 @@ Future<DateTime?> pickPregnancyDate(
       DateTime(today.year, today.month, today.day + days);
   final first = offset(useDueDate ? -7 : -294);
   final last = offset(useDueDate ? 294 : 0);
-  final candidate = selected ?? offset(useDueDate ? 140 : -140);
-  // Older saves may fall outside the interval offered for a new choice.
-  final initial = candidate.isBefore(first)
+  // A first choice opens on this month with no day chosen, so OK cannot save
+  // a week the parent never picked (OK with nothing chosen returns null).
+  // A saved date opens selected; older saves may fall outside the interval
+  // offered for a new choice.
+  final candidate = selected;
+  final initial = candidate == null
+      ? null
+      : candidate.isBefore(first)
       ? first
       : candidate.isAfter(last)
       ? last
