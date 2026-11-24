@@ -166,7 +166,7 @@ void main() {
         closeTo(0, 1),
       );
       final thanks = find.byKey(const ValueKey('today-check-ins-thanks'));
-      expect(t.widget<Text>(thanks).data, 'Thank you! That made me smile.');
+      expect(t.widget<Text>(thanks).data, 'Thank you!\nThat made me smile.');
       expect(find.descendant(of: card, matching: find.byType(DraftTag)), findsOne);
       // Nothing on the card counts, scores or compares.
       final words = t

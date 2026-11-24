@@ -210,7 +210,8 @@ class _SavedCheckIns extends StatelessWidget {
   /// Bumpy's thank-you once all three are ticked. A draft line, in the
   /// owner's review list (factory `roles/polish-a.md`), so like every draft
   /// it shows only in a review build, with its Draft tag, until approved.
-  static const thanks = 'Thank you! That made me smile.';
+  // Two short lines at every width, so no word is left alone at 320.
+  static const thanks = 'Thank you!\nThat made me smile.';
 
   @override
   Widget build(BuildContext context) {
