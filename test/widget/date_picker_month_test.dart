@@ -49,7 +49,8 @@ DateTime _last(DateTime t, bool due) =>
 
 void main() {
   group('opening month', () {
-    test('each calendar opens on the middle month of its range', () {
+    test('the due date calendar opens on the middle month of its range; '
+        'the last-period calendar about ten weeks back', () {
       expect(
         pickerOpeningMonth(
           today: _today,
@@ -66,7 +67,21 @@ void main() {
           first: _first(_today, false),
           last: _last(_today, false),
         ),
-        DateTime(2026, 6),
+        // 23 Nov 2026 less 70 days: 14 Sep 2026.
+        DateTime(2026, 9),
+      );
+    });
+
+    test('a chosen last-period day opens on its own month', () {
+      expect(
+        pickerOpeningMonth(
+          today: _today,
+          useDueDate: false,
+          first: _first(_today, false),
+          last: _last(_today, false),
+          selected: DateTime(2026, 4, 2),
+        ),
+        DateTime(2026, 4),
       );
     });
 
@@ -84,11 +99,11 @@ void main() {
     });
 
     // Every day of a year, so the day of the month cannot hide a gap.
-    test('for weeks 4 to 35 the month is at most four month taps away, and '
-        'for weeks 36 to 41 at most five, on any day of the year, both ways', () {
+    test('due date: for weeks 4 to 35 the month is at most four month taps '
+        'away, and for weeks 36 to 41 at most five, on any day of the year', () {
       for (var i = 0; i < 366; i++) {
         final today = DateTime(2026, 1, 1 + i);
-        for (final due in [true, false]) {
+        for (final due in [true]) {
           final open = pickerOpeningMonth(
             today: today,
             useDueDate: due,
@@ -109,6 +124,36 @@ void main() {
               reason: '$today week $week ${due ? 'due' : 'period'}',
             );
           }
+        }
+      }
+    });
+
+    // Parents who know only their last period are mostly early.
+    test('last period: weeks 6 to 14 are at most one month tap away, weeks '
+        '4 to 16 at most two, on any day of the year', () {
+      for (var i = 0; i < 366; i++) {
+        final today = DateTime(2026, 1, 1 + i);
+        final open = pickerOpeningMonth(
+          today: today,
+          useDueDate: false,
+          first: _first(today, false),
+          last: _last(today, false),
+        );
+        for (var week = 4; week <= 16; week++) {
+          final dueDate = PregnancyCalculator.dueDateForWeek(
+            week: week,
+            currentDate: today,
+          );
+          final period = DateTime(
+            dueDate.year,
+            dueDate.month,
+            dueDate.day - 280,
+          );
+          expect(
+            _monthsApart(open, period),
+            lessThanOrEqualTo(week >= 6 && week <= 14 ? 1 : 2),
+            reason: '$today week $week period',
+          );
         }
       }
     });
@@ -151,6 +196,29 @@ void main() {
     expect(find.text('15 March 2027'), findsOneWidget);
     await _tap(tester, find.byKey(const ValueKey('picker-ok')));
     expect(find.byType(PregnancyCalendarDialog), findsNothing);
+  });
+
+  testWidgets('the last-period calendar opens on September 2026 with no day '
+      'chosen; a week 9 period (21 Sep) needs no month tap', (tester) async {
+    SharedPreferences.setMockInitialValues({'is_halloween': true});
+    final state = await AppState.load(now: () => _today);
+    tester.view.physicalSize = const Size(375, 812);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: buildTheme(AppPalette.halloween),
+        home: FirstRunScreen(state: state),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await _tap(tester, find.text('Start'));
+    await _tap(tester, find.text('I know when my last period started'));
+    await _tap(tester, find.text('Choose period start date'));
+    expect(find.text('September 2026'), findsOneWidget);
+    expect(find.text('No day chosen yet'), findsOneWidget);
+    await _tap(tester, find.byKey(const ValueKey('picker-day-2026-9-21')));
+    expect(find.text('21 September 2026'), findsOneWidget);
   });
 
   testWidgets('the month list offers every month in range and reaches any '

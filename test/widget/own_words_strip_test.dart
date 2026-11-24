@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:little_bumpy/domain/models/app_state.dart';
 import 'package:little_bumpy/domain/models/need.dart';
 import 'package:little_bumpy/main.dart';
+import 'package:little_bumpy/presentation/screens/today/today_screen.dart';
 import 'package:little_bumpy/presentation/screens/visit_screen.dart';
 import 'package:little_bumpy/presentation/widgets/app_nav_bar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -199,6 +200,13 @@ void main() {
     await t.pumpWidget(const SizedBox());
   });
 
+  test('the spoken label adds a stop only when the question has none', () {
+    expect(withFullStop('Is this normal?'), 'Is this normal?');
+    expect(withFullStop('Ask about the scan.'), 'Ask about the scan.');
+    expect(withFullStop('Ask about the scan '), 'Ask about the scan.');
+    expect(withFullStop('Wow!'), 'Wow!');
+  });
+
   testWidgets('the strip is one button with a spoken label and opens the '
       'show view', (t) async {
     final handle = t.ensureSemantics();
@@ -206,7 +214,8 @@ void main() {
     final state = await _start();
     await state.addVisitQuestion(_own);
     await _reopen(t);
-    final node = find.bySemanticsLabel('My question: $_own. Show at my visit');
+    // The question ends in its own "?": no extra stop before the action.
+    final node = find.bySemanticsLabel('My question: $_own Show at my visit');
     expect(node, findsOneWidget);
     expect(t.getSemantics(node).flagsCollection.isButton, isTrue);
     expect(t.getSize(find.byKey(_strip)).height, greaterThanOrEqualTo(48));
