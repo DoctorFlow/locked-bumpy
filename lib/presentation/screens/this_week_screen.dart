@@ -259,12 +259,15 @@ class _ThisWeekScreenState extends State<ThisWeekScreen> {
             key: const ValueKey('week-strip-in-page'),
             child: _weekStrip(palette, week),
           ),
+        // Bottom space of one week-bar height (48) plus a gap: the page's last
+        // link (the guide or urgent link) ends well clear of the bar, never
+        // flush against it (test lab round 4).
         SliverPadding(
           padding: const EdgeInsets.fromLTRB(
             AppSpace.page,
             AppSpace.s,
             AppSpace.page,
-            AppSpace.xl,
+            AppSpace.target + AppSpace.xl,
           ),
           sliver: SliverToBoxAdapter(child: child),
         ),

@@ -9,18 +9,21 @@ part of 'this_week_screen.dart';
 /// Opens the guide for [need]. When the gate hides that guide (not approved,
 /// and not a draft in a review build), the Guides tab opens instead, where
 /// the need's card still offers its visit-list control: never an empty page.
+/// [answerFact] is the id of the fact that answers the chapter's question:
+/// the guide opens at that fact and marks it.
 Future<void> _openGuide(
   BuildContext context,
   AppState state,
-  MaternalNeed need,
-) async {
+  MaternalNeed need, {
+  String answerFact = '',
+}) async {
   final guides = await ContentLoader.loadGuides();
   if (!context.mounted) return;
   if (guides[need] == null) {
     state.setTab(2);
     return;
   }
-  await GuideScreen.open(context, state, need);
+  await GuideScreen.open(context, state, need, answerFact: answerFact);
 }
 
 /// Width over height of every chapter picture (1200 x 900).
@@ -237,7 +240,12 @@ class _ChapterPage extends StatelessWidget {
                   palette: palette,
                   band: band,
                   onBand: onBand,
-                  onTap: () => _openGuide(context, state, chapter.curiousNeed),
+                  onTap: () => _openGuide(
+                    context,
+                    state,
+                    chapter.curiousNeed,
+                    answerFact: chapter.curiousAnswerFact,
+                  ),
                 ),
               ],
             ),

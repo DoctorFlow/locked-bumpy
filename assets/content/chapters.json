@@ -26,7 +26,8 @@
     },
     "curious": {
       "question": "Which vitamin is worth taking in these early weeks?",
-      "need": "VITAMIN"
+      "need": "VITAMIN",
+      "answer_fact": "vitamin-f1"
     }
   },
   {
@@ -56,7 +57,8 @@
     },
     "curious": {
       "question": "Does sipping water help when I feel sick?",
-      "need": "WATER"
+      "need": "WATER",
+      "answer_fact": "water-f6"
     }
   },
   {
@@ -86,7 +88,8 @@
     },
     "curious": {
       "question": "Why does folic acid matter so much for my baby's brain?",
-      "need": "BRAIN"
+      "need": "BRAIN",
+      "answer_fact": "brain-f1"
     }
   },
   {
@@ -116,7 +119,8 @@
     },
     "curious": {
       "question": "I still feel tired a lot. Could low iron be part of it?",
-      "need": "IRON"
+      "need": "IRON",
+      "answer_fact": "iron-f1"
     }
   },
   {
@@ -146,7 +150,8 @@
     },
     "curious": {
       "question": "I feel tired a lot these days. What can help me rest?",
-      "need": "REST"
+      "need": "REST",
+      "answer_fact": "rest-f2"
     }
   },
   {
@@ -176,7 +181,8 @@
     },
     "curious": {
       "question": "Is folic acid the only thing that matters for my baby's brain?",
-      "need": "BRAIN"
+      "need": "BRAIN",
+      "answer_fact": "brain-f5"
     }
   },
   {
@@ -206,7 +212,8 @@
     },
     "curious": {
       "question": "My vitamin is a gummy one. Is anything missing from it?",
-      "need": "VITAMIN"
+      "need": "VITAMIN",
+      "answer_fact": "vitamin-f3"
     }
   },
   {
@@ -236,7 +243,8 @@
     },
     "curious": {
       "question": "My baby is storing calcium now. Where can I get mine?",
-      "need": "BONES"
+      "need": "BONES",
+      "answer_fact": "bones-f2"
     }
   },
   {
@@ -266,7 +274,8 @@
     },
     "curious": {
       "question": "With all these trips to the loo, how can I tell if I'm drinking enough?",
-      "need": "WATER"
+      "need": "WATER",
+      "answer_fact": "water-f5"
     }
   },
   {
@@ -296,7 +305,8 @@
     },
     "curious": {
       "question": "How can I rest well while I wait?",
-      "need": "REST"
+      "need": "REST",
+      "answer_fact": "rest-f3"
     }
   }
 ]
