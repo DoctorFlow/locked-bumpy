@@ -11,6 +11,7 @@ import 'skin_tone.dart';
 class AppState extends ChangeNotifier {
   AppState._(this._prefs, this._now)
     : _dueDate = _prefs.dueDate,
+      _originalDueDate = _prefs.originalDueDate,
       _isHalloween = _prefs.isHalloween,
       _skinTone = _prefs.skinTone,
       _isPaused = _prefs.isPaused,
@@ -25,11 +26,13 @@ class AppState extends ChangeNotifier {
   // ── Onboarding ───────────────────────────────────────────────────────────
 
   DateTime? _dueDate;
+  DateTime? _originalDueDate;
   DateTime? get dueDate => _dueDate;
   bool get isFirstRun => _dueDate == null;
 
   Future<void> saveDueDate(DateTime date) async {
     refreshDay();
+    _originalDueDate ??= date;
     _dueDate = date;
     notifyListeners();
     await _prefs.saveDueDate(date);
@@ -118,9 +121,10 @@ class AppState extends ChangeNotifier {
         );
 
   int get daysTogetherCount {
-    if (_dueDate == null) return 0;
+    final original = _originalDueDate;
+    if (original == null) return 0;
     final days = PregnancyCalculator.daysFromDueDate(
-      dueDate: _dueDate!,
+      dueDate: original,
       currentDate: today,
     );
     return days < 0 ? 0 : days;
@@ -189,6 +193,7 @@ class AppState extends ChangeNotifier {
   /// Wipes all data and returns the app to First Run. Used by Erase.
   Future<void> eraseAll() async {
     _dueDate = null;
+    _originalDueDate = null;
     _nickname = '';
     _isHalloween = true;
     _skinTone = SkinTone.peach;

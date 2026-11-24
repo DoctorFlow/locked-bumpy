@@ -84,6 +84,7 @@ void main() {
           'daily_needs_v2': <String>['2026-11-23', 'water'],
           'checkin_ids': 'water',
           'checkin_date': '2026-11-23',
+          'corrected_due_date_iso': '2027-05-17',
           'other_app_setting': 'preserved',
         });
         final state = await AppState.load();

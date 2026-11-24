@@ -19,14 +19,23 @@ class PrefsService {
 
   // ── Due date ─────────────────────────────────────────────────────────────
 
-  DateTime? get dueDate {
-    final raw = _prefs.getString(AppConstants.prefsDueDateKey);
+  DateTime? get originalDueDate => _readDate(AppConstants.prefsDueDateKey);
+
+  DateTime? get dueDate =>
+      _readDate(AppConstants.prefsCorrectedDueDateKey) ?? originalDueDate;
+
+  DateTime? _readDate(String key) {
+    final raw = _prefs.getString(key);
     if (raw == null) return null;
     return DateTime.tryParse(raw);
   }
 
-  Future<void> saveDueDate(DateTime date) =>
-      _prefs.setString(AppConstants.prefsDueDateKey, _isoDate(date));
+  Future<void> saveDueDate(DateTime date) => _prefs.setString(
+    originalDueDate == null
+        ? AppConstants.prefsDueDateKey
+        : AppConstants.prefsCorrectedDueDateKey,
+    _isoDate(date),
+  );
 
   // ── Mode & pause ─────────────────────────────────────────────────────────
 
@@ -97,6 +106,7 @@ class PrefsService {
   Future<void> clearAll() async {
     const ownedKeys = [
       AppConstants.prefsDueDateKey,
+      AppConstants.prefsCorrectedDueDateKey,
       AppConstants.prefsSkinToneKey,
       AppConstants.prefsIsHalloweenKey,
       AppConstants.prefsIsPausedKey,

@@ -25,6 +25,7 @@ void main() {
   ) async {
     final state = await settings(t);
     final initial = state.completedCheckIns;
+    final daysTogether = state.daysTogetherCount;
     final change = find.byTooltip('Change due date');
     expect(change, findsOneWidget);
     await t.ensureVisible(change);
@@ -37,6 +38,7 @@ void main() {
     expect(state.dueDate, DateTime(2027, 5, 12));
     expect((await AppState.load()).dueDate, DateTime(2027, 5, 12));
     expect(state.currentWeek, 15);
+    expect(state.daysTogetherCount, daysTogether);
     expect(state.completedCheckIns, initial);
     await t.pumpWidget(const SizedBox());
   });
