@@ -1,9 +1,9 @@
 part of 'first_run_screen.dart';
 
-// ── Step 2: Optional nickname ─────────────────────────────────────────────
+// ── Step 3: Optional nickname ─────────────────────────────────────────────
 
-class _Step2Nickname extends StatelessWidget {
-  const _Step2Nickname({
+class _StepNickname extends StatelessWidget {
+  const _StepNickname({
     required this.palette,
     required this.controller,
     required this.onBack,
@@ -18,27 +18,16 @@ class _Step2Nickname extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 24),
+      padding: _stepPadding,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(
-            'Give the baby a nickname?',
-            style: TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.bold,
-              color: palette.moonlight,
-              height: 1.2,
-            ),
-            textAlign: TextAlign.center,
+          _StepHeading(
+            title: 'Give the baby a nickname?',
+            subtitle: 'Optional — skip if you prefer Little Bumpy.',
+            palette: palette,
           ),
-          const SizedBox(height: 8),
-          Text(
-            'Optional — skip if you prefer Little Bumpy.',
-            style: TextStyle(fontSize: 14, color: palette.moonlightSoft),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 28),
+          const SizedBox(height: 24),
 
           TextField(
             controller: controller,
@@ -53,7 +42,7 @@ class _Step2Nickname extends StatelessWidget {
               fillColor: palette.paper,
               counterStyle: TextStyle(
                 color: palette.moonlightSoft,
-                fontSize: 11,
+                fontSize: 14,
               ),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(14),
@@ -65,26 +54,13 @@ class _Step2Nickname extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(height: 28),
+          const SizedBox(height: 20),
 
-          Row(
-            children: [
-              Expanded(
-                child: _SecondaryButton(
-                  label: 'Back',
-                  palette: palette,
-                  onPressed: onBack,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _PrimaryButton(
-                  label: 'Next',
-                  palette: palette,
-                  onPressed: onNext,
-                ),
-              ),
-            ],
+          _StepButtons(
+            palette: palette,
+            onBack: onBack,
+            primaryLabel: 'Next',
+            onPrimary: onNext,
           ),
         ],
       ),

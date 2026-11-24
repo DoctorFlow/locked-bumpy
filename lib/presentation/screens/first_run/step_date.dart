@@ -1,166 +1,26 @@
 part of 'first_run_screen.dart';
 
-// ── Step 1: Date input ────────────────────────────────────────────────────
+// ── Step 2: Date input ────────────────────────────────────────────────────
 
-class _WelcomeNursery extends StatefulWidget {
-  const _WelcomeNursery({
+class _StepDate extends StatelessWidget {
+  const _StepDate({
     required this.palette,
-    required this.skinTone,
-    required this.onSwitchLamp,
-  });
-  final AppPalette palette;
-  final SkinTone skinTone;
-  final VoidCallback onSwitchLamp;
-
-  @override
-  State<_WelcomeNursery> createState() => _WelcomeNurseryState();
-}
-
-class _WelcomeNurseryState extends State<_WelcomeNursery> {
-  bool _checked = false;
-  late final _records = ContentLoader.load(ContentPaths.todayLines);
-
-  @override
-  Widget build(BuildContext context) {
-    final palette = widget.palette;
-    return Material(
-      color: palette.paper,
-      borderRadius: BorderRadius.circular(22),
-      clipBehavior: Clip.antiAlias,
-      child: Column(
-        children: [
-          ClipRRect(
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(22)),
-            child: NurseryScene(
-              palette: palette,
-              avatar: BumpyAvatar(
-                need: MaternalNeed.iron,
-                palette: palette,
-                happy: _checked,
-                skinTone: widget.skinTone,
-              ),
-              cornerAction: FilledButton.tonalIcon(
-                onPressed: widget.onSwitchLamp,
-                icon: Image.asset(
-                  'assets/images/nursery-lamp.png',
-                  width: 18,
-                  height: 18,
-                  color: palette.ink,
-                  excludeFromSemantics: true,
-                ),
-                label: Text(
-                  palette.isHalloween ? 'Try daylight' : 'Try moonlight',
-                ),
-                style: FilledButton.styleFrom(
-                  foregroundColor: palette.ink,
-                  backgroundColor: palette.paper,
-                  minimumSize: const Size(0, 44),
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
-                ),
-              ),
-            ),
-          ),
-          FutureBuilder(
-            future: _records,
-            builder: (context, snapshot) {
-              final line = ContentLoader.find(
-                records: snapshot.data ?? [],
-                need: MaternalNeed.iron.needName,
-                category: 'thank_you',
-                mode: palette.isHalloween ? 'halloween' : 'everyday',
-              )?.text;
-              final label = _checked
-                  ? line ?? 'Check-in preview complete'
-                  : 'Try a sample check-in';
-              return PaperChoice(
-                liveRegion: _checked,
-                label: _checked
-                    ? '$label. Sample only, nothing saved. Reset preview'
-                    : 'Try a sample check-in',
-                onTap: _toggle,
-                focusColor: palette.ink,
-                borderRadius: const BorderRadius.vertical(
-                  bottom: Radius.circular(22),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 10,
-                  ),
-                  child: Row(
-                    children: [
-                      Image.asset(
-                        MaternalNeed.iron.iconPath,
-                        width: 30,
-                        height: 30,
-                        excludeFromSemantics: true,
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              label,
-                              style: TextStyle(
-                                color: palette.ink,
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            if (_checked)
-                              Text(
-                                'Sample only · nothing saved',
-                                style: TextStyle(
-                                  color: palette.inkSoft,
-                                  fontSize: 13,
-                                ),
-                              ),
-                          ],
-                        ),
-                      ),
-                      Icon(
-                        _checked ? Icons.replay : Icons.touch_app_outlined,
-                        size: 21,
-                        color: palette.inkSoft,
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            },
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _toggle() => setState(() => _checked = !_checked);
-}
-
-class _Step1Date extends StatelessWidget {
-  const _Step1Date({
-    required this.palette,
-    required this.skinTone,
     required this.useDueDate,
     required this.pickedDate,
     required this.previewWeek,
     required this.onToggleMode,
     required this.onPickDate,
-    required this.onEnter,
-    required this.onSwitchLamp,
+    required this.onBack,
     required this.onNext,
   });
 
   final AppPalette palette;
   final bool useDueDate;
-  final SkinTone skinTone;
   final DateTime? pickedDate;
   final int? previewWeek;
   final ValueChanged<bool> onToggleMode;
   final VoidCallback onPickDate;
-  final VoidCallback onSwitchLamp;
-  final VoidCallback? onEnter;
+  final VoidCallback onBack;
   final VoidCallback? onNext;
 
   @override
@@ -172,39 +32,18 @@ class _Step1Date extends StatelessWidget {
         ? (useDueDate ? 'Choose due date' : 'Choose period start date')
         : _fmt(pickedDate!);
     return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 24),
+      padding: _stepPadding,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(
-            'Hello, Little Bumpy.',
-            style: TextStyle(
-              fontSize: 26,
-              fontWeight: FontWeight.bold,
-              color: palette.moonlight,
-              height: 1.2,
-            ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 6),
-          Text(
-            'A little check-in with your baby each day.',
-            textAlign: TextAlign.center,
-            style: TextStyle(color: palette.moonlightSoft, fontSize: 16),
-          ),
-          const SizedBox(height: 16),
-          _WelcomeNursery(
+          _StepHeading(
+            title: 'When am I due?',
+            subtitle:
+                'Your date opens the right chapter each week. '
+                'It stays on this device.',
             palette: palette,
-            skinTone: skinTone,
-            onSwitchLamp: onSwitchLamp,
           ),
-          const SizedBox(height: 22),
-          Text(
-            'Your date picks the weekly cards. It stays on this device.',
-            style: TextStyle(fontSize: 15, color: palette.moonlightSoft),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 20),
           // Due Date / Last Period toggle
           _SegmentToggle(
             palette: palette,
@@ -221,7 +60,8 @@ class _Step1Date extends StatelessWidget {
             focusColor: pickedDate == null ? palette.accentText : palette.ink,
             borderRadius: BorderRadius.circular(16),
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+              constraints: const BoxConstraints(minHeight: 56),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
               decoration: BoxDecoration(
                 color: pickedDate == null ? palette.accent : palette.paper,
                 borderRadius: BorderRadius.circular(16),
@@ -247,7 +87,7 @@ class _Step1Date extends StatelessWidget {
                     child: Text(
                       dateText,
                       style: TextStyle(
-                        fontSize: 16,
+                        fontSize: 17,
                         fontWeight: FontWeight.w600,
                         color: pickedDate == null
                             ? palette.accentText
@@ -274,26 +114,20 @@ class _Step1Date extends StatelessWidget {
                   ),
           ),
 
-          const SizedBox(height: 20),
-          if (pickedDate != null)
-            _PrimaryButton(
-              label: 'Enter the nursery',
-              palette: palette,
-              onPressed: onEnter,
-            ),
-          if (onNext != null)
-            TextButton(
-              onPressed: onNext,
-              style: TextButton.styleFrom(foregroundColor: palette.moonlight),
-              child: const Text('Choose name and appearance first'),
-            ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 24),
+          _StepButtons(
+            palette: palette,
+            onBack: onBack,
+            primaryLabel: 'Next',
+            onPrimary: onNext,
+          ),
+          const SizedBox(height: 24),
 
           // Disclaimer
           Text(
             AppConstants.disclaimer,
             style: TextStyle(
-              fontSize: 11,
+              fontSize: 16,
               color: palette.moonlightSoft,
               height: 1.4,
             ),
@@ -352,7 +186,7 @@ class _WeekPreview extends StatelessWidget {
               child: Text(
                 'You are at week $week right now.',
                 style: TextStyle(
-                  fontSize: 14,
+                  fontSize: 16,
                   fontWeight: FontWeight.w600,
                   color: palette.moonlight,
                 ),
@@ -399,7 +233,12 @@ class _SegmentToggle extends StatelessWidget {
               focusColor: active ? palette.accentText : palette.moonlight,
               borderRadius: BorderRadius.circular(12),
               child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 11),
+                constraints: const BoxConstraints(minHeight: 48),
+                alignment: Alignment.center,
+                padding: const EdgeInsets.symmetric(
+                  vertical: 10,
+                  horizontal: 6,
+                ),
                 decoration: BoxDecoration(
                   color: active ? palette.accent : Colors.transparent,
                   borderRadius: BorderRadius.circular(12),
@@ -408,7 +247,7 @@ class _SegmentToggle extends StatelessWidget {
                   options[i],
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                    fontSize: 13,
+                    fontSize: 16,
                     fontWeight: FontWeight.bold,
                     color: active ? palette.accentText : palette.moonlightSoft,
                   ),

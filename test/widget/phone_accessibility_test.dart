@@ -67,13 +67,16 @@ void main() {
         final state = await AppState.load();
         await t.pumpWidget(LittleBumpyApp(state: state));
         await t.pumpAndSettle();
+        await t.ensureVisible(find.text('Start'));
+        await t.tap(find.text('Start'));
+        await t.pumpAndSettle();
         await t.ensureVisible(find.text('Choose due date'));
         await t.tap(find.text('Choose due date'));
         await t.pumpAndSettle();
         await t.tap(find.text('OK'));
         await t.pumpAndSettle();
-        await t.ensureVisible(find.text('Choose name and appearance first'));
-        await t.tap(find.text('Choose name and appearance first'));
+        await t.ensureVisible(find.text('Next'));
+        await t.tap(find.text('Next'));
         await t.pumpAndSettle();
         final decoration = t
             .widget<TextField>(find.byType(TextField))
