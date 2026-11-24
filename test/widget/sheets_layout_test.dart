@@ -81,7 +81,9 @@ void main() {
       await t.pumpWidget(LittleBumpyApp(state: state));
       await t.pumpAndSettle();
       // A room under 340 px shows the compact corner button (fix-today).
-      await t.tap(find.byTooltip(width == 320 ? 'Wardrobe' : 'Costume closet'));
+      await t.tap(
+        find.byTooltip(width == 320 ? 'Wardrobe' : 'Costume closet'),
+      );
       await t.pumpAndSettle();
       expect(t.takeException(), isNull);
       Finder card(MaternalNeed need) => find
