@@ -217,7 +217,7 @@ class _CostumeCard extends StatelessWidget {
       key: ValueKey('closet-${need.name}'),
       button: true,
       selected: selected,
-      label: 'Try $name',
+      label: 'Try $name, ${need.label}',
       onTap: onTap,
       excludeSemantics: true,
       child: Material(
@@ -248,7 +248,7 @@ class _CostumeCard extends StatelessWidget {
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.fromLTRB(6, 4, 6, 8),
+                padding: const EdgeInsets.fromLTRB(6, 4, 6, 0),
                 child: Wrap(
                   alignment: WrapAlignment.center,
                   crossAxisAlignment: WrapCrossAlignment.center,
@@ -265,6 +265,14 @@ class _CostumeCard extends StatelessWidget {
                       ),
                     ),
                   ],
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(4, 0, 4, 6),
+                child: Text(
+                  need.label,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 12, color: palette.inkSoft),
                 ),
               ),
             ],

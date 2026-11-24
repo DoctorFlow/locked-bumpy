@@ -25,7 +25,11 @@ void main() {
     await tester.tap(trigger);
     await tester.pumpAndSettle();
     for (final need in MaternalNeed.values) {
-      expect(find.byKey(ValueKey('closet-${need.name}')), findsOneWidget);
+      final card = find.byKey(ValueKey('closet-${need.name}'));
+      expect(
+        find.descendant(of: card, matching: find.text(need.label)),
+        findsOneWidget,
+      );
     }
     final witch = find.byKey(const ValueKey('closet-vitamin'));
     await tester.ensureVisible(witch);

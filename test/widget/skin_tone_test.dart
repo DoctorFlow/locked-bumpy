@@ -38,11 +38,19 @@ void main() {
       expect(find.text('Bumpy’s skin tone'), findsOneWidget);
       final choice = find.text('Deep umber');
       await t.ensureVisible(choice);
-      await t.tap(choice);
+      await t.pumpAndSettle();
+      await t.tap(choice.hitTestable());
       await t.pumpAndSettle();
       expect(
         (await SharedPreferences.getInstance()).getString('skin_tone'),
         'deepest',
+      );
+      final preview = t.widget<Image>(
+        find.byKey(const ValueKey('skin-tone-preview')),
+      );
+      expect(
+        preview.image,
+        const PaperTintImage('assets/images/everyday.png', SkinTone.deepest),
       );
       await t.binding.handlePopRoute();
       await t.pumpAndSettle();

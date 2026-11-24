@@ -182,6 +182,7 @@ class SettingsScreen extends StatelessWidget {
                                 selected: state.skinTone,
                                 onSelected: state.saveSkinTone,
                                 foreground: palette.ink,
+                                showPreview: true,
                               ),
                               const SizedBox(height: 24),
                               Text('Privacy', style: title),
