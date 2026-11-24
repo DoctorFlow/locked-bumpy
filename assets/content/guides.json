@@ -65,8 +65,7 @@
       "I'm tired most days. Could it be low iron, or is it the pregnancy?",
       "Would an iron tablet help me, or are food and my vitamin enough?"
     ],
-    "call_today": "Call your doctor or midwife today if your poo is black, tar-like or red, or has blood in or on it, even if you are not sure.",
-    "call_now": "",
+    "call_today": "Call your doctor or midwife today if your poo is black and sticky like tar, or red, or has blood in or on it, even if you are not sure.",
     "closing": "Your doctor or midwife decides the amount.",
     "sources": [
       {
@@ -166,8 +165,7 @@
       "Does my vitamin have iodine, and is that enough with the food I eat?",
       "I had a drink before I knew I was pregnant. Is there anything to check?"
     ],
-    "call_today": "Call your doctor or midwife today if your baby is moving less than usual, or you have any bleeding from your vagina, even if you are not sure.",
-    "call_now": "",
+    "call_today": "",
     "closing": "Your doctor or midwife decides what is right for you.",
     "sources": [
       {
@@ -268,7 +266,7 @@
       }
     ],
     "try_this": [
-      "Choose pasteurized milk, yogurt and cheese",
+      "Choose pasteurized milk and yogurt",
       "Try a plant drink with calcium added",
       "Add curly kale or okra to a meal",
       "Check your vitamin label for vitamin D"
@@ -279,8 +277,7 @@
       "Does my vitamin have vitamin D and calcium, and is that enough for me?",
       "I don't eat much dairy. How can I get enough calcium?"
     ],
-    "call_today": "Call your doctor or midwife today if you have a severe headache that will not go away, blurred vision or flashing lights, pain below your ribs, or sudden swelling of your face, hands or feet, even if you are not sure.",
-    "call_now": "",
+    "call_today": "",
     "closing": "Your doctor or midwife decides the amount.",
     "sources": [
       {
@@ -380,14 +377,13 @@
       "Choose water, milk or a lower-sugar drink",
       "Add high-fiber foods to your meals"
     ],
-    "if_hard": "If nausea makes drinking hard, sipping little and often may help. If you cannot keep drinks down, that is a reason to call your doctor or midwife.",
+    "if_hard": "If nausea makes drinking hard, sipping little and often may help. If you cannot keep drinks down, call your doctor or midwife right away.",
     "questions": [
       "How much do you want me to drink each day, given my health?",
       "How much caffeine is fine for me, counting tea, coffee and cola?",
       "I throw up most days. How will I know when it needs treatment?"
     ],
-    "call_today": "Call your doctor or midwife today if you are vomiting and cannot keep food or drinks down, your pee is very dark or you have not peed for many hours, you feel very weak, dizzy or faint when you stand up, or you have stomach pain, a high temperature or blood in your vomit, even if you are not sure.",
-    "call_now": "",
+    "call_today": "Call your doctor or midwife today if you are vomiting and your pee is very dark, you have not peed for many hours, or there is blood in your vomit, even if you are not sure.",
     "closing": "Your doctor or midwife decides the amount.",
     "sources": [
       {
@@ -430,7 +426,7 @@
     "approved_date": "",
     "last_checked": "2026-11-24",
     "costume_line": "A ghost costume is really a bedsheet. Bedsheets mean rest, so I wore one for you.",
-    "point": "Feeling very tired is common in pregnancy, and the NHS says it will not harm you or your baby. Rest when you can, and call your doctor or midwife if it feels like too much.",
+    "point": "Feeling tired is common in pregnancy, and the NHS says it will not harm you or your baby. Tiredness that is sudden and too much to cope with is different: get help right away.",
     "facts": [
       {
         "id": "rest-f1",
@@ -487,8 +483,7 @@
       "Which sleeping positions are safe and comfortable for me now?",
       "I have been feeling low or worried. Who can I talk to?"
     ],
-    "call_today": "Call your doctor or midwife today if your tiredness feels overwhelming, you feel dizzy or faint, you have trouble breathing, chest pain or a fast-beating heart, or you have thoughts about harming yourself or your baby, even if you are not sure.",
-    "call_now": "",
+    "call_today": "",
     "closing": "Your doctor or midwife decides what is right for you.",
     "sources": [
       {
@@ -582,8 +577,7 @@
       "Does my vitamin have vitamin A as retinol, and is that okay for me?",
       "My vitamin makes me feel sick. Is there another kind I could try?"
     ],
-    "call_today": "Call your doctor or midwife today if you are vomiting and cannot keep food or drinks down, or your pee is very dark, even if you are not sure.",
-    "call_now": "",
+    "call_today": "",
     "closing": "Your doctor or midwife decides what is right for you.",
     "sources": [
       {
