@@ -3,7 +3,7 @@ import '../../core/theme/palette.dart';
 import 'bumpy_avatar.dart';
 
 /// The same paper room welcomes the parent and holds the daily visit.
-class NurseryScene extends StatelessWidget {
+class NurseryScene extends StatefulWidget {
   const NurseryScene({
     super.key,
     required this.palette,
@@ -16,8 +16,42 @@ class NurseryScene extends StatelessWidget {
   final Widget? cornerAction;
   final double height;
 
+  /// One backdrop per look, sized for the widest card on a 3x phone.
+  static String backdropFor(AppPalette palette) => palette.isHalloween
+      ? 'assets/images/nursery-halloween.webp'
+      : 'assets/images/nursery-everyday.webp';
+
+  @override
+  State<NurseryScene> createState() => _NurserySceneState();
+}
+
+class _NurserySceneState extends State<NurseryScene> {
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _precacheBackdrop();
+  }
+
+  @override
+  void didUpdateWidget(NurseryScene oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.palette != widget.palette) _precacheBackdrop();
+  }
+
+  void _precacheBackdrop() {
+    precacheImage(
+      AssetImage(NurseryScene.backdropFor(widget.palette)),
+      context,
+      // A missing backdrop already falls back to the sky colour in build.
+      onError: (_, _) {},
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final palette = widget.palette;
+    final height = widget.height;
+    final cornerAction = widget.cornerAction;
     final separateAction =
         cornerAction != null && MediaQuery.textScalerOf(context).scale(14) > 21;
     final room = SizedBox(
@@ -28,9 +62,7 @@ class NurseryScene extends StatelessWidget {
         children: [
           Positioned.fill(
             child: Image.asset(
-              palette.isHalloween
-                  ? 'assets/images/nursery-halloween.png'
-                  : 'assets/images/nursery-everyday.png',
+              NurseryScene.backdropFor(palette),
               fit: BoxFit.cover,
               alignment: const Alignment(0, -.85),
               excludeFromSemantics: true,
@@ -39,10 +71,10 @@ class NurseryScene extends StatelessWidget {
           ),
           SizedBox(
             height: height < 194 ? height - 4 : 190,
-            child: FittedBox(child: avatar),
+            child: FittedBox(child: widget.avatar),
           ),
           if (cornerAction != null && !separateAction)
-            Positioned(top: 6, left: 6, child: cornerAction!),
+            Positioned(top: 6, left: 6, child: cornerAction),
         ],
       ),
     );

@@ -5,7 +5,7 @@ import '../../domain/models/skin_tone.dart';
 import 'paper_portrait.dart';
 
 /// Full-body paper cut on the same square registration in both nursery looks.
-class BumpyAvatar extends StatelessWidget {
+class BumpyAvatar extends StatefulWidget {
   const BumpyAvatar({
     super.key,
     required this.need,
@@ -22,7 +22,45 @@ class BumpyAvatar extends StatelessWidget {
   final Animation<double>? hopAnimation;
 
   @override
+  State<BumpyAvatar> createState() => _BumpyAvatarState();
+}
+
+class _BumpyAvatarState extends State<BumpyAvatar> {
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _precacheLook();
+  }
+
+  @override
+  void didUpdateWidget(BumpyAvatar oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.need != widget.need ||
+        oldWidget.palette != widget.palette ||
+        oldWidget.skinTone != widget.skinTone) {
+      _precacheLook();
+    }
+  }
+
+  /// Decode (and tint) both faces of the visible look ahead of time, so the
+  /// 768 px paper never shows an empty box while the smile swaps in.
+  void _precacheLook() {
+    for (final happy in [false, true]) {
+      final path = widget.need.assetPath(widget.palette, happy: happy);
+      precacheImage(
+        paperPortrait(path, widget.skinTone),
+        context,
+        // A damaged asset already falls back to the moon icon in build.
+        onError: (_, _) {},
+      );
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final need = widget.need;
+    final palette = widget.palette;
+    final happy = widget.happy;
     final path = need.assetPath(palette, happy: happy);
     final reduceMotion = MediaQuery.disableAnimationsOf(context);
     final look = palette.isHalloween
@@ -33,7 +71,7 @@ class BumpyAvatar extends StatelessWidget {
           ? Duration.zero
           : const Duration(milliseconds: 300),
       child: Image(
-        image: paperPortrait(path, skinTone),
+        image: paperPortrait(path, widget.skinTone),
         key: ValueKey(path),
         width: 190,
         height: 190,
@@ -45,7 +83,8 @@ class BumpyAvatar extends StatelessWidget {
         ),
       ),
     );
-    final hop = hopAnimation;
+    final hop = widget.hopAnimation;
+    final pixelRatio = MediaQuery.devicePixelRatioOf(context);
     return Semantics(
       image: true,
       label: 'Bumpy in a $look${happy ? ', smiling' : ''}',
@@ -56,7 +95,11 @@ class BumpyAvatar extends StatelessWidget {
               animation: hop,
               child: avatar,
               builder: (_, child) => Transform.translate(
-                offset: Offset(0, hop.value),
+                // Whole device pixels, so the paper is not resampled mid-hop.
+                offset: Offset(
+                  0,
+                  (hop.value * pixelRatio).roundToDouble() / pixelRatio,
+                ),
                 child: child,
               ),
             ),
