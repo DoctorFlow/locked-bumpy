@@ -11,7 +11,8 @@ import '../../domain/models/app_state.dart';
 /// A paper strip with three equal tabs. The selected tab is marked four ways,
 /// so it never depends on colour alone: an accent paper marker behind the
 /// icon, a filled icon, a bold label and the accent colour. Labels grow with
-/// the system text size (the stock Material bar pins them at 100%).
+/// the system text size up to 1.3x and stay on one line (the stock Material
+/// bar pins them at 100%).
 class AppNavBar extends StatelessWidget {
   const AppNavBar({super.key, required this.state});
 
@@ -30,6 +31,9 @@ class AppNavBar extends StatelessWidget {
       selectedIcon: Icons.menu_book,
     ),
   ];
+
+  /// The largest text scale a tab label follows before it shrinks to fit.
+  static const maxLabelScale = 1.3;
 
   /// Label and icon colour of a tab that is not selected, on [AppPalette.tabBar].
   static Color unselectedColor(AppPalette palette) => palette.tabBarText;
@@ -54,8 +58,8 @@ class AppNavBar extends StatelessWidget {
           role: SemanticsRole.tabBar,
           explicitChildNodes: true,
           container: true,
-          // One height for all three, so a label that wraps at a large text
-          // size leaves the icons in a line and every target full height.
+          // One height for all three, so the icons stay in a line and every
+          // target is full height.
           child: IntrinsicHeight(
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -126,14 +130,24 @@ class _Tab extends StatelessWidget {
         color: selected ? palette.accentText : color,
       ),
     );
-    final text = Text(
-      label,
-      maxLines: 2,
-      textAlign: TextAlign.center,
-      overflow: TextOverflow.ellipsis,
-      style: AppText.label.copyWith(
-        color: color,
-        fontWeight: selected ? FontWeight.w700 : FontWeight.w400,
+    // One line at any text size. The label grows with the system text size
+    // up to [AppNavBar.maxLabelScale], then shrinks to fit the tab rather
+    // than wrap: the icon and the marker carry the meaning, and the bar
+    // stays short enough to leave the page room on a small phone.
+    final text = MediaQuery.withClampedTextScaling(
+      maxScaleFactor: AppNavBar.maxLabelScale,
+      child: FittedBox(
+        fit: BoxFit.scaleDown,
+        child: Text(
+          label,
+          maxLines: 1,
+          softWrap: false,
+          textAlign: TextAlign.center,
+          style: AppText.label.copyWith(
+            color: color,
+            fontWeight: selected ? FontWeight.w700 : FontWeight.w400,
+          ),
+        ),
       ),
     );
 
