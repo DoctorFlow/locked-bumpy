@@ -1,8 +1,15 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import '../../core/theme/palette.dart';
 import 'bumpy_avatar.dart';
 
 /// The same paper room welcomes the parent and holds the daily visit.
+///
+/// Three layers, back to front: the sky (the top of the backdrop picture),
+/// a paper hill in [AppPalette.hill] with a soft shadow where Bumpy stands,
+/// and Bumpy. The hill is drawn, not cropped from the picture, so Bumpy has
+/// ground under the feet at every size the room is shown.
 class NurseryScene extends StatefulWidget {
   const NurseryScene({
     super.key,
@@ -20,6 +27,10 @@ class NurseryScene extends StatefulWidget {
   static String backdropFor(AppPalette palette) => palette.isHalloween
       ? 'assets/images/nursery-halloween.webp'
       : 'assets/images/nursery-everyday.webp';
+
+  /// Height of Bumpy's picture in a room of [height].
+  static double spriteHeightFor(double height) =>
+      height < 194 ? height - 4 : 190;
 
   @override
   State<NurseryScene> createState() => _NurserySceneState();
@@ -54,6 +65,7 @@ class _NurserySceneState extends State<NurseryScene> {
     final cornerAction = widget.cornerAction;
     final separateAction =
         cornerAction != null && MediaQuery.textScalerOf(context).scale(14) > 21;
+    final sprite = NurseryScene.spriteHeightFor(height);
     final room = SizedBox(
       height: height,
       width: double.infinity,
@@ -69,8 +81,22 @@ class _NurserySceneState extends State<NurseryScene> {
               errorBuilder: (_, _, _) => ColoredBox(color: palette.skyBottom),
             ),
           ),
+          Positioned.fill(
+            child: CustomPaint(
+              painter: _GroundPainter(
+                hill: palette.hill,
+                shadow: palette.shadow,
+                night: palette.isHalloween,
+                sprite: sprite,
+                // Bumpy stays on the ground when motion is reduced.
+                hop: MediaQuery.disableAnimationsOf(context)
+                    ? null
+                    : widget.avatar.hopAnimation,
+              ),
+            ),
+          ),
           SizedBox(
-            height: height < 194 ? height - 4 : 190,
+            height: sprite,
             child: FittedBox(child: widget.avatar),
           ),
           if (cornerAction != null && !separateAction)
@@ -93,4 +119,107 @@ class _NurserySceneState extends State<NurseryScene> {
       ],
     );
   }
+}
+
+/// The hill Bumpy stands on and the shadow under the feet.
+///
+/// Every measure is a share of Bumpy's picture height, so the ground keeps
+/// its place under the feet from the 112 px room to the 204 px one.
+class _GroundPainter extends CustomPainter {
+  _GroundPainter({
+    required this.hill,
+    required this.shadow,
+    required this.night,
+    required this.sprite,
+    this.hop,
+  }) : super(repaint: hop);
+
+  final Color hill;
+  final Color shadow;
+  final bool night;
+  final double sprite;
+  final Animation<double>? hop;
+
+  /// The hill crest above the floor of the room: behind Bumpy's legs.
+  static const double _crest = .22;
+
+  /// Bumpy's feet end here in every picture (measured: 0.938 from the top).
+  static const double _feet = .062;
+
+  /// Shadow width and height. The widest costume foot print is 0.59.
+  static const double _shadowWidth = .62;
+  static const double _shadowHeight = .085;
+
+  /// The hop the shadow answers to, in logical pixels.
+  static const double _fullHop = 18;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final w = size.width;
+    final h = size.height;
+    final side = math.min(sprite, w);
+    final rise = side * _crest;
+    final drop = math.min(w * .055, rise * .5);
+
+    // A second hill further back, the same paper seen through the air.
+    final far = Path()
+      ..moveTo(-.15 * w, h)
+      ..lineTo(-.15 * w, h - rise * .55)
+      ..quadraticBezierTo(.2 * w, h - rise * 1.55, .62 * w, h - rise * .5)
+      ..lineTo(.62 * w, h)
+      ..close();
+    canvas.drawPath(far, Paint()..color = hill.withValues(alpha: .45));
+
+    final crest = Path()
+      ..moveTo(0, h - rise + drop)
+      ..quadraticBezierTo(w / 2, h - rise - drop, w, h - rise + drop);
+    final ground = Path.from(crest)
+      ..lineTo(w, h)
+      ..lineTo(0, h)
+      ..close();
+    canvas.drawPath(ground, Paint()..color = hill);
+    // The cut edge of the paper catches the light.
+    canvas.save();
+    canvas.clipPath(ground);
+    canvas.drawPath(
+      crest,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2.5
+        ..color = Color.lerp(hill, const Color(0xFFFFFFFF), night ? .10 : .22)!,
+    );
+    canvas.restore();
+
+    // The higher the hop, the smaller and fainter the shadow.
+    final lift = ((-(hop?.value ?? 0)) / _fullHop).clamp(0.0, 1.0);
+    final width = side * _shadowWidth * (1 - .2 * lift);
+    final depth = side * _shadowHeight * (1 - .2 * lift);
+    final strength = (night ? .6 : .34) * (1 - .35 * lift);
+    final radius = width / 2;
+    canvas.save();
+    canvas.translate(w / 2, h - side * _feet);
+    canvas.scale(1, depth / width);
+    canvas.drawCircle(
+      Offset.zero,
+      radius,
+      Paint()
+        ..shader = RadialGradient(
+          colors: [
+            shadow.withValues(alpha: strength),
+            shadow.withValues(alpha: strength * .6),
+            shadow.withValues(alpha: 0),
+          ],
+          stops: const [0, .55, 1],
+        ).createShader(Rect.fromCircle(center: Offset.zero, radius: radius)),
+    );
+    canvas.restore();
+  }
+
+  @override
+  bool shouldRepaint(_GroundPainter old) =>
+      old.hill != hill ||
+      old.shadow != shadow ||
+      old.night != night ||
+      old.sprite != sprite ||
+      old.hop != hop;
 }

@@ -4,6 +4,7 @@ import 'package:little_bumpy/core/theme/palette.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:little_bumpy/domain/models/app_state.dart';
 import 'package:little_bumpy/main.dart';
+import 'package:little_bumpy/presentation/widgets/app_nav_bar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 double contrast(Color text, Color surface) {
@@ -42,11 +43,13 @@ void main() {
           contrast(heading.style!.color!, palette.paper),
           greaterThanOrEqualTo(4.5),
         );
-        final nav = tester.widget<BottomNavigationBar>(
-          find.byType(BottomNavigationBar),
+        expect(find.byType(AppNavBar), findsOneWidget);
+        expect(
+          contrast(AppNavBar.unselectedColor(palette), palette.tabBar),
+          greaterThanOrEqualTo(4.5),
         );
         expect(
-          contrast(nav.unselectedItemColor!, palette.tabBar),
+          contrast(AppNavBar.selectedColor(palette), palette.tabBar),
           greaterThanOrEqualTo(4.5),
         );
         if (!palette.isHalloween) {
