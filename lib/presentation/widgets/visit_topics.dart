@@ -10,9 +10,13 @@ class VisitTopics extends StatelessWidget {
   const VisitTopics({super.key, required this.state});
   final AppState state;
 
-  Future<void> _edit(BuildContext context) async {
+  static Future<void> edit(
+    BuildContext context,
+    AppState state, {
+    MaternalNeed? include,
+  }) async {
     final palette = AppPalette.of(context);
-    final selected = {...state.visitTopics};
+    final selected = {...state.visitTopics, ?include};
     final result = await showModalBottomSheet<Set<MaternalNeed>>(
       context: context,
       useSafeArea: true,
@@ -173,7 +177,7 @@ class VisitTopics extends StatelessWidget {
                 ),
             TextButton.icon(
               style: TextButton.styleFrom(foregroundColor: palette.ink),
-              onPressed: () => _edit(context),
+              onPressed: () => edit(context, state),
               icon: const Icon(Icons.edit_outlined, size: 18),
               label: Text(topics.isEmpty ? 'Choose topics' : 'Edit visit list'),
             ),

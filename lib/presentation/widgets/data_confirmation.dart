@@ -27,7 +27,7 @@ Future<void> confirmErase(BuildContext context, AppState state) async {
       palette: palette,
       title: 'Erase everything?',
       body:
-          'This removes your date, nickname, and check-ins. '
+          'This removes your date, nickname, appearance, check-ins, and visit list. '
           'It cannot be undone.',
       confirmLabel: 'Yes, erase',
       confirmDestructive: true,

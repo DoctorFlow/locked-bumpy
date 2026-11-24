@@ -15,23 +15,38 @@ void main() {
     await t.pumpAndSettle();
     Future<void> tap(Finder f) async {
       await t.ensureVisible(f);
-      await t.tap(f);
+      await t.pumpAndSettle();
+      await t.tap(f.hitTestable());
       await t.pumpAndSettle();
     }
 
     await tap(find.text('Guides'));
-    await tap(find.text('Choose topics'));
-    await tap(find.byKey(const ValueKey('visit-topic-water')));
+    final waterGuide = find.byKey(const PageStorageKey(MaternalNeed.water));
+    await tap(find.descendant(of: waterGuide, matching: find.text('Water')));
+    await tap(
+      find.descendant(
+        of: waterGuide,
+        matching: find.text('Add to my visit list'),
+      ),
+    );
+    expect(
+      t
+          .widget<CheckboxListTile>(
+            find.byKey(const ValueKey('visit-topic-water')),
+          )
+          .value,
+      isTrue,
+    );
     await tap(find.byKey(const ValueKey('visit-topic-rest')));
     await tap(find.text('Save visit list'));
     expect(state.visitTopics, {MaternalNeed.water, MaternalNeed.rest});
     expect(state.completedCheckIns, isEmpty);
-    await tap(find.text('Edit visit list'));
+    await tap(find.text('On my visit list'));
     await tap(find.byKey(const ValueKey('visit-topic-rest')));
     await tap(find.byTooltip('Close visit list'));
     final restored = await AppState.load();
     expect(restored.visitTopics, {MaternalNeed.water, MaternalNeed.rest});
-    await tap(find.text('Edit visit list'));
+    await tap(find.text('On my visit list'));
     await tap(find.byKey(const ValueKey('visit-topic-water')));
     await tap(find.byTooltip('Pause').hitTestable());
     expect(find.text('Everything is paused.'), findsOneWidget);

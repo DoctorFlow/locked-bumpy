@@ -55,6 +55,9 @@ class _GuidesScreenState extends State<GuidesScreen> {
                 palette: palette,
                 article: snapshot.data?[need],
                 skinTone: widget.state.skinTone,
+                savedForVisit: widget.state.visitTopics.contains(need),
+                onVisitList: () =>
+                    VisitTopics.edit(context, widget.state, include: need),
               ),
             ),
           Text(
@@ -75,12 +78,16 @@ class _NeedGuide extends StatelessWidget {
     required this.palette,
     required this.article,
     required this.skinTone,
+    required this.savedForVisit,
+    required this.onVisitList,
   });
   final MaternalNeed need;
   final bool isToday;
   final AppPalette palette;
   final GuideArticle? article;
   final SkinTone skinTone;
+  final bool savedForVisit;
+  final VoidCallback onVisitList;
 
   @override
   Widget build(BuildContext context) {
@@ -161,6 +168,18 @@ class _NeedGuide extends StatelessWidget {
                 child: Text(question, style: TextStyle(color: palette.inkSoft)),
               ),
           ],
+          const SizedBox(height: 12),
+          OutlinedButton.icon(
+            onPressed: onVisitList,
+            style: OutlinedButton.styleFrom(
+              foregroundColor: palette.ink,
+              minimumSize: const Size.fromHeight(48),
+            ),
+            icon: Icon(savedForVisit ? Icons.bookmark : Icons.bookmark_outline),
+            label: Text(
+              savedForVisit ? 'On my visit list' : 'Add to my visit list',
+            ),
+          ),
         ],
       ),
     );
