@@ -1,7 +1,9 @@
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import '../../core/constants/app_constants.dart';
+import '../../core/theme/app_text.dart';
 import '../../core/theme/palette.dart';
+import '../../core/theme/paper.dart';
 import '../../domain/models/app_state.dart';
 import '../widgets/data_confirmation.dart';
 import '../widgets/pregnancy_date_picker.dart';
@@ -93,9 +95,27 @@ class SettingsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final palette = AppPalette.of(context);
     final largeText = MediaQuery.textScalerOf(context).scale(14) > 20;
-    final title = Theme.of(context).textTheme.titleMedium?.copyWith(
-      color: palette.ink,
-      fontWeight: FontWeight.bold,
+    final title = AppText.heading.copyWith(color: palette.ink);
+    final reading = AppText.body.copyWith(color: palette.inkSoft);
+    Widget rule() => Padding(
+      padding: const EdgeInsets.symmetric(vertical: AppSpace.l),
+      child: Divider(height: 1, thickness: 1, color: palette.rule),
+    );
+    final heading = Semantics(
+      header: true,
+      child: Text(
+        'Settings',
+        style: AppText.title.copyWith(color: palette.moonlight),
+      ),
+    );
+    final pause = Tooltip(
+      message: 'Pause',
+      child: TextButton.icon(
+        onPressed: state.pause,
+        style: TextButton.styleFrom(foregroundColor: palette.moonlight),
+        icon: largeText ? null : const Icon(Icons.pause_circle_outline),
+        label: Text(largeText ? 'Pause' : 'Pause app'),
+      ),
     );
     return Scaffold(
       backgroundColor: palette.skyBottom,
@@ -104,164 +124,159 @@ class SettingsScreen extends StatelessWidget {
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 440),
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Row(
-                  children: [
-                    BackButton(color: palette.moonlight),
-                    Expanded(
-                      child: Semantics(
-                        header: true,
-                        child: Text(
-                          'Settings',
-                          style: TextStyle(
-                            color: palette.moonlight,
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
+                // At large text the title takes its own line under the
+                // back and pause controls, so it never breaks mid-word.
+                if (largeText) ...[
+                  Row(
+                    children: [
+                      BackButton(color: palette.moonlight),
+                      const Spacer(),
+                      pause,
+                      const SizedBox(width: AppSpace.s),
+                    ],
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpace.page,
                     ),
-                    Tooltip(
-                      message: 'Pause',
-                      child: TextButton.icon(
-                        onPressed: state.pause,
-                        style: TextButton.styleFrom(
-                          foregroundColor: palette.moonlight,
-                        ),
-                        icon: largeText
-                            ? null
-                            : const Icon(Icons.pause_circle_outline),
-                        label: Text(largeText ? 'Pause' : 'Pause app'),
-                      ),
+                    child: heading,
+                  ),
+                ] else
+                  SizedBox(
+                    height: AppSpace.row,
+                    child: Row(
+                      children: [
+                        BackButton(color: palette.moonlight),
+                        Expanded(child: heading),
+                        pause,
+                        const SizedBox(width: AppSpace.s),
+                      ],
                     ),
-                  ],
-                ),
+                  ),
                 Expanded(
                   child: ListView(
-                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+                    padding: const EdgeInsets.fromLTRB(
+                      AppSpace.page,
+                      AppSpace.s,
+                      AppSpace.page,
+                      AppSpace.xl,
+                    ),
                     children: [
-                      Card(
-                        color: palette.paper,
-                        margin: EdgeInsets.zero,
-                        child: Padding(
-                          padding: const EdgeInsets.all(20),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              _EditableDetail(
-                                label: 'Due date',
-                                value: state.dueDate == null
-                                    ? ''
-                                    : MaterialLocalizations.of(
-                                        context,
-                                      ).formatShortDate(state.dueDate!),
-                                action: 'Change due date',
-                                palette: palette,
-                                onTap: () async {
-                                  state.refreshDay();
-                                  final picked = await pickPregnancyDate(
-                                    context,
-                                    today: state.today,
-                                    useDueDate: true,
-                                    onPause: state.pause,
-                                    selected: state.dueDate,
-                                  );
-                                  if (picked != null &&
+                      PaperCard(
+                        padding: const EdgeInsets.all(AppSpace.l),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _EditableDetail(
+                              label: 'Due date',
+                              value: state.dueDate == null
+                                  ? ''
+                                  : MaterialLocalizations.of(
+                                      context,
+                                    ).formatShortDate(state.dueDate!),
+                              action: 'Change due date',
+                              palette: palette,
+                              onTap: () async {
+                                state.refreshDay();
+                                final picked = await pickPregnancyDate(
+                                  context,
+                                  today: state.today,
+                                  useDueDate: true,
+                                  onPause: state.pause,
+                                  selected: state.dueDate,
+                                );
+                                if (picked != null &&
+                                    context.mounted &&
+                                    !state.isPaused &&
+                                    !state.isFirstRun) {
+                                  final saved = await state.saveDueDate(picked);
+                                  if (!saved &&
                                       context.mounted &&
-                                      !state.isPaused &&
-                                      !state.isFirstRun) {
-                                    final saved = await state.saveDueDate(
-                                      picked,
-                                    );
-                                    if (!saved &&
-                                        context.mounted &&
-                                        !state.isPaused) {
-                                      ScaffoldMessenger.of(
-                                        context,
-                                      ).showSnackBar(
-                                        const SnackBar(
-                                          content: Text(
-                                            'Couldn’t save the due date. Please try again.',
-                                          ),
+                                      !state.isPaused) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text(
+                                          'Couldn’t save the due date. Please try again.',
                                         ),
-                                      );
-                                    }
-                                  }
-                                },
-                              ),
-                              _EditableDetail(
-                                label: 'Nickname',
-                                value: state.babyDisplayName,
-                                action: 'Edit nickname',
-                                palette: palette,
-                                onTap: () => _editNickname(context),
-                              ),
-                              const SizedBox(height: 16),
-                              Text('Appearance', style: title),
-                              const SizedBox(height: 8),
-                              Wrap(
-                                spacing: 8,
-                                children: [
-                                  for (final mode in [false, true])
-                                    ChoiceChip(
-                                      label: Text(
-                                        mode ? 'Halloween' : 'Everyday',
                                       ),
-                                      selected: mode == state.isHalloween,
-                                      onSelected: (_) {
-                                        if (mode != state.isHalloween) {
-                                          state.toggleMode();
-                                        }
-                                      },
+                                    );
+                                  }
+                                }
+                              },
+                            ),
+                            _EditableDetail(
+                              label: 'Nickname',
+                              value: state.babyDisplayName,
+                              action: 'Edit nickname',
+                              palette: palette,
+                              onTap: () => _editNickname(context),
+                            ),
+                            rule(),
+                            Text('Appearance', style: title),
+                            const SizedBox(height: AppSpace.s),
+                            Wrap(
+                              spacing: AppSpace.s,
+                              runSpacing: AppSpace.s,
+                              children: [
+                                for (final mode in [false, true])
+                                  ChoiceChip(
+                                    label: Text(
+                                      mode ? 'Halloween' : 'Everyday',
                                     ),
-                                ],
-                              ),
-                              const SizedBox(height: 24),
-                              SkinTonePicker(
-                                selected: state.skinTone,
-                                onSelected: state.saveSkinTone,
-                                foreground: palette.ink,
-                                showPreview: true,
-                              ),
-                              const SizedBox(height: 24),
-                              Text('Privacy', style: title),
-                              const SizedBox(height: 4),
-                              Text(
-                                kIsWeb
-                                    ? 'Your data stays in this browser on this device. No accounts. No tracking. No ads.'
-                                    : AppConstants.privacyStatement,
-                                style: TextStyle(color: palette.inkSoft),
-                              ),
-                              const SizedBox(height: 20),
-                              Text('Medical disclaimer', style: title),
-                              const SizedBox(height: 4),
-                              Text(
-                                AppConstants.disclaimer,
-                                style: TextStyle(color: palette.inkSoft),
-                              ),
-                              const SizedBox(height: 20),
-                              Wrap(
-                                spacing: 8,
-                                crossAxisAlignment: WrapCrossAlignment.center,
-                                children: [
-                                  Text('Little Bumpy', style: title),
-                                  Text(
-                                    AppConstants.appVersion,
-                                    style: TextStyle(color: palette.inkSoft),
+                                    selected: mode == state.isHalloween,
+                                    onSelected: (_) {
+                                      if (mode != state.isHalloween) {
+                                        state.toggleMode();
+                                      }
+                                    },
                                   ),
-                                ],
-                              ),
-                            ],
-                          ),
+                              ],
+                            ),
+                            const SizedBox(height: AppSpace.xl),
+                            SkinTonePicker(
+                              selected: state.skinTone,
+                              onSelected: state.saveSkinTone,
+                              foreground: palette.ink,
+                              showPreview: true,
+                            ),
+                            rule(),
+                            Text('Privacy', style: title),
+                            const SizedBox(height: AppSpace.s),
+                            Text(
+                              kIsWeb
+                                  ? 'Your data stays in this browser on this device. No accounts. No tracking. No ads.'
+                                  : AppConstants.privacyStatement,
+                              style: reading,
+                            ),
+                            const SizedBox(height: AppSpace.xl),
+                            Text('Medical disclaimer', style: title),
+                            const SizedBox(height: AppSpace.s),
+                            Text(AppConstants.disclaimer, style: reading),
+                            rule(),
+                            Wrap(
+                              spacing: AppSpace.s,
+                              crossAxisAlignment: WrapCrossAlignment.center,
+                              children: [
+                                Text('Little Bumpy', style: title),
+                                Text(
+                                  AppConstants.appVersion,
+                                  style: AppText.small.copyWith(
+                                    color: palette.inkSoft,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
                         ),
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: AppSpace.xl),
                       Align(
-                        alignment: Alignment.centerLeft,
+                        alignment: AlignmentDirectional.centerStart,
                         child: OutlinedButton(
                           style: OutlinedButton.styleFrom(
                             foregroundColor: palette.moonlight,
-                            minimumSize: const Size(48, 48),
                           ),
                           onPressed: () => confirmErase(context, state),
                           child: const Text('Erase all data'),
@@ -297,11 +312,21 @@ class _EditableDetail extends StatelessWidget {
     return Tooltip(
       message: action,
       child: ListTile(
-        contentPadding: EdgeInsets.zero,
+        contentPadding: const EdgeInsetsDirectional.only(
+          start: AppSpace.s,
+          end: AppSpace.xs,
+        ),
+        shape: const RoundedRectangleBorder(borderRadius: AppRadii.control),
         onTap: onTap,
-        title: Text(label, style: TextStyle(color: palette.ink)),
-        subtitle: Text(value, style: TextStyle(color: palette.inkSoft)),
-        trailing: Icon(Icons.edit_outlined, color: palette.inkSoft, size: 20),
+        title: Text(
+          label,
+          style: AppText.small.copyWith(color: palette.inkSoft),
+        ),
+        subtitle: Text(
+          value,
+          style: AppText.bodyStrong.copyWith(color: palette.ink),
+        ),
+        trailing: Icon(Icons.edit_outlined, color: palette.ink, size: 24),
       ),
     );
   }

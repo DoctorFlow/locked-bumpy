@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart' show ScrollCacheExtent;
 import '../../content/content_loader.dart';
 import '../../core/constants/app_constants.dart';
+import '../../core/theme/app_text.dart';
 import '../../core/theme/palette.dart';
+import '../../core/theme/paper.dart';
 import '../../domain/models/app_state.dart';
 import '../../domain/models/guide.dart';
 import '../../domain/models/need.dart';
 import '../../domain/models/skin_tone.dart';
-import '../widgets/bumpy_avatar.dart';
 import '../widgets/draft_tag.dart';
 import '../widgets/paper_portrait.dart';
 import '../widgets/visit_topics.dart';
@@ -14,7 +16,8 @@ import 'guide_screen.dart';
 import 'urgent_screen.dart';
 
 /// Six need cards. A card whose guide passed the gate opens the guide page;
-/// a hidden guide's card keeps its name, Bumpy and the visit-list control.
+/// a hidden guide's card keeps its name, Bumpy in costume and the visit-list
+/// control, and promises nothing more (no arrow, no accordion).
 /// Everything stays inside the main shell so Pause immediately hides it.
 class GuidesScreen extends StatefulWidget {
   const GuidesScreen({super.key, required this.state});
@@ -33,28 +36,39 @@ class _GuidesScreenState extends State<GuidesScreen> {
     return FutureBuilder<Map<MaternalNeed, Guide>>(
       future: _guides,
       builder: (context, snapshot) => ListView(
-        padding: const EdgeInsets.all(16),
+        // Build every card (only a dozen pieces), so the page and its
+        // spoken order are complete even beyond the first screen.
+        scrollCacheExtent: const ScrollCacheExtent.pixels(4000),
+        padding: const EdgeInsets.fromLTRB(
+          AppSpace.page,
+          AppSpace.l,
+          AppSpace.page,
+          AppSpace.xl,
+        ),
         children: [
           Semantics(
             header: true,
             child: Text(
               snapshot.data?.isNotEmpty == true ? 'Care guides' : 'Care topics',
-              style: TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-                color: palette.moonlight,
-              ),
+              style: AppText.title.copyWith(color: palette.moonlight),
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppSpace.l),
+          // Near the top, visible without scrolling (Amendment 3): a parent
+          // who needs this list should never find it by luck.
+          _UrgentRow(
+            palette: palette,
+            onOpen: () => UrgentScreen.open(context, widget.state),
+          ),
+          const SizedBox(height: AppSpace.l),
           VisitTopics(state: widget.state),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppSpace.xl),
           for (final need in [
             widget.state.todayNeed,
             ...MaternalNeed.values.where((n) => n != widget.state.todayNeed),
           ])
             Padding(
-              padding: const EdgeInsets.only(bottom: 8),
+              padding: const EdgeInsets.only(bottom: AppSpace.l),
               child: _NeedCard(
                 need: need,
                 isToday: need == widget.state.todayNeed,
@@ -67,16 +81,11 @@ class _GuidesScreenState extends State<GuidesScreen> {
                     VisitTopics.edit(context, widget.state, include: need),
               ),
             ),
-          const SizedBox(height: 8),
-          _UrgentRow(
-            palette: palette,
-            onOpen: () => UrgentScreen.open(context, widget.state),
-          ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppSpace.s),
           Text(
             AppConstants.disclaimer,
             textAlign: TextAlign.center,
-            style: TextStyle(color: palette.moonlightSoft, fontSize: 14),
+            style: AppText.small.copyWith(color: palette.moonlightSoft),
           ),
         ],
       ),
@@ -85,7 +94,8 @@ class _GuidesScreenState extends State<GuidesScreen> {
 }
 
 /// The one row that opens the shared urgent list. Plain ink on paper with a
-/// heavy ink edge: calm, but clearly not like the playful need cards.
+/// heavy ink edge and an ink icon tile: calm, but clearly not like the
+/// playful need cards above it.
 class _UrgentRow extends StatelessWidget {
   const _UrgentRow({required this.palette, required this.onOpen});
   final AppPalette palette;
@@ -93,49 +103,149 @@ class _UrgentRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final shape = RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(16),
-      side: BorderSide(color: palette.ink, width: 2),
-    );
-    return Material(
-      key: const ValueKey('urgent-row'),
-      shape: shape,
-      clipBehavior: Clip.antiAlias,
-      color: palette.paper,
-      child: Semantics(
-        button: true,
-        label: UrgentScreen.rowLabel,
-        excludeSemantics: true,
-        child: InkWell(
-          onTap: onOpen,
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(minHeight: 56),
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(14, 12, 8, 12),
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.health_and_safety_outlined,
-                    color: palette.ink,
-                    size: 28,
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      UrgentScreen.rowLabel,
-                      style: TextStyle(
+    return InkedEdge(
+      color: palette.ink,
+      child: PaperCard(
+        key: const ValueKey('urgent-row'),
+        child: Semantics(
+          button: true,
+          label: UrgentScreen.rowLabel,
+          excludeSemantics: true,
+          child: InkWell(
+            onTap: onOpen,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(minHeight: 72),
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpace.l,
+                  AppSpace.m,
+                  AppSpace.s,
+                  AppSpace.m,
+                ),
+                child: Row(
+                  children: [
+                    DecoratedBox(
+                      decoration: BoxDecoration(
                         color: palette.ink,
-                        fontSize: 18,
-                        fontWeight: FontWeight.w700,
-                        height: 1.3,
+                        borderRadius: AppRadii.tag,
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(AppSpace.s),
+                        child: Icon(
+                          Icons.health_and_safety_outlined,
+                          color: palette.paper,
+                          size: 28,
+                        ),
                       ),
                     ),
-                  ),
-                  Icon(Icons.chevron_right, color: palette.ink),
-                ],
+                    const SizedBox(width: AppSpace.m),
+                    Expanded(
+                      child: Text(
+                        UrgentScreen.rowLabel,
+                        style: AppText.heading.copyWith(color: palette.ink),
+                      ),
+                    ),
+                    Icon(Icons.chevron_right, color: palette.ink, size: 28),
+                  ],
+                ),
               ),
             ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+/// A 2 px edge in [color] drawn over a [PaperCard] (card corners). The
+/// theme's card has only the 1 px lit edge; the serious pieces need more.
+class InkedEdge extends StatelessWidget {
+  const InkedEdge({
+    super.key,
+    required this.color,
+    required this.child,
+    this.borderRadius = AppRadii.card,
+  });
+  final Color color;
+  final Widget child;
+  final BorderRadius borderRadius;
+
+  @override
+  Widget build(BuildContext context) => DecoratedBox(
+    position: DecorationPosition.foreground,
+    decoration: BoxDecoration(
+      borderRadius: borderRadius,
+      border: Border.all(color: color, width: 2),
+    ),
+    child: child,
+  );
+}
+
+/// Bumpy wearing [need]'s costume, in either look: the costume is the idea
+/// of the app, so the Everyday look shows the same costume by day.
+String costumePortraitPath(MaternalNeed need) =>
+    need.assetPath(AppPalette.halloween);
+
+/// Bumpy in costume on a small raised piece of paper, with the need's own
+/// paper icon pinned in the corner.
+class NeedPortrait extends StatelessWidget {
+  const NeedPortrait({
+    super.key,
+    required this.need,
+    required this.skinTone,
+    this.size = 88,
+  });
+  final MaternalNeed need;
+  final SkinTone skinTone;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = AppPalette.of(context);
+    final path = costumePortraitPath(need);
+    return ExcludeSemantics(
+      child: SizedBox.square(
+        dimension: size,
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            Positioned.fill(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  color: palette.paperRaised,
+                  borderRadius: AppRadii.control,
+                  border: Border.all(color: palette.edge),
+                  boxShadow: paperShadows(palette, raised: true),
+                ),
+              ),
+            ),
+            Positioned.fill(
+              child: Padding(
+                padding: const EdgeInsets.all(AppSpace.xs),
+                child: Image(
+                  key: ValueKey(path),
+                  image: paperPortrait(path, skinTone),
+                  fit: BoxFit.contain,
+                  gaplessPlayback: true,
+                  errorBuilder: (_, _, _) => Image.asset(
+                    need.iconPath,
+                    width: size / 2,
+                    height: size / 2,
+                  ),
+                ),
+              ),
+            ),
+            PositionedDirectional(
+              end: -AppSpace.xs,
+              bottom: -AppSpace.xs,
+              child: Image.asset(
+                need.iconPath,
+                width: 28,
+                height: 28,
+                errorBuilder: (_, _, _) => const SizedBox.shrink(),
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -169,163 +279,125 @@ class _NeedCard extends StatelessWidget {
         ].join(' · ')
       : null;
 
-  Widget _visitButton() => OutlinedButton.icon(
-    onPressed: onVisitList,
-    style: OutlinedButton.styleFrom(
-      foregroundColor: palette.ink,
-      minimumSize: const Size.fromHeight(48),
+  Widget _visitButton() => Align(
+    alignment: AlignmentDirectional.centerStart,
+    child: OutlinedButton.icon(
+      onPressed: onVisitList,
+      icon: Icon(savedForVisit ? Icons.bookmark : Icons.bookmark_outline),
+      label: Text(savedForVisit ? 'On my visit list' : 'Add to my visit list'),
     ),
-    icon: Icon(savedForVisit ? Icons.bookmark : Icons.bookmark_outline),
-    label: Text(savedForVisit ? 'On my visit list' : 'Add to my visit list'),
   );
 
   @override
   Widget build(BuildContext context) {
-    final shape = RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(16),
-    );
     final copy = guide;
-    return Material(
-      key: PageStorageKey(need),
-      shape: shape,
-      clipBehavior: Clip.antiAlias,
-      color: palette.paper,
-      child: copy == null ? _hidden(context, shape) : _ready(copy),
-    );
-  }
-
-  /// A guide that passed the gate: the card opens the guide page.
-  Widget _ready(Guide copy) {
     final status = _status;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Semantics(
-          button: true,
-          label: 'Open the ${need.label} guide',
-          child: InkWell(
-            onTap: onOpen,
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(minHeight: 48),
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(12, 12, 8, 4),
-                child: Row(
-                  children: [
-                    // Bumpy in this need's costume (the onesie in Everyday).
-                    Image(
-                      image: paperPortrait(need.assetPath(palette), skinTone),
-                      width: 72,
-                      height: 72,
-                      excludeFromSemantics: true,
-                      errorBuilder: (_, _, _) => Image.asset(
-                        need.iconPath,
-                        width: 48,
-                        height: 48,
-                        excludeFromSemantics: true,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            need.label,
-                            style: TextStyle(
-                              color: palette.ink,
-                              fontSize: 18,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                          if (palette.isHalloween)
-                            Text(
-                              need.costume,
-                              style: TextStyle(
-                                color: palette.inkSoft,
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          if (status != null)
-                            Text(
-                              status,
-                              style: TextStyle(
-                                color: palette.inkSoft,
-                                fontSize: 14,
-                              ),
-                            ),
-                          if (copy.isDraft)
-                            Padding(
-                              padding: const EdgeInsets.only(top: 4),
-                              child: DraftTag(palette: palette),
-                            ),
-                        ],
-                      ),
-                    ),
-                    Icon(Icons.chevron_right, color: palette.inkSoft),
-                  ],
+    final top = Padding(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpace.l,
+        AppSpace.l,
+        AppSpace.s,
+        AppSpace.m,
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          NeedPortrait(need: need, skinTone: skinTone),
+          const SizedBox(width: AppSpace.l),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  need.label,
+                  style: AppText.heading.copyWith(color: palette.ink),
                 ),
-              ),
+                const SizedBox(height: AppSpace.xs),
+                CostumeTag(costume: need.costume, palette: palette),
+                if (status != null) ...[
+                  const SizedBox(height: AppSpace.xs),
+                  Text(
+                    status,
+                    style: AppText.small.copyWith(color: palette.inkSoft),
+                  ),
+                ],
+                if (copy != null) ...[
+                  const SizedBox(height: AppSpace.s),
+                  Text(
+                    copy.point,
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppText.body.copyWith(color: palette.ink),
+                  ),
+                ],
+                if (copy?.isDraft == true)
+                  Padding(
+                    padding: const EdgeInsets.only(top: AppSpace.xs),
+                    child: DraftTag(palette: palette),
+                  ),
+              ],
             ),
           ),
-        ),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 4, 16, 14),
-          child: _visitButton(),
-        ),
-      ],
+          if (copy != null)
+            Padding(
+              padding: const EdgeInsets.only(top: AppSpace.xl),
+              child: Icon(Icons.chevron_right, color: palette.ink, size: 28),
+            )
+          else
+            const SizedBox(width: AppSpace.s),
+        ],
+      ),
+    );
+    return PaperCard(
+      key: PageStorageKey(need),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (copy == null)
+            top
+          else
+            Semantics(
+              button: true,
+              label: 'Open the ${need.label} guide',
+              child: InkWell(onTap: onOpen, child: top),
+            ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpace.l,
+              0,
+              AppSpace.l,
+              AppSpace.l,
+            ),
+            child: _visitButton(),
+          ),
+        ],
+      ),
     );
   }
+}
 
-  /// A hidden guide: the need card stays, as before, with its name, Bumpy in
-  /// the costume and the visit-list control.
-  Widget _hidden(BuildContext context, ShapeBorder shape) {
-    final status = _status;
-    return ExpansionTile(
-      key: PageStorageKey(('hidden', need)),
-      expansionAnimationStyle: MediaQuery.disableAnimationsOf(context)
-          ? AnimationStyle.noAnimation
-          : null,
-      shape: shape,
-      collapsedShape: shape,
-      iconColor: palette.ink,
-      collapsedIconColor: palette.inkSoft,
-      leading: Image.asset(
-        need.iconPath,
-        width: 40,
-        height: 40,
-        excludeFromSemantics: true,
+/// The costume word as a small paper tag (capitals live only in `label`).
+class CostumeTag extends StatelessWidget {
+  const CostumeTag({super.key, required this.costume, required this.palette});
+  final String costume;
+  final AppPalette palette;
+
+  @override
+  Widget build(BuildContext context) => DecoratedBox(
+    decoration: BoxDecoration(
+      color: palette.paperRaised,
+      borderRadius: AppRadii.tag,
+      border: Border.all(color: palette.edge),
+    ),
+    child: Padding(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpace.s,
+        vertical: AppSpace.xs,
       ),
-      title: Text(
-        need.label,
-        style: TextStyle(color: palette.ink, fontWeight: FontWeight.w600),
+      child: Text(
+        costume,
+        style: AppText.label.copyWith(color: palette.inkSoft),
       ),
-      subtitle: status != null
-          ? Text(status, style: TextStyle(color: palette.inkSoft))
-          : null,
-      childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 18),
-      expandedCrossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Center(
-          child: BumpyAvatar(
-            need: need,
-            palette: palette,
-            happy: false,
-            skinTone: skinTone,
-          ),
-        ),
-        if (palette.isHalloween)
-          Text(
-            need.costume,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: palette.inkSoft,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        const SizedBox(height: 12),
-        _visitButton(),
-      ],
-    );
-  }
+    ),
+  );
 }

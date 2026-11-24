@@ -100,15 +100,14 @@ void main() {
         of: tile,
         matching: find.text(need.label),
       );
-      await tester.dragUntilVisible(
-        heading.hitTestable(),
-        find.byType(ListView),
-        const Offset(0, -60),
-      );
+      // The need cards are taller now; bring the heading fully into view.
+      await tester.ensureVisible(heading);
+      await tester.pumpAndSettle();
       await tester.tap(heading.hitTestable());
       await tester.pumpAndSettle();
+      // Bumpy wears the need's costume in both looks (by day in Everyday).
       expect(
-        find.byKey(ValueKey(need.assetPath(AppPalette.everyday))),
+        find.byKey(ValueKey(need.assetPath(AppPalette.halloween))),
         findsOneWidget,
       );
       if (!articles.containsKey(need)) {

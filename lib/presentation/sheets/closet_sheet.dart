@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import '../widgets/pause_button.dart';
 import '../widgets/paper_choice.dart';
+import '../../core/theme/app_text.dart';
 import '../../core/theme/palette.dart';
+import '../../core/theme/paper.dart';
 import '../../domain/models/app_state.dart';
 import '../../domain/models/need.dart';
 import '../../domain/models/skin_tone.dart';
@@ -73,11 +75,7 @@ class _ClosetSheetState extends State<ClosetSheet> {
             header: true,
             child: Text(
               'Tonight’s wardrobe',
-              style: TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-                color: palette.ink,
-              ),
+              style: AppText.title.copyWith(color: palette.ink),
             ),
           ),
         ),
@@ -92,11 +90,8 @@ class _ClosetSheetState extends State<ClosetSheet> {
     final rail = Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        DecoratedBox(
-          decoration: BoxDecoration(
-            color: palette.paperRaised,
-            borderRadius: BorderRadius.circular(18),
-          ),
+        PaperCard(
+          raised: true,
           child: Center(
             child: BumpyAvatar(
               need: _preview,
@@ -106,7 +101,7 @@ class _ClosetSheetState extends State<ClosetSheet> {
             ),
           ),
         ),
-        SizedBox(height: shortPhone ? 6 : 12),
+        SizedBox(height: shortPhone ? AppSpace.s : AppSpace.m),
         LayoutBuilder(
           builder: (context, constraints) {
             final columns =
@@ -118,14 +113,16 @@ class _ClosetSheetState extends State<ClosetSheet> {
                 ? 3
                 : 2;
             return Wrap(
-              spacing: 8,
-              runSpacing: shortPhone ? 4 : 8,
+              spacing: AppSpace.s,
+              runSpacing: AppSpace.s,
               children: [
                 for (final need in MaternalNeed.values)
                   SizedBox(
-                    width: (constraints.maxWidth - 8 * (columns - 1)) / columns,
+                    width:
+                        (constraints.maxWidth - AppSpace.s * (columns - 1)) /
+                        columns,
                     child: _CostumeCard(
-                      thumbnailSize: shortPhone ? 48 : 65,
+                      thumbnailSize: shortPhone ? 64 : 96,
                       need: need,
                       skinTone: state.skinTone,
                       palette: palette,
@@ -140,22 +137,17 @@ class _ClosetSheetState extends State<ClosetSheet> {
       ],
     );
     final footer = Padding(
-      padding: const EdgeInsets.only(top: 12, bottom: 8),
+      padding: const EdgeInsets.only(top: AppSpace.m, bottom: AppSpace.s),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
             'Wear it for this visit. Today’s check-in stays the same.',
             textAlign: TextAlign.center,
-            style: TextStyle(color: palette.inkSoft),
+            style: AppText.small.copyWith(color: palette.inkSoft),
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: AppSpace.s),
           FilledButton(
-            style: FilledButton.styleFrom(
-              backgroundColor: palette.ink,
-              foregroundColor: palette.paper,
-              minimumSize: const Size.fromHeight(48),
-            ),
             onPressed: () {
               state.setCostumeOverride(_preview);
               Navigator.of(context).pop();
@@ -171,7 +163,7 @@ class _ClosetSheetState extends State<ClosetSheet> {
     return SafeArea(
       top: false,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
+        padding: const EdgeInsets.symmetric(horizontal: AppSpace.page),
         child: compact
             ? SingleChildScrollView(
                 child: Column(
@@ -215,74 +207,111 @@ class _CostumeCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final name = _costumeName(need);
-    final shape = RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(16),
-      side: BorderSide(
-        color: selected ? palette.accent : Colors.transparent,
-        width: 2,
-      ),
-    );
-    return Material(
-      color: palette.paperRaised,
-      shape: shape,
-      clipBehavior: Clip.antiAlias,
-      child: PaperChoice(
-        key: ValueKey('closet-${need.name}'),
-        selected: selected,
-        label: 'Try $name, ${need.label}',
-        onTap: onTap,
-        focusColor: palette.ink,
-        borderRadius: BorderRadius.circular(16),
-        child: Column(
-          children: [
-            SizedBox(
-              width: double.infinity,
-              height: thumbnailSize,
-              child: ColoredBox(
-                color: Color.alphaBlend(
-                  palette.moonlight.withValues(alpha: .40),
-                  palette.paperRaised,
-                ),
-                child: Center(
-                  child: Image(
+    // Selected = a 3 px accent edge, a tick badge on the picture and a tick
+    // before the name: never colour alone.
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        PaperCard(
+          raised: true,
+          child: PaperChoice(
+            key: ValueKey('closet-${need.name}'),
+            selected: selected,
+            label: 'Try $name, ${need.label}',
+            onTap: onTap,
+            focusColor: palette.ink,
+            borderRadius: AppRadii.control,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpace.xs,
+                AppSpace.s,
+                AppSpace.xs,
+                AppSpace.s,
+              ),
+              child: Column(
+                children: [
+                  Image(
                     image: paperPortrait(need.assetPath(palette), skinTone),
-                    height: thumbnailSize - 2,
-                    width: thumbnailSize - 2,
+                    height: thumbnailSize,
+                    width: thumbnailSize,
+                    fit: BoxFit.contain,
                     gaplessPlayback: true,
                   ),
-                ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(6, 4, 6, 0),
-              child: Wrap(
-                alignment: WrapAlignment.center,
-                crossAxisAlignment: WrapCrossAlignment.center,
-                spacing: 3,
-                children: [
-                  if (selected) Icon(Icons.check, size: 14, color: palette.ink),
-                  Text(
-                    name,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: palette.ink,
-                    ),
+                  const SizedBox(height: AppSpace.xs),
+                  Wrap(
+                    alignment: WrapAlignment.center,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    spacing: AppSpace.xs,
+                    children: [
+                      if (selected)
+                        Icon(Icons.check, size: 18, color: palette.ink),
+                      Text(
+                        name,
+                        textAlign: TextAlign.center,
+                        style: AppText.bodyStrong.copyWith(color: palette.ink),
+                      ),
+                    ],
+                  ),
+                  Wrap(
+                    alignment: WrapAlignment.center,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    spacing: AppSpace.xs,
+                    children: [
+                      // The need's paper icon, drawn as decoration so the
+                      // sheet's only Image widgets stay the six portraits.
+                      SizedBox.square(
+                        dimension: 18,
+                        child: DecoratedBox(
+                          decoration: BoxDecoration(
+                            image: DecorationImage(
+                              image: AssetImage(need.iconPath),
+                              onError: (_, _) {},
+                            ),
+                          ),
+                        ),
+                      ),
+                      Text(
+                        need.label,
+                        textAlign: TextAlign.center,
+                        style: AppText.small.copyWith(color: palette.inkSoft),
+                      ),
+                    ],
                   ),
                 ],
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(4, 0, 4, 6),
-              child: Text(
-                need.label,
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 12, color: palette.inkSoft),
+          ),
+        ),
+        if (selected) ...[
+          Positioned.fill(
+            child: IgnorePointer(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  borderRadius: AppRadii.control,
+                  border: Border.all(color: palette.accent, width: 3),
+                ),
               ),
             ),
-          ],
-        ),
-      ),
+          ),
+          PositionedDirectional(
+            top: -AppSpace.xs,
+            end: -AppSpace.xs,
+            child: IgnorePointer(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  color: palette.accent,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: palette.paper, width: 2),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(2),
+                  child: Icon(Icons.check, size: 18, color: palette.accentText),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ],
     );
   }
 }
