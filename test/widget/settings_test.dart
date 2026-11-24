@@ -96,7 +96,9 @@ void main() {
     await tester.pump();
     expect(find.text('Everything is paused.'), findsOneWidget);
     expect(find.text('Settings'), findsNothing);
-    expect(find.byType(Image), findsNothing);
+    // Only Bumpy asleep: no costume, no room, no other picture.
+    expect(find.byType(Image), findsOneWidget);
+    expect(find.byKey(const ValueKey('paused-bumpy')), findsOneWidget);
     await tester.tap(find.text('Resume'));
     await tester.pumpAndSettle();
     expect(state.currentTab, 2);

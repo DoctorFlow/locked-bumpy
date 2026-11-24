@@ -1,5 +1,13 @@
 [
   {
+    "id": "paused_support",
+    "status": "draft",
+    "approved_by": "",
+    "approved_date": "",
+    "where": "Paused screen: the kind line under \"Everything is paused.\" and its first line, pointing to real support.",
+    "text": "If today is heavy, your doctor or midwife is there for you too."
+  },
+  {
     "id": "urgent_later_title",
     "status": "draft",
     "approved_by": "",

@@ -140,10 +140,10 @@ void main() {
       await tester.pump();
 
       expect(find.textContaining('stays paused until Erase'), findsOneWidget);
-      final resume = tester.widget<ElevatedButton>(
+      final resume = tester.widget<OutlinedButton>(
         find.ancestor(
           of: find.text('Resume'),
-          matching: find.byType(ElevatedButton),
+          matching: find.byType(OutlinedButton),
         ),
       );
       expect(resume.onPressed, isNull);

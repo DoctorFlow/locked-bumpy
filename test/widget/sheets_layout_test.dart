@@ -81,9 +81,7 @@ void main() {
       await t.pumpWidget(LittleBumpyApp(state: state));
       await t.pumpAndSettle();
       // A room under 340 px shows the compact corner button (fix-today).
-      await t.tap(
-        find.byTooltip(width == 320 ? 'Wardrobe' : 'Costume closet'),
-      );
+      await t.tap(find.byTooltip(width == 320 ? 'Wardrobe' : 'Costume closet'));
       await t.pumpAndSettle();
       expect(t.takeException(), isNull);
       Finder card(MaternalNeed need) => find
@@ -196,8 +194,8 @@ void main() {
       await t.pumpAndSettle();
       expect(t.takeException(), isNull);
       expectWholeWords(t, 'Everything is paused.');
-      // A paper moon, never Bumpy.
-      expect(t.getSize(find.byKey(const ValueKey('paused-moon'))).width, 72);
+      // Bumpy asleep, a still picture that is never read aloud.
+      expect(t.getSize(find.byKey(const ValueKey('paused-bumpy'))).height, 112);
       expect(find.bySemanticsLabel(RegExp('^Bumpy')), findsNothing);
       final reset = find.text('Reset today’s check-ins and resume');
       await t.ensureVisible(reset);
@@ -206,7 +204,7 @@ void main() {
       expect(
         t
             .getSize(
-              find.ancestor(of: reset, matching: find.byType(OutlinedButton)),
+              find.ancestor(of: reset, matching: find.byType(TextButton)),
             )
             .height,
         greaterThanOrEqualTo(48),

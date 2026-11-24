@@ -1,26 +1,45 @@
 import 'package:flutter/material.dart';
+import '../../content/content_loader.dart';
 import '../../core/theme/app_text.dart';
 import '../../core/theme/palette.dart';
 import '../../core/theme/paper.dart';
+import '../../domain/models/app_line.dart';
 import '../../domain/models/app_state.dart';
 
 import '../widgets/data_confirmation.dart';
+import '../widgets/draft_tag.dart';
+import '../widgets/paper_portrait.dart';
 import '../widgets/whole_word_text.dart';
 
-/// Quiet, neutral Paused screen.
-/// App voice only — no baby, no costume, no animations.
+/// Quiet Paused screen (lab round 3, problem 3: it was a bright Resume
+/// button under a faceless disc, with no kind word).
 ///
-/// Everything sits on one paper card, so the erase colours are the palette's
-/// `danger` / `onDanger` on paper in both looks (DESIGN.md section 8, item 5),
-/// and they stay right when the Everyday page turns light. "Resume" is the
-/// one main button; the other two actions sit 32 below it.
+/// App voice only, no costume, no animation. Bumpy is a still picture,
+/// asleep, in the plain onesie. The title is the strongest thing on the
+/// card; Resume is a calm outlined button; reset and erase are quieter
+/// links below it. One kind line points to real support: it is content
+/// (`app_lines.json`, `paused_support`) behind the review gate, so until the
+/// physician approves it, it shows only in a review build, with a Draft tag.
+///
+/// Everything sits on one paper card. The erase retry keeps the palette's
+/// `danger` / `onDanger`; so does the erase confirmation dialog.
 class PausedScreen extends StatelessWidget {
   const PausedScreen({super.key, required this.state});
 
   final AppState state;
 
+  /// The sleeping picture, the same art the Everyday look already uses.
+  static const sleepingBumpy = 'assets/images/everyday-sleepy.png';
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => FutureBuilder<Map<String, AppLine>>(
+    future: ContentLoader.loadAppLines(),
+    initialData: ContentLoader.loadedAppLines,
+    builder: (context, snap) =>
+        _build(context, snap.data?[AppLines.pausedSupport]),
+  );
+
+  Widget _build(BuildContext context, AppLine? support) {
     final palette = AppPalette.of(context);
 
     // Centred when it fits; scrolls when large text makes it taller.
@@ -49,28 +68,24 @@ class PausedScreen extends StatelessWidget {
                       mainAxisSize: MainAxisSize.min,
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        // A still paper moon, no animation while paused. Never
-                        // Bumpy: this is also the screen after a loss.
+                        // Bumpy asleep: a still picture, no costume, no hop,
+                        // nothing read aloud. Eyes closed, so it asks
+                        // nothing of a parent on a hard day.
                         Center(
-                          child: Container(
-                            key: const ValueKey('paused-moon'),
-                            width: 72,
-                            height: 72,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              // At night the moon token is pumpkin, which
-                              // reads as an orange ball; cream moonlight is
-                              // the moon. By day the pale yellow moon shows
-                              // on cream paper, where moonlight would vanish.
-                              color: palette.isHalloween
-                                  ? palette.moonlight
-                                  : palette.moon,
-                              border: Border.all(color: palette.edge),
-                              boxShadow: paperShadows(palette),
+                          child: ExcludeSemantics(
+                            child: Image(
+                              key: const ValueKey('paused-bumpy'),
+                              image: paperPortrait(
+                                sleepingBumpy,
+                                state.skinTone,
+                              ),
+                              height: 112,
+                              fit: BoxFit.contain,
+                              gaplessPlayback: true,
                             ),
                           ),
                         ),
-                        const SizedBox(height: AppSpace.xl),
+                        const SizedBox(height: AppSpace.l),
                         Semantics(
                           header: true,
                           child: WholeWordText(
@@ -86,6 +101,19 @@ class PausedScreen extends StatelessWidget {
                           style: AppText.body.copyWith(color: palette.inkSoft),
                           textAlign: TextAlign.center,
                         ),
+                        if (support != null) ...[
+                          const SizedBox(height: AppSpace.m),
+                          Text(
+                            support.text,
+                            key: const ValueKey('paused-support'),
+                            style: AppText.body.copyWith(color: palette.ink),
+                            textAlign: TextAlign.center,
+                          ),
+                          if (support.isDraft) ...[
+                            const SizedBox(height: AppSpace.xs),
+                            Center(child: DraftTag(palette: palette)),
+                          ],
+                        ],
                         if (state.eraseFailed) ...[
                           const SizedBox(height: AppSpace.l),
                           Text(
@@ -116,24 +144,28 @@ class PausedScreen extends StatelessWidget {
                         const SizedBox(height: AppSpace.xl),
 
                         // Resume (disabled while an Erase is unfinished on
-                        // disk). The one main button.
-                        ElevatedButton(
+                        // disk). A calm outlined button: clear, never loud.
+                        OutlinedButton(
+                          key: const ValueKey('paused-resume'),
                           onPressed: state.erasePending ? null : state.resume,
-                          style: ElevatedButton.styleFrom(
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: palette.ink,
                             minimumSize: const Size.fromHeight(AppSpace.target),
                           ),
                           child: const Text('Resume'),
                         ),
-                        const SizedBox(height: AppSpace.xxl),
-                        if (state.dueDate != null) ...[
+                        const SizedBox(height: AppSpace.l),
+                        if (state.dueDate != null)
                           // Resets today's check-ins and leaves Pause (its
-                          // dialog says so). Outlined: Resume stays the one
-                          // main button.
-                          OutlinedButton(
+                          // dialog says so). A plain link, quieter than
+                          // Resume.
+                          TextButton(
+                            key: const ValueKey('paused-reset'),
                             onPressed: state.erasePending
                                 ? null
                                 : () => confirmStartFresh(context, state),
-                            style: OutlinedButton.styleFrom(
+                            style: TextButton.styleFrom(
+                              foregroundColor: palette.inkSoft,
                               minimumSize: const Size.fromHeight(
                                 AppSpace.target,
                               ),
@@ -143,14 +175,14 @@ class PausedScreen extends StatelessWidget {
                               textAlign: TextAlign.center,
                             ),
                           ),
-                          const SizedBox(height: AppSpace.s),
-                        ],
 
-                        // Erase all data: a link in the danger colour.
+                        // Erase all data: the quietest link. Its confirming
+                        // step keeps the danger colour.
                         TextButton(
+                          key: const ValueKey('paused-erase'),
                           onPressed: () => confirmErase(context, state),
                           style: TextButton.styleFrom(
-                            foregroundColor: palette.danger,
+                            foregroundColor: palette.inkSoft,
                             minimumSize: const Size.fromHeight(AppSpace.target),
                           ),
                           child: const Text('Erase all data'),

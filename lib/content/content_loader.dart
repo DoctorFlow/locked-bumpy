@@ -65,6 +65,10 @@ class ContentLoader {
     }
   }
 
+  /// The app lines already loaded, or null before the first [loadAppLines]
+  /// finishes: lets a screen draw them on its first frame.
+  static Map<String, AppLine>? get loadedAppLines => _appLines;
+
   /// Replaces the loaded app lines (null reads the file again). Tests only.
   @visibleForTesting
   static void debugSetAppLines(Map<String, AppLine>? lines) =>
