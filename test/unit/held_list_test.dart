@@ -55,12 +55,15 @@ void main() {
       );
     });
 
-    test('holds the three week cards PRODUCT.md calls wrong', () async {
-      final held = await shippedHolds();
-      for (final id in ['week-8', 'week-9', 'week-35']) {
-        expect(held.holds('week_cards.json', id), isTrue, reason: id);
-      }
-    });
+    test(
+      'holds the three week cards PRODUCT.md calls wrong, and week 20',
+      () async {
+        final held = await shippedHolds();
+        for (final id in ['week-8', 'week-9', 'week-20', 'week-35']) {
+          expect(held.holds('week_cards.json', id), isTrue, reason: id);
+        }
+      },
+    );
 
     test('week card ids are unique, so a hold names one card', () async {
       final cards = WeekCard.listFromJsonString(
