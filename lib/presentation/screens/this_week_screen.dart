@@ -1,13 +1,20 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import '../widgets/pause_button.dart';
+import '../../content/chapter_loader.dart';
 import '../../content/content_loader.dart';
 import '../../core/constants/app_constants.dart';
 import '../../core/theme/palette.dart';
 import '../../domain/models/app_state.dart';
+import '../../domain/models/chapter.dart';
+import '../../domain/models/need.dart';
 import '../../domain/models/week_card.dart';
 import '../widgets/bumpy_avatar.dart';
 import '../widgets/nursery_scene.dart';
 import '../widgets/visit_topics.dart';
+
+part 'this_week_chapter.dart';
 
 /// This Week tab — browse gestational weeks 4–42 with approved baby-voice cards.
 class ThisWeekScreen extends StatefulWidget {
@@ -21,6 +28,7 @@ class ThisWeekScreen extends StatefulWidget {
 
 class _ThisWeekScreenState extends State<ThisWeekScreen> {
   List<WeekCard>? _cards;
+  List<Chapter> _chapters = const [];
   static const int _minWeek = AppConstants.minWeek;
   static const int _maxWeek = AppConstants.maxWeek;
   late int _currentWeek;
@@ -188,8 +196,15 @@ class _ThisWeekScreenState extends State<ThisWeekScreen> {
   }
 
   Future<void> _loadCards() async {
+    final chapters = ChapterLoader.load();
     final cards = await ContentLoader.loadWeekCards();
-    if (mounted) setState(() => _cards = cards);
+    final loaded = await chapters;
+    if (mounted) {
+      setState(() {
+        _cards = cards;
+        _chapters = loaded;
+      });
+    }
   }
 
   @override
@@ -218,6 +233,31 @@ class _ThisWeekScreenState extends State<ThisWeekScreen> {
                 week: week,
                 mode: mode,
               );
+              final chapter = ChapterLoader.forWeek(_chapters, week);
+              if (chapter != null) {
+                return Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: CustomScrollView(
+                    key: PageStorageKey('chapter-week-$week'),
+                    slivers: [
+                      SliverFillRemaining(
+                        hasScrollBody: false,
+                        child: _ChapterPage(
+                          chapter: chapter,
+                          week: week,
+                          card: card,
+                          palette: palette,
+                          state: widget.state,
+                          isCurrentWeek: week == _currentWeek,
+                          onReturn: () => _goTo(_currentWeek),
+                          onVisit: () =>
+                              VisitTopics.edit(context, widget.state),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }
               return Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: CustomScrollView(
