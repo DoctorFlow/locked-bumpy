@@ -1,0 +1,41 @@
+{
+  "id": "urgent_signs",
+  "status": "draft",
+  "approved_by": "",
+  "approved_date": "",
+  "last_checked": "2026-11-24",
+  "title": "Get medical help right away",
+  "intro": "Day or night, do not wait, if you have any of these:",
+  "signs": [
+    "A severe headache, or one that will not go away or keeps getting worse.",
+    "Fainting, gaps in your memory, or dizziness that lasts or keeps coming back.",
+    "Changes in your vision: blurring, flashing lights, blind spots or seeing double.",
+    "A temperature of 100.4°F (38°C) or higher.",
+    "Sudden or severe swelling of your face, lips, hands, legs or feet.",
+    "Thoughts about harming yourself or your baby, or scary thoughts you cannot stop.",
+    "Trouble breathing, or feeling short of breath, including when lying flat.",
+    "Chest pain, or a fast, pounding or uneven heartbeat.",
+    "Severe sickness: you cannot keep fluids down, or cannot drink for over 8 hours.",
+    "Severe belly pain that does not go away, or pain below your ribs.",
+    "Severe pain in your chest, shoulder or back.",
+    "Any other pain that worries you.",
+    "Your baby is moving less, has stopped moving, or the pattern has changed.",
+    "Any bleeding from your vagina while pregnant, even light spotting.",
+    "Fluid leaking from your vagina, or discharge that smells bad.",
+    "After birth: soaking a pad within an hour, or clots bigger than an egg.",
+    "Swelling, redness, pain or warmth in one leg or one arm.",
+    "Overwhelming tiredness: suddenly very tired and weak, too tired to get through the day.",
+    "Very itchy skin, itchy hands or feet, or itching that is worse at night.",
+    "Heartburn that does not go away with heartburn medicines.",
+    "Feeling very unwell."
+  ],
+  "action": "Call your doctor, midwife or hospital. If you cannot reach them, call emergency services.",
+  "sources": [
+    { "key": "cdc-hear-her", "org": "CDC", "title": "Urgent Maternal Warning Signs", "url": "https://www.cdc.gov/hearher/maternal-warning-signs/index.html" },
+    { "key": "nhs-symptoms", "org": "NHS", "title": "Pregnancy symptoms you need to get help for", "url": "https://www.nhs.uk/pregnancy/common-symptoms/pregnancy-symptoms-you-need-to-get-help-for/" },
+    { "key": "nhs-baby-movements", "org": "NHS", "title": "Your baby's movements", "url": "https://www.nhs.uk/pregnancy/keeping-well/your-babys-movements/" },
+    { "key": "nhs-pre-eclampsia", "org": "NHS", "title": "Pre-eclampsia", "url": "https://www.nhs.uk/conditions/pre-eclampsia/" },
+    { "key": "nhs-vaginal-bleeding", "org": "NHS", "title": "Vaginal bleeding in pregnancy", "url": "https://www.nhs.uk/pregnancy/related-conditions/common-symptoms/vaginal-bleeding/" },
+    { "key": "nhs-itching-icp", "org": "NHS", "title": "Itching and intrahepatic cholestasis of pregnancy", "url": "https://www.nhs.uk/pregnancy/related-conditions/complications/itching-and-intrahepatic-cholestasis/" }
+  ]
+}

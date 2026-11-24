@@ -174,9 +174,12 @@ void main() {
       'call_today':
           'Call your doctor or midwife today if , even if you are not sure.',
     },
-    'call_now wrong start': {
+    'call_today not text': {...paperBoatGuide(), 'call_today': 7},
+    'call_today with "doctor" alone': {
       ...paperBoatGuide(),
-      'call_now': 'Run if the pond floods.',
+      'call_today':
+          'Call your doctor or midwife today if your doctor folds, '
+          'even if you are not sure.',
     },
     'other closing': {...paperBoatGuide(), 'closing': 'Happy sailing.'},
     'costume_line over 16 words': {
@@ -211,10 +214,33 @@ void main() {
     });
   }
 
-  test('an emergency line and a sixth fact are allowed', () {
+  test('call_today may be empty or absent (Amendment 2)', () {
+    for (final row in [
+      {...paperBoatGuide(), 'call_today': ''},
+      {...paperBoatGuide(), 'call_today': '   '},
+      Map<String, dynamic>.of(paperBoatGuide())..remove('call_today'),
+    ]) {
+      expect(Guide.ruleIssue(row), isNull);
+      expect(review([row])[MaternalNeed.iron]!.callToday, isEmpty);
+    }
+  });
+
+  test('a leftover call_now is ignored, whatever it says', () {
+    for (final callNow in [
+      '',
+      'Run if the pond floods.',
+      'Call emergency services now if the boat sinks.',
+      42,
+    ]) {
+      final row = {...paperBoatGuide(), 'call_now': callNow};
+      expect(Guide.ruleIssue(row), isNull, reason: '$callNow');
+      expect(review([row]), contains(MaternalNeed.iron));
+    }
+  });
+
+  test('a sixth fact and the second closing are allowed', () {
     final row = {
       ...paperBoatGuide(),
-      'call_now': 'Call emergency services now if the boat sinks.',
       'closing': 'Your doctor or midwife decides the amount.',
       'facts': [
         ...paperBoatGuide()['facts'] as List,
@@ -229,7 +255,7 @@ void main() {
     };
     final g = review([row])[MaternalNeed.iron]!;
     expect(g.facts, hasLength(6));
-    expect(g.callNow, startsWith('Call emergency services now if '));
+    expect(g.closing, 'Your doctor or midwife decides the amount.');
   });
 
   test('a broken record hides only that guide', () {

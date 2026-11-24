@@ -6,9 +6,11 @@ import '../../core/theme/palette.dart';
 import '../../domain/models/app_state.dart';
 import '../../domain/models/guide.dart';
 import '../../domain/models/need.dart';
+import '../../domain/models/urgent_signs.dart';
 import '../widgets/bumpy_avatar.dart';
 import '../widgets/draft_tag.dart';
 import '../widgets/visit_topics.dart';
+import 'urgent_screen.dart';
 
 /// One need's guide as a full page: five paper cards, then sources and the
 /// "Last checked" date. It sits on the app's route stack, so Pause and Erase
@@ -19,6 +21,8 @@ class GuideScreen extends StatelessWidget {
     required this.state,
     required this.need,
     required this.guide,
+    this.urgent,
+    this.urgentFromBundle = false,
   });
 
   final AppState state;
@@ -26,6 +30,13 @@ class GuideScreen extends StatelessWidget {
 
   /// Null when the gate hides this need's guide.
   final Guide? guide;
+
+  /// The shared urgent list for card 5. Null when the gate hides it: card 5
+  /// then shows [UrgentSigns.fallback].
+  final UrgentSigns? urgent;
+
+  /// True: ignore [urgent] and use the bundled list ([open] sets this).
+  final bool urgentFromBundle;
 
   /// Opens [need]'s guide. The one entry point other screens call.
   static Future<void> open(
@@ -37,8 +48,12 @@ class GuideScreen extends StatelessWidget {
     if (!context.mounted) return;
     await Navigator.of(context).push(
       MaterialPageRoute<void>(
-        builder: (_) =>
-            GuideScreen(state: state, need: need, guide: guides[need]),
+        builder: (_) => GuideScreen(
+          state: state,
+          need: need,
+          guide: guides[need],
+          urgentFromBundle: true,
+        ),
       ),
     );
   }
@@ -247,15 +262,18 @@ class GuideScreen extends StatelessWidget {
         accentEdge: true,
         isDraft: draft,
         children: [
-          Text(g.callToday, style: _body(palette)),
-          if (g.callNow.isNotEmpty) ...[
-            const SizedBox(height: 10),
-            Text(
-              g.callNow,
-              style: _body(palette).copyWith(fontWeight: FontWeight.w700),
-            ),
+          // This need's own signs, then the shared urgent list in full (or
+          // the fixed fallback when it is hidden), then the closing.
+          if (g.callToday.isNotEmpty) ...[
+            Text(g.callToday, style: _body(palette)),
+            const SizedBox(height: 12),
           ],
-          const SizedBox(height: 10),
+          withUrgentSigns(
+            fromBundle: urgentFromBundle,
+            given: urgent,
+            builder: (list) => UrgentSignsBlock(urgent: list, palette: palette),
+          ),
+          const SizedBox(height: 12),
           Text(g.closing, style: _body(palette)),
         ],
       ),
