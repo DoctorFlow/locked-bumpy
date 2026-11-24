@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'pause_button.dart';
 
 import '../../core/theme/palette.dart';
 import '../../domain/models/app_state.dart';
@@ -45,6 +46,7 @@ class VisitTopics extends StatelessWidget {
                           ),
                         ),
                       ),
+                      PauseButton(onPressed: state.pause, color: palette.ink),
                       IconButton(
                         tooltip: 'Close visit list',
                         onPressed: () => Navigator.pop(sheet),

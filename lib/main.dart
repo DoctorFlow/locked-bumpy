@@ -120,10 +120,10 @@ class _LittleBumpyAppState extends State<LittleBumpyApp>
                     ),
                   ),
                   child: SafeArea(
-                    child: state.isFirstRun
-                        ? FirstRunScreen(state: state)
-                        : state.isPaused
+                    child: state.isPaused
                         ? PausedScreen(state: state)
+                        : state.isFirstRun
+                        ? FirstRunScreen(state: state)
                         : _MainShell(state: state),
                   ),
                 ),

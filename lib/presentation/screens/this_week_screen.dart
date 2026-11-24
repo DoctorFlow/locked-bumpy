@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../widgets/pause_button.dart';
 import '../../content/content_loader.dart';
 import '../../core/constants/app_constants.dart';
 import '../../core/theme/palette.dart';
@@ -117,6 +118,10 @@ class _ThisWeekScreenState extends State<ThisWeekScreen> {
                             ),
                           ),
                         ),
+                      ),
+                      PauseButton(
+                        onPressed: widget.state.pause,
+                        color: palette.ink,
                       ),
                       IconButton(
                         onPressed: () => Navigator.pop(sheet),

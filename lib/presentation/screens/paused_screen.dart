@@ -120,35 +120,37 @@ class PausedScreen extends StatelessWidget {
                     ),
                   ),
                 ),
-                const SizedBox(height: 12),
+                if (state.dueDate != null) ...[
+                  const SizedBox(height: 12),
 
-                // Start Fresh
-                SizedBox(
-                  width: double.infinity,
-                  child: OutlinedButton(
-                    onPressed: state.erasePending
-                        ? null
-                        : () => confirmStartFresh(context, state),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: palette.moonlightSoft,
-                      side: BorderSide(
-                        color: palette.moonlightSoft.withValues(alpha: 0.5),
+                  // Start Fresh
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton(
+                      onPressed: state.erasePending
+                          ? null
+                          : () => confirmStartFresh(context, state),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: palette.moonlightSoft,
+                        side: BorderSide(
+                          color: palette.moonlightSoft.withValues(alpha: 0.5),
+                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        minimumSize: const Size(double.infinity, 48),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
                       ),
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      minimumSize: const Size(double.infinity, 48),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                    ),
-                    child: const Text(
-                      'Start Fresh',
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.bold,
+                      child: const Text(
+                        'Start Fresh',
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ),
-                ),
+                ],
                 const SizedBox(height: 8),
 
                 // Erase all data

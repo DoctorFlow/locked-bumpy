@@ -31,8 +31,14 @@ void main() {
     await tap(find.byTooltip('Close visit list'));
     final restored = await AppState.load();
     expect(restored.visitTopics, {MaternalNeed.water, MaternalNeed.rest});
-    await state.togglePause();
-    await t.pumpAndSettle();
+    await tap(find.text('Edit visit list'));
+    await tap(find.byKey(const ValueKey('visit-topic-water')));
+    await tap(find.byTooltip('Pause').hitTestable());
+    expect(find.text('Everything is paused.'), findsOneWidget);
+    expect((await AppState.load()).visitTopics, {
+      MaternalNeed.water,
+      MaternalNeed.rest,
+    });
     expect(find.text('For my next visit'), findsNothing);
     await state.eraseAll();
     expect((await AppState.load()).visitTopics, isEmpty);

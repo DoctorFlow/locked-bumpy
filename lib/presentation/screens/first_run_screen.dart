@@ -6,6 +6,7 @@ import '../../core/theme/palette.dart';
 import '../../domain/models/app_state.dart';
 import '../../domain/models/need.dart';
 import '../../domain/pregnancy.dart';
+import '../widgets/pause_button.dart';
 import '../widgets/pregnancy_date_picker.dart';
 import '../widgets/paper_portrait.dart';
 import '../widgets/bumpy_avatar.dart';
@@ -141,8 +142,22 @@ class _FirstRunScreenState extends State<FirstRunScreen> {
               child: SafeArea(
                 child: Column(
                   children: [
-                    if (_step > 0)
-                      _StepIndicator(step: _step - 1, palette: palette),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _step > 0
+                              ? _StepIndicator(
+                                  step: _step - 1,
+                                  palette: palette,
+                                )
+                              : const SizedBox.shrink(),
+                        ),
+                        PauseButton(
+                          onPressed: widget.state.pause,
+                          color: palette.moonlight,
+                        ),
+                      ],
+                    ),
                     Expanded(
                       child: PageView(
                         controller: _pages,

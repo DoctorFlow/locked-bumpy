@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../widgets/pause_button.dart';
 import '../../core/theme/palette.dart';
 import '../../domain/models/app_state.dart';
 import '../../domain/models/need.dart';
@@ -77,6 +78,7 @@ class _ClosetSheetState extends State<ClosetSheet> {
             ),
           ),
         ),
+        PauseButton(onPressed: state.pause, color: palette.ink),
         IconButton(
           tooltip: 'Close wardrobe',
           icon: Icon(Icons.close, color: palette.ink),
@@ -136,7 +138,7 @@ class _ClosetSheetState extends State<ClosetSheet> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
-            'Today’s check-in stays the same.',
+            'Wear it for this visit. Today’s check-in stays the same.',
             textAlign: TextAlign.center,
             style: TextStyle(color: palette.inkSoft),
           ),

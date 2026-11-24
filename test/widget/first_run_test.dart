@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:little_bumpy/core/theme/palette.dart';
 import 'package:little_bumpy/domain/models/app_state.dart';
+import 'package:little_bumpy/main.dart';
 import 'package:little_bumpy/presentation/screens/first_run_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -22,6 +23,34 @@ Widget _wrap(AppState state) {
 
 void main() {
   group('FirstRunScreen', () {
+    testWidgets('Pause before choosing a date survives relaunch', (
+      tester,
+    ) async {
+      final state = await _freshState();
+      await tester.pumpWidget(LittleBumpyApp(state: state));
+      await tester.pumpAndSettle();
+
+      final pause = find.byTooltip('Pause');
+      expect(tester.getSize(pause).shortestSide, greaterThanOrEqualTo(48));
+      await tester.tap(pause);
+      await tester.pumpAndSettle();
+      expect(find.text('Everything is paused.'), findsOneWidget);
+      expect(find.text('Start Fresh'), findsNothing);
+      expect(find.text('Hello, Little Bumpy.'), findsNothing);
+
+      await tester.pumpWidget(const SizedBox());
+      final restored = await AppState.load();
+      expect(restored.dueDate, isNull);
+      await tester.pumpWidget(LittleBumpyApp(state: restored));
+      await tester.pumpAndSettle();
+      expect(find.text('Everything is paused.'), findsOneWidget);
+      await tester.tap(find.text('Resume'));
+      await tester.pumpAndSettle();
+      expect(find.text('Choose due date'), findsOneWidget);
+      expect((await AppState.load()).isPaused, isFalse);
+      await tester.pumpWidget(const SizedBox());
+    });
+
     testWidgets('step 1 renders hello message and date picker', (tester) async {
       final state = await _freshState();
       await tester.pumpWidget(_wrap(state));
