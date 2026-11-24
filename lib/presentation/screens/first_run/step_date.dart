@@ -31,6 +31,7 @@ class _StepDate extends StatelessWidget {
     final dateText = pickedDate == null
         ? (useDueDate ? 'Choose due date' : 'Choose period start date')
         : _fmt(pickedDate!);
+    final empty = pickedDate == null;
     return SingleChildScrollView(
       padding: _stepPadding,
       child: Column(
@@ -43,55 +44,49 @@ class _StepDate extends StatelessWidget {
                 'It stays on this device.',
             palette: palette,
           ),
-          const SizedBox(height: 20),
-          // Due Date / Last Period toggle
+          const SizedBox(height: AppSpace.xl),
           _SegmentToggle(
             palette: palette,
-            options: const ['Due Date', 'Last Period'],
+            options: const ['Due date', 'Last period'],
             selectedIndex: useDueDate ? 0 : 1,
             onSelect: (i) => onToggleMode(i == 0),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppSpace.l),
 
-          // Date picker card
+          // The date itself: a paper piece. Before a choice it is the accent
+          // piece that asks to be tapped; after, plain paper with the date.
           PaperChoice(
             label: '$dateAction\n$dateText',
             onTap: onPickDate,
-            focusColor: pickedDate == null ? palette.accentText : palette.ink,
-            borderRadius: BorderRadius.circular(16),
+            focusColor: empty ? palette.accentText : palette.ink,
+            borderRadius: AppRadii.control,
             child: Container(
-              constraints: const BoxConstraints(minHeight: 56),
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+              constraints: const BoxConstraints(minHeight: AppSpace.row),
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpace.l,
+                vertical: AppSpace.m,
+              ),
               decoration: BoxDecoration(
-                color: pickedDate == null ? palette.accent : palette.paper,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.2),
-                    offset: const Offset(0, 2),
-                    blurRadius: 0,
-                  ),
-                ],
+                color: empty ? palette.accent : palette.paper,
+                borderRadius: AppRadii.control,
+                border: Border.all(
+                  color: empty ? palette.accent : palette.edge,
+                ),
+                boxShadow: paperShadows(palette, raised: true),
               ),
               child: Row(
                 children: [
                   Icon(
                     Icons.calendar_today,
-                    color: pickedDate == null
-                        ? palette.accentText
-                        : palette.accent,
+                    color: empty ? palette.accentText : palette.accent,
                     size: 20,
                   ),
-                  const SizedBox(width: 14),
+                  const SizedBox(width: AppSpace.m),
                   Expanded(
                     child: Text(
                       dateText,
-                      style: TextStyle(
-                        fontSize: 17,
-                        fontWeight: FontWeight.w600,
-                        color: pickedDate == null
-                            ? palette.accentText
-                            : palette.ink,
+                      style: AppText.bodyStrong.copyWith(
+                        color: empty ? palette.accentText : palette.ink,
                       ),
                     ),
                   ),
@@ -114,23 +109,19 @@ class _StepDate extends StatelessWidget {
                   ),
           ),
 
-          const SizedBox(height: 24),
+          const SizedBox(height: AppSpace.xl),
           _StepButtons(
             palette: palette,
             onBack: onBack,
             primaryLabel: 'Next',
             onPrimary: onNext,
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: AppSpace.xl),
 
-          // Disclaimer
+          // The safety line: `small`, like every footer safety line.
           Text(
             AppConstants.disclaimer,
-            style: TextStyle(
-              fontSize: 16,
-              color: palette.moonlightSoft,
-              height: 1.4,
-            ),
+            style: AppText.small.copyWith(color: palette.moonlightSoft),
             textAlign: TextAlign.center,
           ),
         ],
@@ -158,7 +149,7 @@ class _StepDate extends StatelessWidget {
   }
 }
 
-// ── Week preview chip ─────────────────────────────────────────────────────
+// ── Week preview ──────────────────────────────────────────────────────────
 
 class _WeekPreview extends StatelessWidget {
   const _WeekPreview({super.key, required this.week, required this.palette});
@@ -169,27 +160,26 @@ class _WeekPreview extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(top: 16),
+      padding: const EdgeInsets.only(top: AppSpace.l),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpace.l,
+          vertical: AppSpace.m,
+        ),
         decoration: BoxDecoration(
-          color: palette.accent.withValues(alpha: 0.15),
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: palette.accent.withValues(alpha: 0.4)),
+          borderRadius: AppRadii.control,
+          border: Border.all(color: palette.outline, width: 1.5),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.child_friendly, color: palette.accent, size: 18),
-            const SizedBox(width: 10),
+            // Moonlight, not accent: accent on the page is too faint.
+            Icon(Icons.child_friendly, color: palette.moonlight, size: 20),
+            const SizedBox(width: AppSpace.s),
             Flexible(
               child: Text(
                 'You are at week $week right now.',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: palette.moonlight,
-                ),
+                style: AppText.bodyStrong.copyWith(color: palette.moonlight),
               ),
             ),
           ],
@@ -199,7 +189,7 @@ class _WeekPreview extends StatelessWidget {
   }
 }
 
-// ── Segment toggle (Due Date / Last Period) ───────────────────────────────
+// ── Segment toggle (Due date / Last period) ───────────────────────────────
 
 class _SegmentToggle extends StatelessWidget {
   const _SegmentToggle({
@@ -217,40 +207,52 @@ class _SegmentToggle extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
+      padding: const EdgeInsets.all(AppSpace.xs),
       decoration: BoxDecoration(
-        color: palette.paperRaised.withValues(alpha: 0.15),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: palette.moonlight.withValues(alpha: 0.2)),
+        borderRadius: AppRadii.control,
+        border: Border.all(color: palette.outline, width: 1.5),
       ),
       child: Row(
         children: List.generate(options.length, (i) {
           final active = i == selectedIndex;
+          final ink = active ? palette.accentText : palette.moonlight;
           return Expanded(
             child: PaperChoice(
               label: options[i],
               selected: active,
               onTap: () => onSelect(i),
               focusColor: active ? palette.accentText : palette.moonlight,
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: AppRadii.tag,
               child: Container(
-                constraints: const BoxConstraints(minHeight: 48),
+                constraints: const BoxConstraints(minHeight: AppSpace.target),
                 alignment: Alignment.center,
                 padding: const EdgeInsets.symmetric(
-                  vertical: 10,
-                  horizontal: 6,
+                  vertical: AppSpace.s,
+                  horizontal: AppSpace.s,
                 ),
                 decoration: BoxDecoration(
                   color: active ? palette.accent : Colors.transparent,
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: AppRadii.tag,
                 ),
-                child: Text(
-                  options[i],
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: active ? palette.accentText : palette.moonlightSoft,
-                  ),
+                // Selected is the accent fill plus a tick, never colour alone.
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    if (active) ...[
+                      Icon(Icons.check_rounded, size: 18, color: ink),
+                      const SizedBox(width: AppSpace.xs),
+                    ],
+                    Flexible(
+                      child: Text(
+                        options[i],
+                        textAlign: TextAlign.center,
+                        style: AppText.small.copyWith(
+                          fontWeight: FontWeight.w700,
+                          color: ink,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),

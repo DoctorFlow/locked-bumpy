@@ -15,33 +15,37 @@ void main() {
     expect(state.daysTogetherCount, 112);
     expect(state.currentWeek, 16);
   });
-  testWidgets('week, days together and check-ins follow the same local date', (
-    tester,
-  ) async {
-    SharedPreferences.setMockInitialValues({'due_date_iso': '2027-05-11'});
-    var day = DateTime(2026, 11, 23, 23, 59);
-    final state = await AppState.load(now: () => day);
-    await tester.pumpWidget(LittleBumpyApp(state: state));
-    await tester.pumpAndSettle();
-    expect(find.text('111 days together'), findsOneWidget);
-    await tester.tap(find.text('This Week'));
-    await tester.pumpAndSettle();
-    expect(find.text('Week 15'), findsWidgets);
-    day = DateTime(2026, 11, 24);
-    await tester.pump(const Duration(minutes: 1));
-    await tester.pumpAndSettle();
-    expect(find.text('Week 16'), findsNWidgets(2));
-    expect(find.text('You are here'), findsOneWidget);
-    await tester.tap(find.text('Today'));
-    await tester.pumpAndSettle();
-    expect(find.text('112 days together'), findsOneWidget);
-    await tester.tap(find.byTooltip('Pause'));
-    await tester.pumpAndSettle();
-    expect(find.textContaining('days together'), findsNothing);
-    day = DateTime(2026, 12, 1);
-    await tester.tap(find.text('Resume'));
-    await tester.pumpAndSettle();
-    expect(find.text('119 days together'), findsOneWidget);
-    await tester.pumpWidget(const SizedBox());
-  });
+  testWidgets(
+    'week and check-ins follow the same local date; Today counts no days',
+    (tester) async {
+      SharedPreferences.setMockInitialValues({'due_date_iso': '2027-05-11'});
+      var day = DateTime(2026, 11, 23, 23, 59);
+      final state = await AppState.load(now: () => day);
+      await tester.pumpWidget(LittleBumpyApp(state: state));
+      await tester.pumpAndSettle();
+      // Today counts no days (lab round 1): the week chip is enough.
+      expect(find.textContaining('days together'), findsNothing);
+      await tester.tap(find.text('This Week'));
+      await tester.pumpAndSettle();
+      expect(find.text('Week 15'), findsWidgets);
+      day = DateTime(2026, 11, 24);
+      await tester.pump(const Duration(minutes: 1));
+      await tester.pumpAndSettle();
+      expect(find.text('Week 16'), findsNWidgets(2));
+      expect(find.text('You are here'), findsOneWidget);
+      await tester.tap(find.text('Today'));
+      await tester.pumpAndSettle();
+      // Today counts no days (lab round 1): the week chip is enough.
+      expect(find.textContaining('days together'), findsNothing);
+      await tester.tap(find.byTooltip('Pause'));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('days together'), findsNothing);
+      day = DateTime(2026, 12, 1);
+      await tester.tap(find.text('Resume'));
+      await tester.pumpAndSettle();
+      // Today counts no days (lab round 1): the week chip is enough.
+      expect(find.textContaining('days together'), findsNothing);
+      await tester.pumpWidget(const SizedBox());
+    },
+  );
 }

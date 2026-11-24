@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import '../../../content/content_loader.dart';
 import '../../../content/content_paths.dart';
 import '../../../core/constants/app_constants.dart';
+import '../../../core/theme/app_text.dart';
 import '../../../core/theme/palette.dart';
+import '../../../core/theme/paper.dart';
 import '../../../domain/models/app_state.dart';
 import '../../../domain/models/content_record.dart';
 import '../../../domain/models/guide.dart';
@@ -13,6 +15,7 @@ import '../../widgets/draft_tag.dart';
 import '../../widgets/nursery_scene.dart';
 import '../../widgets/visit_topics.dart';
 import '../guide_screen.dart';
+import '../urgent_screen.dart';
 import '../visit_screen.dart';
 
 part 'today_style.dart';
@@ -219,9 +222,10 @@ class _TodayScreenState extends State<TodayScreen>
           need: need,
           palette: palette,
           // A short turned phone gets a smaller room, so Bumpy's line stays
-          // in view beside the ticks.
+          // in view beside the ticks. Upright, 176 leaves the top of the visit
+          // card in view on a 375 x 812 phone when a fact is shown.
           sceneHeight: !sideBySide
-              ? 192
+              ? 176
               : bounds.maxHeight < 420
               ? 112
               : 156,
@@ -268,7 +272,12 @@ class _TodayScreenState extends State<TodayScreen>
         );
         if (sideBySide) {
           return Padding(
-            padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
+            padding: const EdgeInsets.fromLTRB(
+              AppSpace.page,
+              AppSpace.xs,
+              AppSpace.page,
+              0,
+            ),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [

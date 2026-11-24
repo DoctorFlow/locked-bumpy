@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../core/constants/app_constants.dart';
+import '../../../core/theme/app_text.dart';
+import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/palette.dart';
+import '../../../core/theme/paper.dart';
 import '../../../domain/models/app_state.dart';
 import '../../../domain/models/need.dart';
 import '../../../domain/pregnancy.dart';
@@ -163,96 +166,101 @@ class _FirstRunScreenState extends State<FirstRunScreen> {
       onPopInvokedWithResult: (didPop, _) {
         if (!didPop) _back();
       },
-      child: Scaffold(
-        backgroundColor: palette.skyBottom,
-        body: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 440),
-            child: Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [palette.skyTop, palette.skyBottom],
+      // The look being tried is the theme too, so the chips, the nickname
+      // field and the date picker match the page they sit on.
+      child: Theme(
+        data: buildTheme(palette),
+        child: Scaffold(
+          backgroundColor: palette.skyBottom,
+          body: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 440),
+              child: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [palette.skyTop, palette.skyBottom],
+                  ),
                 ),
-              ),
-              child: SafeArea(
-                child: Column(
-                  children: [
-                    Row(
-                      children: [
-                        const SizedBox(width: 48),
-                        Expanded(
-                          child: _StepIndicator(
-                            step: _step,
-                            count: _stepCount,
-                            palette: palette,
+                child: SafeArea(
+                  child: Column(
+                    children: [
+                      Row(
+                        children: [
+                          const SizedBox(width: 48),
+                          Expanded(
+                            child: _StepIndicator(
+                              step: _step,
+                              count: _stepCount,
+                              palette: palette,
+                            ),
+                          ),
+                          PauseButton(
+                            onPressed: widget.state.pause,
+                            color: palette.moonlight,
+                          ),
+                        ],
+                      ),
+                      Expanded(
+                        child: AbsorbPointer(
+                          absorbing: _saving,
+                          child: PageView(
+                            controller: _pages,
+                            physics: const NeverScrollableScrollPhysics(),
+                            onPageChanged: (i) {
+                              if (i != _step) setState(() => _step = i);
+                            },
+                            children: [
+                              _StepWelcome(
+                                palette: palette,
+                                skinTone: _skinTone,
+                                onSwitchLamp: toggleLook,
+                                onStart: () => _goTo(1),
+                              ),
+                              _StepDate(
+                                palette: palette,
+                                useDueDate: _useDueDate,
+                                pickedDate: _pickedDate,
+                                previewWeek: _previewWeek,
+                                onToggleMode: (v) =>
+                                    setState(() => _useDueDate = v),
+                                onPickDate: _pickDate,
+                                onBack: _back,
+                                onNext: _pickedDate != null
+                                    ? () => _goTo(2)
+                                    : null,
+                              ),
+                              _StepNickname(
+                                palette: palette,
+                                controller: _nicknameController,
+                                onBack: _back,
+                                onNext: () => _goTo(3),
+                              ),
+                              _StepLook(
+                                palette: palette,
+                                skinTone: _skinTone,
+                                onTone: (tone) =>
+                                    setState(() => _skinTone = tone),
+                                isHalloween: _pickHalloween,
+                                onToggle: (v) =>
+                                    setState(() => _pickHalloween = v),
+                                onBack: _back,
+                                onNext: () => _goTo(4),
+                              ),
+                              _StepCostumes(
+                                palette: palette,
+                                skinTone: _skinTone,
+                                saving: _saving,
+                                onBack: _back,
+                                onConfirm: _confirm,
+                              ),
+                            ],
                           ),
                         ),
-                        PauseButton(
-                          onPressed: widget.state.pause,
-                          color: palette.moonlight,
-                        ),
-                      ],
-                    ),
-                    Expanded(
-                      child: AbsorbPointer(
-                        absorbing: _saving,
-                        child: PageView(
-                          controller: _pages,
-                          physics: const NeverScrollableScrollPhysics(),
-                          onPageChanged: (i) {
-                            if (i != _step) setState(() => _step = i);
-                          },
-                          children: [
-                            _StepWelcome(
-                              palette: palette,
-                              skinTone: _skinTone,
-                              onSwitchLamp: toggleLook,
-                              onStart: () => _goTo(1),
-                            ),
-                            _StepDate(
-                              palette: palette,
-                              useDueDate: _useDueDate,
-                              pickedDate: _pickedDate,
-                              previewWeek: _previewWeek,
-                              onToggleMode: (v) =>
-                                  setState(() => _useDueDate = v),
-                              onPickDate: _pickDate,
-                              onBack: _back,
-                              onNext: _pickedDate != null
-                                  ? () => _goTo(2)
-                                  : null,
-                            ),
-                            _StepNickname(
-                              palette: palette,
-                              controller: _nicknameController,
-                              onBack: _back,
-                              onNext: () => _goTo(3),
-                            ),
-                            _StepLook(
-                              palette: palette,
-                              skinTone: _skinTone,
-                              onTone: (tone) =>
-                                  setState(() => _skinTone = tone),
-                              isHalloween: _pickHalloween,
-                              onToggle: (v) =>
-                                  setState(() => _pickHalloween = v),
-                              onBack: _back,
-                              onNext: () => _goTo(4),
-                            ),
-                            _StepCostumes(
-                              palette: palette,
-                              skinTone: _skinTone,
-                              saving: _saving,
-                              onBack: _back,
-                              onConfirm: _confirm,
-                            ),
-                          ],
-                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -285,8 +293,8 @@ class _StepIndicator extends StatelessWidget {
       child: Wrap(
         alignment: WrapAlignment.center,
         crossAxisAlignment: WrapCrossAlignment.center,
-        spacing: 12,
-        runSpacing: 4,
+        spacing: AppSpace.m,
+        runSpacing: AppSpace.xs,
         children: [
           Row(
             mainAxisSize: MainAxisSize.min,
@@ -310,11 +318,7 @@ class _StepIndicator extends StatelessWidget {
           ),
           Text(
             '${step + 1} of $count',
-            style: TextStyle(
-              color: palette.moonlightSoft,
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-            ),
+            style: AppText.label.copyWith(color: palette.moonlightSoft),
           ),
         ],
       ),

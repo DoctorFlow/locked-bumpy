@@ -1,6 +1,10 @@
 part of 'today_screen.dart';
 
 // ── One small fact from today's need, with its source and two quiet actions ─
+//
+// Kept short on purpose: on a 375 x 812 phone the top of the visit card below
+// stays in view. The fact and the question are reading text (16 px or more);
+// only the two one-line captions ("Source: …", "To ask …") are `small`.
 
 class _FactCard extends StatelessWidget {
   const _FactCard({
@@ -27,71 +31,88 @@ class _FactCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final question = guide.questions.isEmpty ? null : guide.questions.first;
     final onList = question != null && state.hasVisitQuestion(question);
+    // Links on paper: the theme's text button, tighter at the sides so the
+    // two actions line up with the text above.
     final quiet = TextButton.styleFrom(
-      foregroundColor: palette.ink,
-      minimumSize: const Size(48, 48),
-      padding: const EdgeInsets.symmetric(horizontal: 8),
-      shape: const RoundedRectangleBorder(borderRadius: _controlCorners),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpace.s),
     );
-    return _PaperCard(
+    return PaperCard(
       key: const ValueKey('today-fact'),
-      palette: palette,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Wrap(
-              spacing: 8,
-              runSpacing: 4,
-              crossAxisAlignment: WrapCrossAlignment.center,
-              children: [
-                Semantics(
-                  header: true,
-                  child: Text(
-                    'Good to know',
-                    style: _T.bodyStrong.copyWith(color: palette.inkSoft),
-                  ),
+      padding: const EdgeInsets.fromLTRB(
+        AppSpace.l,
+        AppSpace.l,
+        AppSpace.l,
+        AppSpace.s,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Wrap(
+            spacing: AppSpace.s,
+            runSpacing: AppSpace.xs,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              Semantics(
+                header: true,
+                child: Text(
+                  'Good to know',
+                  style: _cardTitle.copyWith(color: palette.ink),
                 ),
-                if (guide.isDraft) DraftTag(palette: palette),
-              ],
-            ),
-            const SizedBox(height: 4),
-            Text(
-              fact.text,
-              style: _T.body.copyWith(
-                fontSize: 18,
-                height: 26 / 18,
-                color: palette.ink,
               ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              'Source: ${fact.sourceOrg}',
-              style: _T.body.copyWith(color: palette.inkSoft),
-            ),
-            if (question != null) ...[
-              const SizedBox(height: 12),
-              Divider(height: 1, color: palette.inkSoft.withValues(alpha: .3)),
-              const SizedBox(height: 12),
-              Text(
-                'To ask your doctor or midwife',
-                style: _T.body.copyWith(color: palette.inkSoft),
-              ),
-              Text(question, style: _T.bodyStrong.copyWith(color: palette.ink)),
+              if (guide.isDraft) DraftTag(palette: palette),
             ],
-            const SizedBox(height: 4),
-            Wrap(
-              spacing: 4,
+          ),
+          const SizedBox(height: AppSpace.xs),
+          Text(fact.text, style: AppText.body.copyWith(color: palette.ink)),
+          // The source and the way into the guide share one line, which
+          // keeps the card short (DESIGN brief: visit card in view).
+          Wrap(
+            spacing: AppSpace.m,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              Text(
+                'Source: ${fact.sourceOrg}',
+                style: AppText.small.copyWith(color: palette.inkSoft),
+              ),
+              TextButton.icon(
+                key: const ValueKey('fact-open-guide'),
+                style: quiet,
+                onPressed: () => GuideScreen.open(context, state, need),
+                icon: const Icon(Icons.menu_book_outlined, size: 22),
+                label: Text('Open the ${_needWord(need).toLowerCase()} guide'),
+              ),
+            ],
+          ),
+          if (question != null) ...[
+            const SizedBox(height: AppSpace.xs),
+            Text(
+              'To ask your doctor or midwife',
+              style: AppText.small.copyWith(color: palette.inkSoft),
+            ),
+            Text(
+              question,
+              style: AppText.bodyStrong.copyWith(color: palette.ink),
+            ),
+          ],
+          const SizedBox(height: AppSpace.xs),
+          // Pulled out by the buttons' own side padding, so their words line
+          // up with the text above.
+          Transform.translate(
+            offset: const Offset(-AppSpace.s, 0),
+            child: Wrap(
               children: [
                 // Once added it is a plain note: the visit card below is the
                 // one way into the list on Today.
                 if (question != null && onList)
                   ConstrainedBox(
                     key: const ValueKey('fact-on-list'),
-                    constraints: const BoxConstraints(minHeight: 48),
+                    constraints: const BoxConstraints(
+                      minHeight: AppSpace.target,
+                    ),
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpace.s,
+                      ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
@@ -100,11 +121,13 @@ class _FactCard extends StatelessWidget {
                             size: 22,
                             color: palette.ink,
                           ),
-                          const SizedBox(width: 8),
+                          const SizedBox(width: AppSpace.s),
                           Flexible(
                             child: Text(
                               'On your visit list',
-                              style: _T.bodyStrong.copyWith(color: palette.ink),
+                              style: AppText.bodyStrong.copyWith(
+                                color: palette.ink,
+                              ),
                             ),
                           ),
                         ],
@@ -119,37 +142,24 @@ class _FactCard extends StatelessWidget {
                       style: quiet,
                       onPressed: adding ? null : () => onAddQuestion(question),
                       icon: const Icon(Icons.add_rounded, size: 22),
-                      label: Text(
-                        adding ? 'Adding…' : 'Add to my visit list',
-                        style: _T.bodyStrong,
-                      ),
+                      label: Text(adding ? 'Adding…' : 'Add to my visit list'),
                     ),
                   ),
-                TextButton.icon(
-                  key: const ValueKey('fact-open-guide'),
-                  style: quiet,
-                  onPressed: () => GuideScreen.open(context, state, need),
-                  icon: const Icon(Icons.menu_book_outlined, size: 22),
-                  label: Text(
-                    'Open the ${_needWord(need).toLowerCase()} guide',
-                    style: _T.bodyStrong,
-                  ),
-                ),
               ],
             ),
-            if (addFailed)
-              Semantics(
-                liveRegion: true,
-                child: Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
-                  child: Text(
-                    'Couldn’t add it on this device. Tap to try again.',
-                    style: _T.body.copyWith(color: palette.ink),
-                  ),
+          ),
+          if (addFailed)
+            Semantics(
+              liveRegion: true,
+              child: Padding(
+                padding: const EdgeInsets.only(bottom: AppSpace.s),
+                child: Text(
+                  'Couldn’t add it on this device. Tap to try again.',
+                  style: AppText.body.copyWith(color: palette.danger),
                 ),
               ),
-          ],
-        ),
+            ),
+        ],
       ),
     );
   }

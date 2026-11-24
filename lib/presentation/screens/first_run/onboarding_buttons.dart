@@ -6,20 +6,30 @@ part of 'first_run_screen.dart';
 bool _isLargeText(BuildContext context) =>
     MediaQuery.textScalerOf(context).scale(16) > 22;
 
-/// The same padding on every step, so headlines and buttons line up.
-const _stepPadding = EdgeInsets.fromLTRB(24, 12, 24, 24);
+/// The same padding on every step, so headlines and buttons line up: the
+/// page margin at the sides, one small step under the progress row.
+const _stepPadding = EdgeInsets.fromLTRB(
+  AppSpace.page,
+  AppSpace.s,
+  AppSpace.page,
+  AppSpace.xl,
+);
 
-/// A step headline that screen readers announce as a heading.
+/// A step headline that screen readers announce as a heading. Headlines are
+/// `title` (Fraunces). The line under it is the app's `body`, or Bumpy's
+/// `bumpyStory` when Bumpy is the one speaking ([bumpySpeaks]).
 class _StepHeading extends StatelessWidget {
   const _StepHeading({
     required this.title,
     required this.palette,
     this.subtitle,
+    this.bumpySpeaks = false,
   });
 
   final String title;
   final String? subtitle;
   final AppPalette palette;
+  final bool bumpySpeaks;
 
   @override
   Widget build(BuildContext context) {
@@ -31,23 +41,16 @@ class _StepHeading extends StatelessWidget {
           child: Text(
             title,
             textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: palette.moonlight,
-              height: 1.2,
-            ),
+            style: AppText.title.copyWith(color: palette.moonlight),
           ),
         ),
         if (subtitle != null) ...[
-          const SizedBox(height: 8),
+          const SizedBox(height: AppSpace.s),
           Text(
             subtitle!,
             textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 16,
+            style: (bumpySpeaks ? AppText.bumpyStory : AppText.body).copyWith(
               color: palette.moonlightSoft,
-              height: 1.35,
             ),
           ),
         ],
@@ -89,19 +92,26 @@ class _StepButtons extends StatelessWidget {
     if (_isLargeText(context)) {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [forward, const SizedBox(height: 12), back],
+        children: [
+          forward,
+          const SizedBox(height: AppSpace.m),
+          back,
+        ],
       );
     }
     return Row(
       children: [
         Expanded(child: back),
-        const SizedBox(width: 12),
+        const SizedBox(width: AppSpace.m),
         Expanded(child: forward),
       ],
     );
   }
 }
 
+/// The step's one main action. Shape, height and type come from the theme;
+/// only the disabled colours are set, so a waiting "Next" still reads as the
+/// accent piece on the dark page.
 class _PrimaryButton extends StatelessWidget {
   const _PrimaryButton({
     required this.label,
@@ -124,9 +134,7 @@ class _PrimaryButton extends StatelessWidget {
         foregroundColor: palette.accentText,
         disabledBackgroundColor: palette.accent.withValues(alpha: 0.35),
         disabledForegroundColor: palette.accentText.withValues(alpha: 0.6),
-        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 12),
-        minimumSize: const Size(double.infinity, 52),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        minimumSize: const Size(double.infinity, AppSpace.target),
       ),
       child: loading
           ? Semantics(
@@ -140,15 +148,12 @@ class _PrimaryButton extends StatelessWidget {
                 ),
               ),
             )
-          : Text(
-              label,
-              textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-            ),
+          : Text(label, textAlign: TextAlign.center),
     );
   }
 }
 
+/// "Back": an outlined button on the page (moonlight label, outline edge).
 class _SecondaryButton extends StatelessWidget {
   const _SecondaryButton({
     required this.label,
@@ -166,16 +171,10 @@ class _SecondaryButton extends StatelessWidget {
       onPressed: onPressed,
       style: OutlinedButton.styleFrom(
         foregroundColor: palette.moonlight,
-        side: BorderSide(color: palette.moonlightSoft.withValues(alpha: 0.6)),
-        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 12),
-        minimumSize: const Size(double.infinity, 52),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        side: BorderSide(color: palette.outline, width: 1.5),
+        minimumSize: const Size(double.infinity, AppSpace.target),
       ),
-      child: Text(
-        label,
-        textAlign: TextAlign.center,
-        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-      ),
+      child: Text(label, textAlign: TextAlign.center),
     );
   }
 }

@@ -25,8 +25,7 @@ class _NurseryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return _PaperCard(
-      palette: palette,
+    return PaperCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -42,7 +41,7 @@ class _NurseryCard extends StatelessWidget {
                       label: const Text('Wardrobe'),
                       style: FilledButton.styleFrom(
                         minimumSize: const Size(0, 48),
-                        padding: const EdgeInsets.symmetric(horizontal: 10),
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
                         backgroundColor: palette.paper,
                         foregroundColor: palette.ink,
                       ),
@@ -71,7 +70,9 @@ class _NurseryCard extends StatelessWidget {
                       header: true,
                       child: Text(
                         state.babyDisplayName,
-                        style: _T.bodyStrong.copyWith(color: palette.inkSoft),
+                        style: AppText.bodyStrong.copyWith(
+                          color: palette.inkSoft,
+                        ),
                       ),
                     ),
                     _NeedPairing(state: state, need: need, palette: palette),
@@ -83,7 +84,7 @@ class _NurseryCard extends StatelessWidget {
                     liveRegion: true,
                     child: Text(
                       babyLine,
-                      style: _T.bumpy.copyWith(color: palette.ink),
+                      style: AppText.bumpy.copyWith(color: palette.ink),
                     ),
                   ),
                   if (lineIsDraft) ...[
@@ -138,10 +139,7 @@ class _NeedPairing extends StatelessWidget {
       excludeSemantics: true,
       child: DecoratedBox(
         key: const ValueKey('need-pairing'),
-        decoration: _paper(
-          palette,
-          raised: true,
-        ).copyWith(borderRadius: _tagCorners),
+        decoration: _paperTag(palette),
         child: IntrinsicHeight(
           child: Row(
             mainAxisSize: MainAxisSize.min,
@@ -152,25 +150,25 @@ class _NeedPairing extends StatelessWidget {
                 width: 8,
                 decoration: BoxDecoration(
                   color: need.color,
-                  borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(9),
-                    bottomLeft: Radius.circular(6),
+                  borderRadius: BorderRadius.only(
+                    topLeft: AppRadii.tag.topLeft,
+                    bottomLeft: AppRadii.tag.bottomLeft,
                   ),
                 ),
               ),
               Flexible(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(10, 6, 14, 6),
+                  padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Image.asset(
                         need.iconPath,
-                        width: 32,
-                        height: 32,
+                        width: 28,
+                        height: 28,
                         excludeFromSemantics: true,
                       ),
-                      const SizedBox(width: 10),
+                      const SizedBox(width: 8),
                       Flexible(
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
@@ -178,12 +176,16 @@ class _NeedPairing extends StatelessWidget {
                           children: [
                             Text(
                               title,
-                              style: _T.heading.copyWith(color: palette.ink),
+                              style: AppText.heading.copyWith(
+                                color: palette.ink,
+                              ),
                             ),
                             if (dressedOther && other != null)
                               Text(
                                 'Dressed as a ${_costumeWord(other).toLowerCase()} for fun',
-                                style: _T.body.copyWith(color: palette.inkSoft),
+                                style: AppText.small.copyWith(
+                                  color: palette.inkSoft,
+                                ),
                               ),
                           ],
                         ),

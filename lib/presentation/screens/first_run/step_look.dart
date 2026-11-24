@@ -33,17 +33,17 @@ class _StepLook extends StatelessWidget {
             subtitle: 'You can switch any time with the lamp.',
             palette: palette,
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: AppSpace.xl),
 
           LayoutBuilder(
             builder: (context, constraints) {
               final largeText = _isLargeText(context);
               final width = largeText
                   ? constraints.maxWidth
-                  : (constraints.maxWidth - 12) / 2;
+                  : (constraints.maxWidth - AppSpace.m) / 2;
               return Wrap(
-                spacing: 12,
-                runSpacing: 12,
+                spacing: AppSpace.m,
+                runSpacing: AppSpace.m,
                 children: [
                   for (final look in [
                     AppPalette.halloween,
@@ -66,7 +66,7 @@ class _StepLook extends StatelessWidget {
               );
             },
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: AppSpace.xl),
           SkinTonePicker(
             selected: skinTone,
             onSelected: onTone,
@@ -110,26 +110,21 @@ class _LookCard extends StatelessWidget {
       selected: selected,
       onTap: onTap,
       focusColor: look.ink,
-      borderRadius: BorderRadius.circular(18),
+      borderRadius: AppRadii.card,
       child: AnimatedContainer(
         duration: MediaQuery.disableAnimationsOf(context)
             ? Duration.zero
             : const Duration(milliseconds: 200),
-        padding: const EdgeInsets.all(14),
+        padding: const EdgeInsets.all(AppSpace.m),
+        // A paper card of that look; selected = accent edge plus the tick.
         decoration: BoxDecoration(
           color: look.paper,
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: AppRadii.card,
           border: Border.all(
-            color: selected ? look.accent : Colors.transparent,
-            width: 2.5,
+            color: selected ? look.accent : look.edge,
+            width: selected ? 2.5 : 1,
           ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: selected ? 0.3 : 0.15),
-              offset: const Offset(0, 3),
-              blurRadius: 0,
-            ),
-          ],
+          boxShadow: paperShadows(look, raised: true),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -151,21 +146,17 @@ class _LookCard extends StatelessWidget {
                 Expanded(
                   child: Text(
                     label,
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: look.ink,
-                    ),
+                    style: AppText.heading.copyWith(color: look.ink),
                   ),
                 ),
-                const SizedBox(width: 6),
+                const SizedBox(width: AppSpace.s),
                 _SelectedMark(selected: selected, look: look),
               ],
             ),
             const SizedBox(height: 4),
             Text(
               description,
-              style: TextStyle(fontSize: 16, color: look.inkSoft, height: 1.3),
+              style: AppText.small.copyWith(color: look.inkSoft),
             ),
           ],
         ),
@@ -183,17 +174,15 @@ class _SelectedMark extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 22,
-      height: 22,
+      width: 24,
+      height: 24,
       decoration: BoxDecoration(
         color: selected ? look.accent : null,
         shape: BoxShape.circle,
-        border: selected
-            ? null
-            : Border.all(color: look.ink.withValues(alpha: 0.3), width: 1.5),
+        border: selected ? null : Border.all(color: look.outline, width: 1.5),
       ),
       child: selected
-          ? Icon(Icons.check, size: 15, color: look.accentText)
+          ? Icon(Icons.check_rounded, size: 16, color: look.accentText)
           : null,
     );
   }

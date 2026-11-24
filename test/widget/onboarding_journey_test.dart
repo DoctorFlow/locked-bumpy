@@ -4,6 +4,8 @@ import 'package:little_bumpy/domain/models/app_state.dart';
 import 'package:little_bumpy/main.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'pick_date_helper.dart';
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   testWidgets('one date and the six needs open the daylight nursery', (
@@ -20,17 +22,19 @@ void main() {
       'Try daylight',
       'Start',
       'Choose due date',
-      'OK',
       'Next',
       'Next',
       'Next',
       'Six everyday needs',
-      'Enter the nursery',
+      'Meet Bumpy',
     ]) {
       final target = find.text(label);
       await tester.ensureVisible(target);
       await tester.tap(target);
       await tester.pumpAndSettle();
+      if (label == 'Choose due date') {
+        await chooseDateInPicker(tester, dueIn140(state.today));
+      }
     }
     expect(state.isFirstRun, isFalse);
     expect(
@@ -75,8 +79,7 @@ void main() {
     await tester.ensureVisible(find.text('Choose due date'));
     await tester.tap(find.text('Choose due date'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('OK'));
-    await tester.pumpAndSettle();
+    await chooseDateInPicker(tester, dueIn140(state.today));
     await tester.ensureVisible(find.text('Next'));
     await tester.tap(find.text('Next'));
     await tester.pump();
@@ -129,7 +132,7 @@ void main() {
       await tap(find.text('Start'));
       expectTargets();
       await tap(find.text('Choose due date'));
-      await tap(find.text('OK'));
+      await chooseDateInPicker(tester, dueIn140(state.today));
       await tap(find.text('Next'));
       final field = find.byType(TextField);
       await tester.ensureVisible(field);
@@ -147,7 +150,7 @@ void main() {
       final iron = find.byKey(const ValueKey('first-run-need-iron'));
       final water = find.byKey(const ValueKey('first-run-need-water'));
       expect(tester.getTopLeft(iron).dx, tester.getTopLeft(water).dx);
-      await tap(find.text('Enter the nursery'));
+      await tap(find.text('Meet Bumpy'));
       expect(state.nickname, 'Clover');
       expect(state.isHalloween, isFalse);
       expect(state.isFirstRun, isFalse);

@@ -7,6 +7,8 @@ import 'package:little_bumpy/main.dart';
 import 'package:little_bumpy/presentation/screens/first_run_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'pick_date_helper.dart';
+
 const _welcome = 'Hello, I’m your Little Bumpy.';
 const _whatItIs =
     'I dress up as six everyday needs, share a chapter each week, '
@@ -37,8 +39,7 @@ Future<void> _tap(WidgetTester tester, Finder target) async {
 
 Future<void> _pickDueDate(WidgetTester tester) async {
   await _tap(tester, find.text('Choose due date'));
-  await tester.tap(find.text('OK'));
-  await tester.pumpAndSettle();
+  await chooseDateInPicker(tester, dueIn140(DateTime(2026, 11, 23)));
 }
 
 Finder _asset(String path) => find.byWidgetPredicate(
@@ -118,13 +119,47 @@ void main() {
 
       expect(find.text('2 of 5'), findsOneWidget);
       expect(find.text('When am I due?'), findsOneWidget);
-      expect(find.text('Due Date'), findsOneWidget);
-      expect(find.text('Last Period'), findsOneWidget);
+      expect(find.text('Due date'), findsOneWidget);
+      expect(find.text('Last period'), findsOneWidget);
       expect(find.text('Choose due date'), findsOneWidget);
       final next = find.widgetWithText(ElevatedButton, 'Next');
       expect(tester.widget<ElevatedButton>(next).onPressed, isNull);
       await _pickDueDate(tester);
       expect(tester.widget<ElevatedButton>(next).onPressed, isNotNull);
+    });
+
+    testWidgets('the date picker opens with no day chosen, and OK alone '
+        'saves nothing', (tester) async {
+      final state = await _freshState();
+      await tester.pumpWidget(_wrap(state));
+      await tester.pumpAndSettle();
+      await _tap(tester, find.text('Start'));
+      await _tap(tester, find.text('Choose due date'));
+
+      final dialog = tester.widget<DatePickerDialog>(
+        find.byType(DatePickerDialog),
+      );
+      expect(dialog.initialDate, isNull);
+      await tester.tap(find.text('OK'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(DatePickerDialog), findsNothing);
+      expect(find.text('Choose due date'), findsOneWidget);
+      expect(find.textContaining('You are at week'), findsNothing);
+      final next = find.widgetWithText(ElevatedButton, 'Next');
+      expect(tester.widget<ElevatedButton>(next).onPressed, isNull);
+
+      // A chosen day opens selected the next time.
+      await _tap(tester, find.text('Choose due date'));
+      await chooseDateInPicker(tester, dueIn140(DateTime(2026, 11, 23)));
+      expect(tester.widget<ElevatedButton>(next).onPressed, isNotNull);
+      await _tap(tester, find.text('Apr 12, 2027'));
+      expect(
+        tester
+            .widget<DatePickerDialog>(find.byType(DatePickerDialog))
+            .initialDate,
+        DateTime(2027, 4, 12),
+      );
     });
 
     testWidgets('shows gestational week preview after a date is chosen', (
@@ -138,18 +173,17 @@ void main() {
       // No preview chip before a date is picked.
       expect(find.textContaining('You are at week'), findsNothing);
 
-      await tester.tap(find.text('Last Period'));
+      await tester.tap(find.text('Last period'));
       await tester.pumpAndSettle();
       await tester.ensureVisible(find.text('Choose period start date'));
       await tester.tap(find.text('Choose period start date'));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('OK'));
-      await tester.pumpAndSettle();
+      await chooseDateInPicker(tester, periodBack140(DateTime(2026, 11, 23)));
       expect(find.text('You are at week 20 right now.'), findsOneWidget);
-      await tester.tap(find.text('Due Date'));
+      await tester.tap(find.text('Due date'));
       await tester.pumpAndSettle();
       expect(find.text('Choose due date'), findsOneWidget);
-      await tester.tap(find.text('Last Period'));
+      await tester.tap(find.text('Last period'));
       await tester.pumpAndSettle();
       expect(find.text('You are at week 20 right now.'), findsOneWidget);
     });
@@ -250,7 +284,7 @@ void main() {
         for (final need in MaternalNeed.values) {
           expect(find.textContaining(need.foodHint), findsNothing);
         }
-        expect(find.text('Enter the nursery'), findsOneWidget);
+        expect(find.text('Meet Bumpy'), findsOneWidget);
         expect(find.text('Back'), findsOneWidget);
       });
     }
@@ -270,7 +304,7 @@ void main() {
       await _tap(tester, find.text('Next'));
       expect(find.text('5 of 5'), findsOneWidget);
       expect(state.isFirstRun, isTrue);
-      final enter = find.text('Enter the nursery');
+      final enter = find.text('Meet Bumpy');
       await tester.ensureVisible(enter);
       await tester.pumpAndSettle();
       await tester.tap(enter);

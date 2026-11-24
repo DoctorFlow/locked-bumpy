@@ -35,12 +35,13 @@ class _StepCostumes extends StatelessWidget {
             subtitle: halloween
                 ? 'Each day I wear one of them.'
                 : 'Each day I show you one of them.',
+            bumpySpeaks: true,
             palette: palette,
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: AppSpace.xl),
           LayoutBuilder(
             builder: (context, constraints) {
-              const gap = 10.0;
+              const gap = AppSpace.s;
               final width = constraints.maxWidth;
               final columns = _isLargeText(context)
                   ? 1
@@ -71,7 +72,7 @@ class _StepCostumes extends StatelessWidget {
           _StepButtons(
             palette: palette,
             onBack: onBack,
-            primaryLabel: 'Enter the nursery',
+            primaryLabel: 'Meet Bumpy',
             onPrimary: saving ? null : onConfirm,
             loading: saving,
           ),
@@ -105,7 +106,7 @@ class _NeedTile extends StatelessWidget {
       height: 72,
       decoration: BoxDecoration(
         color: need.color.withValues(alpha: 0.28),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: AppRadii.control,
         border: Border.all(color: need.color, width: 2),
       ),
       padding: EdgeInsets.all(halloween ? 2 : 14),
@@ -124,12 +125,7 @@ class _NeedTile extends StatelessWidget {
     final word = Text(
       need.label,
       textAlign: wide ? TextAlign.start : TextAlign.center,
-      style: TextStyle(
-        fontSize: 16,
-        fontWeight: FontWeight.bold,
-        color: palette.ink,
-        height: 1.2,
-      ),
+      style: AppText.bodyStrong.copyWith(color: palette.ink),
     );
     return Semantics(
       container: true,
@@ -137,24 +133,13 @@ class _NeedTile extends StatelessWidget {
           ? '${need.label}, ${need.costume.toLowerCase()} costume'
           : need.label,
       excludeSemantics: true,
-      child: Container(
-        padding: const EdgeInsets.all(10),
-        decoration: BoxDecoration(
-          color: palette.paper,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.15),
-              offset: const Offset(0, 2),
-              blurRadius: 0,
-            ),
-          ],
-        ),
+      child: PaperCard(
+        padding: const EdgeInsets.all(AppSpace.m),
         child: wide
             ? Row(
                 children: [
                   picture,
-                  const SizedBox(width: 14),
+                  const SizedBox(width: AppSpace.m),
                   Expanded(child: word),
                 ],
               )

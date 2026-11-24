@@ -8,6 +8,8 @@ import 'package:little_bumpy/main.dart';
 import 'package:little_bumpy/presentation/widgets/app_nav_bar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'pick_date_helper.dart';
+
 double contrast(Color text, Color surface) {
   final foreground = Color.alphaBlend(text, surface).computeLuminance();
   final background = surface.computeLuminance();
@@ -77,8 +79,7 @@ void main() {
         await t.ensureVisible(find.text('Choose due date'));
         await t.tap(find.text('Choose due date'));
         await t.pumpAndSettle();
-        await t.tap(find.text('OK'));
-        await t.pumpAndSettle();
+        await chooseDateInPicker(t, dueIn140(state.today));
         await t.ensureVisible(find.text('Next'));
         await t.tap(find.text('Next'));
         await t.pumpAndSettle();
@@ -102,7 +103,8 @@ void main() {
         await t.ensureVisible(erase);
         final eraseStyle = t.widget<TextButton>(erase).style!;
         expect(
-          contrast(eraseStyle.foregroundColor!.resolve({})!, palette.skyTop),
+          // Pause lays its actions on a paper card (DESIGN.md 8.5).
+          contrast(eraseStyle.foregroundColor!.resolve({})!, palette.paper),
           greaterThanOrEqualTo(4.5),
           reason: 'erase action',
         );
