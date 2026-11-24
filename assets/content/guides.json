@@ -66,7 +66,7 @@
       "Would an iron tablet help me, or are food and my vitamin enough?"
     ],
     "call_today": "Call your doctor or midwife today if your poo is black and sticky like tar, or red, or has blood in or on it, even if you are not sure.",
-    "closing": "Your doctor or midwife decides the amount.",
+    "closing": "Your doctor or midwife decides what is right for you.",
     "sources": [
       {
         "key": "nhs-pregnancy-vitamins",
@@ -278,7 +278,7 @@
       "I don't eat much dairy. How can I get enough calcium?"
     ],
     "call_today": "",
-    "closing": "Your doctor or midwife decides the amount.",
+    "closing": "Your doctor or midwife decides what is right for you.",
     "sources": [
       {
         "key": "nhs-calcium",
@@ -384,7 +384,7 @@
       "I throw up most days. How will I know when it needs treatment?"
     ],
     "call_today": "Call your doctor or midwife today if you are vomiting and your pee is very dark, you have not peed for many hours, or there is blood in your vomit, even if you are not sure.",
-    "closing": "Your doctor or midwife decides the amount.",
+    "closing": "Your doctor or midwife decides what is right for you.",
     "sources": [
       {
         "key": "cdc-heat",
