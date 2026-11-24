@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../widgets/pause_button.dart';
+import '../widgets/paper_choice.dart';
 import '../../core/theme/palette.dart';
 import '../../domain/models/app_state.dart';
 import '../../domain/models/need.dart';
@@ -107,7 +108,10 @@ class _ClosetSheetState extends State<ClosetSheet> {
         LayoutBuilder(
           builder: (context, constraints) {
             final columns =
-                constraints.maxWidth >= 320 &&
+                (constraints.maxWidth >= 320 ||
+                        (constraints.maxWidth >= 282 &&
+                            MediaQuery.textScalerOf(context).scale(14) <=
+                                17)) &&
                     MediaQuery.textScalerOf(context).scale(14) <= 21
                 ? 3
                 : 2;
@@ -213,70 +217,65 @@ class _CostumeCard extends StatelessWidget {
         width: 2,
       ),
     );
-    return Semantics(
-      key: ValueKey('closet-${need.name}'),
-      button: true,
-      selected: selected,
-      label: 'Try $name, ${need.label}',
-      onTap: onTap,
-      excludeSemantics: true,
-      child: Material(
-        color: palette.paperRaised,
-        shape: shape,
-        clipBehavior: Clip.antiAlias,
-        child: InkWell(
-          onTap: onTap,
-          customBorder: shape,
-          child: Column(
-            children: [
-              SizedBox(
-                width: double.infinity,
-                height: 65,
-                child: ColoredBox(
-                  color: Color.alphaBlend(
-                    palette.moonlight.withValues(alpha: .40),
-                    palette.paperRaised,
-                  ),
-                  child: Center(
-                    child: Image(
-                      image: paperPortrait(need.assetPath(palette), skinTone),
-                      height: 63,
-                      width: 63,
-                      gaplessPlayback: true,
-                    ),
+    return Material(
+      color: palette.paperRaised,
+      shape: shape,
+      clipBehavior: Clip.antiAlias,
+      child: PaperChoice(
+        key: ValueKey('closet-${need.name}'),
+        selected: selected,
+        label: 'Try $name, ${need.label}',
+        onTap: onTap,
+        focusColor: palette.ink,
+        borderRadius: BorderRadius.circular(16),
+        child: Column(
+          children: [
+            SizedBox(
+              width: double.infinity,
+              height: 65,
+              child: ColoredBox(
+                color: Color.alphaBlend(
+                  palette.moonlight.withValues(alpha: .40),
+                  palette.paperRaised,
+                ),
+                child: Center(
+                  child: Image(
+                    image: paperPortrait(need.assetPath(palette), skinTone),
+                    height: 63,
+                    width: 63,
+                    gaplessPlayback: true,
                   ),
                 ),
               ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(6, 4, 6, 0),
-                child: Wrap(
-                  alignment: WrapAlignment.center,
-                  crossAxisAlignment: WrapCrossAlignment.center,
-                  spacing: 3,
-                  children: [
-                    if (selected)
-                      Icon(Icons.check, size: 14, color: palette.ink),
-                    Text(
-                      name,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: palette.ink,
-                      ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(6, 4, 6, 0),
+              child: Wrap(
+                alignment: WrapAlignment.center,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                spacing: 3,
+                children: [
+                  if (selected) Icon(Icons.check, size: 14, color: palette.ink),
+                  Text(
+                    name,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: palette.ink,
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(4, 0, 4, 6),
-                child: Text(
-                  need.label,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 12, color: palette.inkSoft),
-                ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(4, 0, 4, 6),
+              child: Text(
+                need.label,
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 12, color: palette.inkSoft),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

@@ -7,6 +7,7 @@ import '../../domain/models/app_state.dart';
 import '../../domain/models/need.dart';
 import '../../domain/pregnancy.dart';
 import '../widgets/pause_button.dart';
+import '../widgets/paper_choice.dart';
 import '../widgets/pregnancy_date_picker.dart';
 import '../widgets/paper_portrait.dart';
 import '../widgets/bumpy_avatar.dart';
@@ -37,7 +38,10 @@ class _FirstRunScreenState extends State<FirstRunScreen> {
 
   // ── Step 1 state ─────────────────────────────────────────────────────────
   bool _useDueDate = true;
-  DateTime? _pickedDate;
+  DateTime? _dueDateChoice;
+  DateTime? _periodStartChoice;
+  DateTime? get _pickedDate =>
+      _useDueDate ? _dueDateChoice : _periodStartChoice;
 
   /// Live gestational week computed from picked date; null until date chosen.
   int? get _previewWeek {
@@ -97,7 +101,15 @@ class _FirstRunScreenState extends State<FirstRunScreen> {
       useDueDate: _useDueDate,
       selected: _pickedDate,
     );
-    if (picked != null && mounted) setState(() => _pickedDate = picked);
+    if (picked != null && mounted) {
+      setState(() {
+        if (_useDueDate) {
+          _dueDateChoice = picked;
+        } else {
+          _periodStartChoice = picked;
+        }
+      });
+    }
   }
 
   Future<void> _confirm() async {
@@ -169,10 +181,8 @@ class _FirstRunScreenState extends State<FirstRunScreen> {
                             useDueDate: _useDueDate,
                             pickedDate: _pickedDate,
                             previewWeek: _previewWeek,
-                            onToggleMode: (v) => setState(() {
-                              _useDueDate = v;
-                              _pickedDate = null;
-                            }),
+                            onToggleMode: (v) =>
+                                setState(() => _useDueDate = v),
                             onPickDate: _pickDate,
                             onSwitchLamp: () => setState(
                               () => _pickHalloween = !_pickHalloween,
@@ -320,60 +330,59 @@ class _WelcomeNurseryState extends State<_WelcomeNursery> {
               final label = _checked
                   ? line ?? 'Check-in preview complete'
                   : 'Try a sample check-in';
-              return Semantics(
-                button: true,
+              return PaperChoice(
                 liveRegion: _checked,
                 label: _checked
                     ? '$label. Sample only, nothing saved. Reset preview'
                     : 'Try a sample check-in',
-                excludeSemantics: true,
                 onTap: _toggle,
-                child: InkWell(
-                  onTap: _toggle,
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 10,
-                    ),
-                    child: Row(
-                      children: [
-                        Image.asset(
-                          MaternalNeed.iron.iconPath,
-                          width: 30,
-                          height: 30,
-                          excludeFromSemantics: true,
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
+                focusColor: palette.ink,
+                borderRadius: const BorderRadius.vertical(
+                  bottom: Radius.circular(22),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 10,
+                  ),
+                  child: Row(
+                    children: [
+                      Image.asset(
+                        MaternalNeed.iron.iconPath,
+                        width: 30,
+                        height: 30,
+                        excludeFromSemantics: true,
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              label,
+                              style: TextStyle(
+                                color: palette.ink,
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            if (_checked)
                               Text(
-                                label,
+                                'Sample only · nothing saved',
                                 style: TextStyle(
-                                  color: palette.ink,
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w600,
+                                  color: palette.inkSoft,
+                                  fontSize: 13,
                                 ),
                               ),
-                              if (_checked)
-                                Text(
-                                  'Sample only · nothing saved',
-                                  style: TextStyle(
-                                    color: palette.inkSoft,
-                                    fontSize: 13,
-                                  ),
-                                ),
-                            ],
-                          ),
+                          ],
                         ),
-                        Icon(
-                          _checked ? Icons.replay : Icons.touch_app_outlined,
-                          size: 21,
-                          color: palette.inkSoft,
-                        ),
-                      ],
-                    ),
+                      ),
+                      Icon(
+                        _checked ? Icons.replay : Icons.touch_app_outlined,
+                        size: 21,
+                        color: palette.inkSoft,
+                      ),
+                    ],
                   ),
                 ),
               );
@@ -414,6 +423,12 @@ class _Step1Date extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final dateAction = useDueDate
+        ? 'Pick your due date'
+        : 'Pick your last period start';
+    final dateText = pickedDate == null
+        ? (useDueDate ? 'Choose due date' : 'Choose period start date')
+        : _fmt(pickedDate!);
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 24),
       child: Column(
@@ -458,58 +473,47 @@ class _Step1Date extends StatelessWidget {
           const SizedBox(height: 16),
 
           // Date picker card
-          Semantics(
-            label: useDueDate
-                ? 'Pick your due date'
-                : 'Pick your last period start',
-            button: true,
-            child: InkWell(
-              onTap: onPickDate,
-              borderRadius: BorderRadius.circular(16),
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 18,
-                ),
-                decoration: BoxDecoration(
-                  color: pickedDate == null ? palette.accent : palette.paper,
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.2),
-                      offset: const Offset(0, 2),
-                      blurRadius: 0,
-                    ),
-                  ],
-                ),
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.calendar_today,
-                      color: pickedDate == null
-                          ? palette.accentText
-                          : palette.accent,
-                      size: 20,
-                    ),
-                    const SizedBox(width: 14),
-                    Expanded(
-                      child: Text(
-                        pickedDate == null
-                            ? (useDueDate
-                                  ? 'Choose due date'
-                                  : 'Choose period start date')
-                            : _fmt(pickedDate!),
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: pickedDate == null
-                              ? palette.accentText
-                              : palette.ink,
-                        ),
+          PaperChoice(
+            label: '$dateAction\n$dateText',
+            onTap: onPickDate,
+            focusColor: pickedDate == null ? palette.accentText : palette.ink,
+            borderRadius: BorderRadius.circular(16),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+              decoration: BoxDecoration(
+                color: pickedDate == null ? palette.accent : palette.paper,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.2),
+                    offset: const Offset(0, 2),
+                    blurRadius: 0,
+                  ),
+                ],
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.calendar_today,
+                    color: pickedDate == null
+                        ? palette.accentText
+                        : palette.accent,
+                    size: 20,
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Text(
+                      dateText,
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: pickedDate == null
+                            ? palette.accentText
+                            : palette.ink,
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
           ),
@@ -854,91 +858,84 @@ class _LookCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Semantics(
+    return PaperChoice(
       label: '$label. $description',
-      excludeSemantics: true,
-      onTap: onTap,
       selected: selected,
-      button: true,
-      child: GestureDetector(
-        onTap: onTap,
-        child: AnimatedContainer(
-          duration: MediaQuery.disableAnimationsOf(context)
-              ? Duration.zero
-              : const Duration(milliseconds: 200),
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: look.paper,
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(
-              color: selected ? look.accent : Colors.transparent,
-              width: 2.5,
+      onTap: onTap,
+      focusColor: look.ink,
+      borderRadius: BorderRadius.circular(18),
+      child: AnimatedContainer(
+        duration: MediaQuery.disableAnimationsOf(context)
+            ? Duration.zero
+            : const Duration(milliseconds: 200),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: look.paper,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(
+            color: selected ? look.accent : Colors.transparent,
+            width: 2.5,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: selected ? 0.3 : 0.15),
+              offset: const Offset(0, 3),
+              blurRadius: 0,
             ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: selected ? 0.3 : 0.15),
-                offset: const Offset(0, 3),
-                blurRadius: 0,
-              ),
-            ],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(
-                child: Image(
-                  image: paperPortrait(
-                    MaternalNeed.iron.assetPath(look),
-                    skinTone,
-                  ),
-                  width: 96,
-                  height: 96,
-                  excludeFromSemantics: true,
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Image(
+                image: paperPortrait(
+                  MaternalNeed.iron.assetPath(look),
+                  skinTone,
                 ),
+                width: 96,
+                height: 96,
+                excludeFromSemantics: true,
               ),
-              const SizedBox(height: 8),
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                  color: look.ink,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                color: look.ink,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              description,
+              style: TextStyle(fontSize: 11, color: look.inkSoft, height: 1.3),
+            ),
+            const SizedBox(height: 10),
+            if (selected)
+              Container(
+                width: 20,
+                height: 20,
+                decoration: BoxDecoration(
+                  color: look.accent,
+                  shape: BoxShape.circle,
                 ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                description,
-                style: TextStyle(
-                  fontSize: 11,
-                  color: look.inkSoft,
-                  height: 1.3,
-                ),
-              ),
-              const SizedBox(height: 10),
-              if (selected)
-                Container(
-                  width: 20,
-                  height: 20,
-                  decoration: BoxDecoration(
-                    color: look.accent,
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(Icons.check, size: 13, color: look.accentText),
-                )
-              else
-                Container(
-                  width: 20,
-                  height: 20,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: look.ink.withValues(alpha: 0.3),
-                      width: 1.5,
-                    ),
+                child: Icon(Icons.check, size: 13, color: look.accentText),
+              )
+            else
+              Container(
+                width: 20,
+                height: 20,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: look.ink.withValues(alpha: 0.3),
+                    width: 1.5,
                   ),
                 ),
-            ],
-          ),
+              ),
+          ],
         ),
       ),
     );
@@ -1046,8 +1043,12 @@ class _SegmentToggle extends StatelessWidget {
         children: List.generate(options.length, (i) {
           final active = i == selectedIndex;
           return Expanded(
-            child: GestureDetector(
+            child: PaperChoice(
+              label: options[i],
+              selected: active,
               onTap: () => onSelect(i),
+              focusColor: active ? palette.accentText : palette.moonlight,
+              borderRadius: BorderRadius.circular(12),
               child: Container(
                 padding: const EdgeInsets.symmetric(vertical: 11),
                 decoration: BoxDecoration(

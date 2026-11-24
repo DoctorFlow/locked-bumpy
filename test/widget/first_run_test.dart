@@ -81,6 +81,12 @@ void main() {
       await tester.tap(find.text('OK'));
       await tester.pumpAndSettle();
       expect(find.text('You are at week 20 right now.'), findsOneWidget);
+      await tester.tap(find.text('Due Date'));
+      await tester.pumpAndSettle();
+      expect(find.text('Choose due date'), findsOneWidget);
+      await tester.tap(find.text('Last Period'));
+      await tester.pumpAndSettle();
+      expect(find.text('You are at week 20 right now.'), findsOneWidget);
     });
 
     testWidgets('medical disclaimer present on step 1', (tester) async {
