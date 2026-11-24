@@ -80,7 +80,10 @@ void main() {
       final state = await boot({'is_halloween': true});
       await t.pumpWidget(LittleBumpyApp(state: state));
       await t.pumpAndSettle();
-      await t.tap(find.byTooltip('Costume closet'));
+      // A room under 340 px shows the compact corner button (fix-today).
+      await t.tap(
+        find.byTooltip(width == 320 ? 'Wardrobe' : 'Costume closet'),
+      );
       await t.pumpAndSettle();
       expect(t.takeException(), isNull);
       Finder card(MaternalNeed need) => find
@@ -106,7 +109,14 @@ void main() {
           .first;
       expect(t.getSize(stack), t.getSize(card(selected)));
       // Witch says the need in sentence case; no extra tick before a name.
-      expect(find.text('Prenatal vitamin'), findsOneWidget);
+      // (Today's check-in row under the sheet says it too since fix-today.)
+      expect(
+        find.descendant(
+          of: find.byType(ClosetSheet),
+          matching: find.text('Prenatal vitamin'),
+        ),
+        findsOneWidget,
+      );
       expect(
         find.descendant(of: card(selected), matching: find.byIcon(Icons.check)),
         findsNothing,
