@@ -49,7 +49,7 @@ DateTime _last(DateTime t, bool due) =>
 
 void main() {
   group('opening month', () {
-    test('a due date opens 27 weeks ahead, a last period 13 weeks back', () {
+    test('each calendar opens on the middle month of its range', () {
       expect(
         pickerOpeningMonth(
           today: _today,
@@ -57,7 +57,7 @@ void main() {
           first: _first(_today, true),
           last: _last(_today, true),
         ),
-        DateTime(2027, 5),
+        DateTime(2027, 4),
       );
       expect(
         pickerOpeningMonth(
@@ -66,7 +66,7 @@ void main() {
           first: _first(_today, false),
           last: _last(_today, false),
         ),
-        DateTime(2026, 8),
+        DateTime(2026, 6),
       );
     });
 
@@ -84,8 +84,8 @@ void main() {
     });
 
     // Every day of a year, so the day of the month cannot hide a gap.
-    test('for weeks 5 to 21, the month is at most two month taps away, on '
-        'any day of the year, both ways', () {
+    test('for weeks 4 to 35 the month is at most four month taps away, and '
+        'for weeks 36 to 41 at most five, on any day of the year, both ways', () {
       for (var i = 0; i < 366; i++) {
         final today = DateTime(2026, 1, 1 + i);
         for (final due in [true, false]) {
@@ -95,7 +95,7 @@ void main() {
             first: _first(today, due),
             last: _last(today, due),
           );
-          for (var week = 5; week <= 21; week++) {
+          for (var week = 4; week <= 41; week++) {
             final dueDate = PregnancyCalculator.dueDateForWeek(
               week: week,
               currentDate: today,
@@ -105,7 +105,7 @@ void main() {
                 : DateTime(dueDate.year, dueDate.month, dueDate.day - 280);
             expect(
               _monthsApart(open, target),
-              lessThanOrEqualTo(2),
+              lessThanOrEqualTo(week <= 35 ? 4 : 5),
               reason: '$today week $week ${due ? 'due' : 'period'}',
             );
           }
@@ -140,12 +140,11 @@ void main() {
     });
   });
 
-  testWidgets('the picker opens on May 2027 with no day chosen; the camera '
-      'date (15 March 2027) is two Previous-month taps away', (tester) async {
+  testWidgets('the picker opens on April 2027 with no day chosen; the camera '
+      'date (15 March 2027) is one Previous-month tap away', (tester) async {
     await _open(tester);
-    expect(find.text('May 2027'), findsOneWidget);
+    expect(find.text('April 2027'), findsOneWidget);
     expect(find.text('No day chosen yet'), findsOneWidget);
-    await _tap(tester, find.byTooltip('Previous month'));
     await _tap(tester, find.byTooltip('Previous month'));
     expect(find.text('March 2027'), findsOneWidget);
     await _tap(tester, find.byKey(const ValueKey('picker-day-2027-3-15')));
@@ -227,7 +226,7 @@ void main() {
     );
     await tester.pumpAndSettle();
     expect(find.text(pickADayFirst), findsNothing);
-    expect(find.text('20 May 2027'), findsOneWidget);
+    expect(find.text('20 April 2027'), findsOneWidget);
 
     tester.semantics.tap(find.semantics.byLabel('Cancel'));
     await tester.pumpAndSettle();
@@ -241,7 +240,7 @@ void main() {
     final handle = tester.ensureSemantics();
     await _open(tester);
     tester.semantics.tap(
-      find.semantics.byLabel('May 2027. Choose another month'),
+      find.semantics.byLabel('April 2027. Choose another month'),
     );
     await tester.pumpAndSettle();
     tester.semantics.tap(find.semantics.byLabel('March 2027'));

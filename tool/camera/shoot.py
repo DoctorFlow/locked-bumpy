@@ -194,10 +194,10 @@ def first_run_steps(prefix, look_label=None):
         shot(f"{p}-1-welcome"),
         tap("Start", "button"), wait(500), shot(f"{p}-2-date"),
         tap_first(["Choose due date", "Pick your due date"]), wait(600), shot(f"{p}-2-picker"),
-        # The picker opens with no day chosen, on May 2027 (the month a
-        # parent 13 weeks along is due in). Step back to March 2027 and pick
+        # The picker opens with no day chosen, on April 2027 (the middle
+        # month of the offered range). Step back to March 2027 and pick
         # the 15th (the camera's DUE_DATE, week 24), then OK.
-        *[st for _ in range(2) for st in (tap("Previous month", "button"), wait(350))],
+        *[st for _ in range(1) for st in (tap("Previous month", "button"), wait(350))],
         tap_first(["15, Monday, March 15, 2027", "15,"]), wait(400), shot(f"{p}-2-day"),
         tap_first(["OK", "Ok"]), wait(600), shot(f"{p}-2-picked"),
         tap_first(["Next"], find=True), wait(500), shot(f"{p}-3-nickname"),
@@ -398,12 +398,12 @@ SCENARIOS = [
         tap("March 2027", "button", find=True), wait(500),
         tap_first(["15, Monday, March 15, 2027"], find=True), wait(400), shot("date-picker-day"),
         tap_first(["OK"]), wait(700), shot("date-picker-picked"),
-    ], shot=None, sizes=DATE_SIZES, note="date-step: opens on May 2027; month list; say-back"),
+    ], shot=None, sizes=DATE_SIZES, note="date-step: opens on April 2027; month list; say-back"),
     S("date-big-text", {"setup": False}, [
         tap("Start", "button"), wait(600), shot("date-big-step"),
         tap_first(["Choose due date", "Pick your due date"], find=True), wait(700),
         shot("date-big-picker"),
-        *[st for _ in range(2) for st in (tap("Previous month", "button"), wait(350))],
+        *[st for _ in range(1) for st in (tap("Previous month", "button"), wait(350))],
         # At 200% text the month scrolls; bring day 15 into view first.
         reveal("15, Monday, March 15, 2027", at=0.4), wait(300),
         tap_first(["15, Monday, March 15, 2027"], find=True), wait(400), shot("date-big-day"),
