@@ -215,8 +215,10 @@ class VisitTopics extends StatelessWidget {
 }
 
 /// How far above the bottom of the screen the tab bar's top edge sits; 0
-/// when there is no tab bar (first run, Paused).
-double _tabBarClearance(BuildContext context) {
+/// when there is no tab bar (first run, Paused). A note that floats this
+/// far up (plus a step) never covers the tabs; the show page keeps this
+/// much room under its last control.
+double tabBarClearance(BuildContext context) {
   final screen = MediaQuery.sizeOf(context).height;
   double found = 0;
   void visit(Element element) {
@@ -380,7 +382,7 @@ class _VisitEditorState extends State<_VisitEditor> {
       // It floats above the tab bar for 2 seconds, so it never covers or
       // takes a tap meant for the tabs.
       final messenger = ScaffoldMessenger.maybeOf(context);
-      final clearance = _tabBarClearance(context);
+      final clearance = tabBarClearance(context);
       Navigator.pop(context);
       messenger
         ?..hideCurrentSnackBar()
@@ -445,7 +447,64 @@ class _VisitEditorState extends State<_VisitEditor> {
     );
   }
 
+  /// One saved question on raised paper: the words, the quiet origin line
+  /// for a picked one, then "Change the words" and remove.
+  Widget _questionRow(AppPalette palette, VisitQuestion question) {
+    return Padding(
+      key: ValueKey('visit-question-${question.text}'),
+      padding: const EdgeInsets.only(bottom: AppSpace.s),
+      child: PaperCard(
+        raised: true,
+        padding: const EdgeInsets.only(left: AppSpace.m),
+        child: Row(
+          children: [
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: AppSpace.s),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      question.text,
+                      style: AppText.body.copyWith(color: palette.ink),
+                    ),
+                    if (visitOriginLine(question) case final line?)
+                      Text(
+                        line,
+                        key: ValueKey('visit-origin-${question.text}'),
+                        style: AppText.small.copyWith(color: palette.inkSoft),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+            IconButton(
+              tooltip: 'Change the words: ${question.text}',
+              constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+              onPressed: _saving ? null : () => _edit(question),
+              icon: Icon(Icons.edit_outlined, color: palette.ink),
+            ),
+            IconButton(
+              tooltip: 'Remove from visit list: ${question.text}',
+              constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+              onPressed: _saving ? null : () => _remove(question),
+              icon: Icon(Icons.remove_circle_outline, color: palette.ink),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _scrollingBody(AppPalette palette, List<VisitQuestion> questions) {
+    final own = [
+      for (final q in questions)
+        if (q.isOwnWords) q,
+    ];
+    final picked = [
+      for (final q in questions)
+        if (!q.isOwnWords) q,
+    ];
     return SingleChildScrollView(
       padding: EdgeInsets.fromLTRB(
         AppSpace.l,
@@ -461,64 +520,16 @@ class _VisitEditorState extends State<_VisitEditor> {
             style: AppText.body.copyWith(color: palette.inkSoft),
           ),
           const SizedBox(height: AppSpace.m),
-          for (final question in questions)
-            Padding(
-              key: ValueKey('visit-question-${question.text}'),
-              padding: const EdgeInsets.only(bottom: AppSpace.s),
-              child: PaperCard(
-                raised: true,
-                padding: const EdgeInsets.only(left: AppSpace.m),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                          vertical: AppSpace.s,
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              question.text,
-                              style: AppText.body.copyWith(color: palette.ink),
-                            ),
-                            if (visitOriginLine(question) case final line?)
-                              Text(
-                                line,
-                                key: ValueKey('visit-origin-${question.text}'),
-                                style: AppText.small.copyWith(
-                                  color: palette.inkSoft,
-                                ),
-                              ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    IconButton(
-                      tooltip: 'Change the words: ${question.text}',
-                      constraints: const BoxConstraints(
-                        minWidth: 48,
-                        minHeight: 48,
-                      ),
-                      onPressed: _saving ? null : () => _edit(question),
-                      icon: Icon(Icons.edit_outlined, color: palette.ink),
-                    ),
-                    IconButton(
-                      tooltip: 'Remove from visit list: ${question.text}',
-                      constraints: const BoxConstraints(
-                        minWidth: 48,
-                        minHeight: 48,
-                      ),
-                      onPressed: _saving ? null : () => _remove(question),
-                      icon: Icon(
-                        Icons.remove_circle_outline,
-                        color: palette.ink,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
+          // The same two groups as the show page, own words first.
+          for (final (heading, group) in [
+            (VisitScreen.ownWordsHeading, own),
+            (VisitScreen.pickedHeading, picked),
+          ])
+            if (group.isNotEmpty) ...[
+              _SheetHeading(heading, palette: palette),
+              for (final question in group) _questionRow(palette, question),
+              const SizedBox(height: AppSpace.s),
+            ],
           const SizedBox(height: AppSpace.xs),
           TextFormField(
             key: const ValueKey('visit-question-field'),
@@ -558,38 +569,40 @@ class _VisitEditorState extends State<_VisitEditor> {
               ),
             ),
           const SizedBox(height: AppSpace.m),
-          Semantics(
-            header: true,
-            child: Text(
-              'Topics',
-              style: AppText.heading.copyWith(color: palette.ink),
-            ),
+          // Topics as paper chips, the same heading as the groups above,
+          // instead of a long list of checkboxes.
+          _SheetHeading('Topics', palette: palette),
+          Wrap(
+            spacing: AppSpace.s,
+            runSpacing: AppSpace.s,
+            children: [
+              for (final need in MaternalNeed.values)
+                FilterChip(
+                  key: ValueKey('visit-topic-${need.name}'),
+                  // Chosen = accent fill and a clean tick in place of the
+                  // icon, so the tick never sits on top of the picture.
+                  avatar: _selected.contains(need)
+                      ? null
+                      : Image.asset(
+                          need.iconPath,
+                          width: 20,
+                          height: 20,
+                          excludeFromSemantics: true,
+                        ),
+                  label: Text(needWord(need)),
+                  selected: _selected.contains(need),
+                  onSelected: _saving
+                      ? null
+                      : (value) => setState(() {
+                          if (value) {
+                            _selected.add(need);
+                          } else {
+                            _selected.remove(need);
+                          }
+                        }),
+                ),
+            ],
           ),
-          for (final need in MaternalNeed.values)
-            CheckboxListTile(
-              key: ValueKey('visit-topic-${need.name}'),
-              contentPadding: EdgeInsets.zero,
-              secondary: Image.asset(
-                need.iconPath,
-                width: 34,
-                height: 34,
-                excludeFromSemantics: true,
-              ),
-              title: Text(
-                needWord(need),
-                style: AppText.body.copyWith(color: palette.ink),
-              ),
-              value: _selected.contains(need),
-              onChanged: _saving
-                  ? null
-                  : (value) => setState(() {
-                      if (value == true) {
-                        _selected.add(need);
-                      } else {
-                        _selected.remove(need);
-                      }
-                    }),
-            ),
           const SizedBox(height: AppSpace.l),
           if (_saveFailed)
             Semantics(
@@ -616,6 +629,28 @@ class _VisitEditorState extends State<_VisitEditor> {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// A heading over one group in the editor, as on the show page.
+class _SheetHeading extends StatelessWidget {
+  const _SheetHeading(this.text, {required this.palette});
+
+  final String text;
+  final AppPalette palette;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppSpace.s),
+      child: Semantics(
+        header: true,
+        child: Text(
+          text,
+          style: AppText.heading.copyWith(color: palette.inkSoft),
+        ),
       ),
     );
   }
@@ -666,9 +701,7 @@ class _EditWordsDialogState extends State<_EditWordsDialog> {
             maxLines: 5,
             enableSuggestions: false,
             autocorrect: false,
-            decoration: const InputDecoration(
-              labelText: 'In my own words',
-            ),
+            decoration: const InputDecoration(labelText: 'In my own words'),
           ),
         ],
       ),

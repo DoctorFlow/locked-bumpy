@@ -89,11 +89,14 @@ class VisitScreen extends StatelessWidget {
                 ),
                 Expanded(
                   child: SingleChildScrollView(
-                    padding: const EdgeInsets.fromLTRB(
+                    // Room under "Copy my list": at large text on a small
+                    // phone the last control can always be scrolled clear
+                    // of where the tab bar and the floating note sit.
+                    padding: EdgeInsets.fromLTRB(
                       AppSpace.xl,
                       AppSpace.s,
                       AppSpace.xl,
-                      AppSpace.xxl,
+                      bottomRoom(context),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -175,6 +178,16 @@ class VisitScreen extends StatelessWidget {
         );
       },
     );
+  }
+
+  /// The empty room under the last control: the tab bar's height (it may
+  /// sit under this page, and at 200 percent text it is tall) or, with no
+  /// tab bar, the room of a floating note; never less than 96.
+  static double bottomRoom(BuildContext context) {
+    final note = MediaQuery.textScalerOf(context).scale(16) + 3 * AppSpace.l;
+    final tabs = tabBarClearance(context);
+    final room = (tabs > note ? tabs : note) + AppSpace.xxxl;
+    return room < 2 * AppSpace.xxxl ? 2 * AppSpace.xxxl : room;
   }
 
   Future<void> _copy(BuildContext context) async {

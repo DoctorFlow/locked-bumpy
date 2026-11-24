@@ -64,10 +64,8 @@ void main() {
     );
     expect(
       t
-          .widget<CheckboxListTile>(
-            find.byKey(const ValueKey('visit-topic-water')),
-          )
-          .value,
+          .widget<FilterChip>(find.byKey(const ValueKey('visit-topic-water')))
+          .selected,
       isTrue,
     );
     await t.enterText(

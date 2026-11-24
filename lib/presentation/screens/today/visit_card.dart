@@ -2,9 +2,91 @@ part of 'today_screen.dart';
 
 // ── For your visit: the one home of the visit list on Today ───────────────
 //
-// It shows the first question in words and "Show at my visit". When today's
-// need has no guide (so no fact card with its "add a question" action), it
+// The parent's newest own words sit in a slim strip right under Bumpy
+// (`_OwnWordsStrip`), so the card shows the rest of the list, or an
+// "add another" row when that question is all there is, and "Show at my
+// visit". When today's need has no guide (so no fact card with its "add a question" action), it
 // also holds the one-tap "Save <need> for my visit" topic control.
+
+/// The parent's newest question in their own words, right under Bumpy's
+/// line, so a parent who reopens the app at the appointment finds it at
+/// once. One slim line of paper; the whole strip opens "Show at my visit".
+/// Absent when there is no question in the parent's own words.
+class _OwnWordsStrip extends StatelessWidget {
+  const _OwnWordsStrip({
+    required this.state,
+    required this.palette,
+    required this.question,
+  });
+
+  final AppState state;
+  final AppPalette palette;
+  final String question;
+
+  /// The small quiet label in front of the question.
+  static const label = 'My question';
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      button: true,
+      label: '$label: $question. Show at my visit',
+      excludeSemantics: true,
+      onTap: () => VisitScreen.open(context, state),
+      child: PaperCard(
+        key: const ValueKey('own-words-strip'),
+        child: InkWell(
+          onTap: () => VisitScreen.open(context, state),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: AppSpace.target),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpace.m,
+                AppSpace.s,
+                AppSpace.s,
+                AppSpace.s,
+              ),
+              child: Row(
+                children: [
+                  // One line of text: the quiet label, then the words in
+                  // quotes, cut with an ellipsis. At very large text it may
+                  // take a second line, so some of the words still show.
+                  Expanded(
+                    child: Text.rich(
+                      TextSpan(
+                        children: [
+                          TextSpan(
+                            text: '$label  ',
+                            style: AppText.label.copyWith(
+                              color: palette.inkSoft,
+                            ),
+                          ),
+                          TextSpan(
+                            text: '“$question”',
+                            style: AppText.bodyStrong.copyWith(
+                              color: palette.ink,
+                            ),
+                          ),
+                        ],
+                      ),
+                      key: const ValueKey('own-words-strip-question'),
+                      maxLines: MediaQuery.textScalerOf(context).scale(16) > 24
+                          ? 2
+                          : 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  const SizedBox(width: AppSpace.xs),
+                  Icon(Icons.chevron_right, size: 24, color: palette.inkSoft),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
 
 class _VisitCard extends StatelessWidget {
   const _VisitCard({
@@ -34,6 +116,14 @@ class _VisitCard extends StatelessWidget {
         .where(state.visitTopics.contains)
         .toList();
     final empty = questions.isEmpty && topics.isEmpty;
+    // What the card shows below the strip: everything but the newest own
+    // words, which the strip under Bumpy already holds. (text, is a question)
+    final stripped = state.newestOwnQuestion;
+    final rest = <(String, bool)>[
+      for (final q in state.visitQuestionsOwnFirst)
+        if (q.text != stripped) (q.text, true),
+      for (final need in topics) (needWord(need), false),
+    ];
     final quiet = TextButton.styleFrom(
       padding: const EdgeInsets.symmetric(horizontal: AppSpace.xs),
       alignment: AlignmentDirectional.centerStart,
@@ -94,17 +184,61 @@ class _VisitCard extends StatelessWidget {
           ),
         ),
       ]);
+    } else if (rest.isEmpty) {
+      // The strip under Bumpy already shows the one question, so the card
+      // does not repeat it: it offers to add another instead.
+      children.addAll([
+        const SizedBox(height: AppSpace.s),
+        PaperCard(
+          raised: true,
+          child: Semantics(
+            button: true,
+            child: InkWell(
+              key: const ValueKey('visit-add-another'),
+              onTap: () => VisitTopics.edit(context, state),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(minHeight: AppSpace.row),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpace.m,
+                    vertical: AppSpace.s,
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.add, size: 24, color: palette.ink),
+                      const SizedBox(width: AppSpace.m),
+                      Expanded(
+                        child: Text(
+                          'Another question? Add it here.',
+                          style: AppText.bodyStrong.copyWith(
+                            color: palette.ink,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: AppSpace.s),
+                      ExcludeSemantics(
+                        child: Icon(
+                          Icons.chevron_right,
+                          size: 24,
+                          color: palette.inkSoft,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ]);
     } else {
-      // The parent's newest own words come first, so they see them the
-      // moment the app opens; else a picked question, else a topic. No count
-      // of the rest: the list is a help, not a pile.
-      final own = state.newestOwnQuestion;
-      final first = own.isNotEmpty
-          ? own
-          : questions.isNotEmpty
-          ? state.visitQuestionsOwnFirst.first.text
-          : needWord(topics.first);
-      final more = questions.length + topics.length > 1;
+      // The newest own words sit in the strip under Bumpy; the card shows
+      // the next thing on the list (own words first, then a picked
+      // question, then a topic). No count of the rest: the list is a help,
+      // not a pile.
+      final first = rest.first;
+      final more = rest.length > 1;
+      final isQuestion = first.$2;
       children.addAll([
         const SizedBox(height: AppSpace.s),
         // The parent's own question on a raised piece of paper, in quotes
@@ -116,7 +250,7 @@ class _VisitCard extends StatelessWidget {
           padding: const EdgeInsets.all(AppSpace.m),
           child: Text(
             // A topic name alone ("Iron") is not a quote.
-            own.isNotEmpty || questions.isNotEmpty ? '“$first”' : first,
+            isQuestion ? '“${first.$1}”' : first.$1,
             key: const ValueKey('visit-card-question'),
             style: AppText.body.copyWith(
               fontSize: 18,
