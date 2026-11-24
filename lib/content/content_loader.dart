@@ -1,6 +1,7 @@
+import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:flutter/services.dart' show rootBundle;
 import '../domain/models/content_record.dart';
-import '../domain/models/guide_article.dart';
+import '../domain/models/guide.dart';
 import '../domain/models/need.dart';
 import '../domain/models/week_card.dart';
 import 'content_paths.dart';
@@ -9,21 +10,25 @@ import 'content_paths.dart';
 ///
 /// All assets are offline (bundled with the app via `rootBundle`).
 /// No network calls, no runtime AI. Results are cached after first load.
+/// Every pack passes the one gate in [ContentGate.review]: approved rows
+/// always, draft rows only in a review build.
 class ContentLoader {
   ContentLoader._();
 
   static final Map<String, List<ContentRecord>> _cache = {};
 
-  /// Loads the individually reviewed records in [assetPath] (e.g.
-  /// `'assets/content/today_lines.json'`). Returns cached result on
+  /// Loads the records in [assetPath] (e.g. `'assets/content/today_lines.json'`)
+  /// that the gate lets through, approved rows first so a draft can never
+  /// take the place of an approved line. Returns cached result on
   /// subsequent calls.
   static Future<List<ContentRecord>> load(String assetPath) async {
     if (_cache.containsKey(assetPath)) return _cache[assetPath]!;
     final raw = await rootBundle.loadString(assetPath);
     final records = ContentRecord.listFromJsonString(raw);
-    final validated = List<ContentRecord>.unmodifiable(
-      records.where(ContentGate.canDisplay),
-    );
+    final validated = List<ContentRecord>.unmodifiable([
+      ...records.where((r) => ContentGate.reviewRecord(r) == Review.shown),
+      ...records.where((r) => ContentGate.reviewRecord(r) == Review.draft),
+    ]);
     _cache[assetPath] = validated;
     return validated;
   }
@@ -32,6 +37,7 @@ class ContentLoader {
   static void clearCache() {
     _cache.clear();
     _weekCards = null;
+    _guides = null;
   }
 
   static List<WeekCard>? _weekCards;
@@ -43,14 +49,31 @@ class ContentLoader {
     return _weekCards = List.unmodifiable(WeekCard.listFromJsonString(raw));
   }
 
-  static Future<Map<MaternalNeed, GuideArticle>> loadGuides() async {
-    final raw = await rootBundle.loadString(ContentPaths.guideArticles);
-    return GuideArticle.reviewed(raw, reviewer: 'Karan');
+  static Future<Map<MaternalNeed, Guide>>? _guides;
+
+  /// The guides the gate lets through, one per need at most. A broken
+  /// record hides only its own guide; an unreadable file hides all six.
+  static Future<Map<MaternalNeed, Guide>> loadGuides() =>
+      _guides ??= _readGuides();
+
+  /// Replaces the loaded guides with [guides] (null clears). Tests only.
+  @visibleForTesting
+  static void debugSetGuides(Map<MaternalNeed, Guide>? guides) =>
+      _guides = guides == null ? null : Future.value(guides);
+
+  static Future<Map<MaternalNeed, Guide>> _readGuides() async {
+    try {
+      final raw = await rootBundle.loadString(ContentPaths.guides);
+      return Guide.reviewAll(raw);
+    } catch (_) {
+      return const {};
+    }
   }
 
   // ── Query helpers ─────────────────────────────────────────────────────────
 
-  /// Finds the first approved record matching [need], [category], and [mode].
+  /// Finds the first record matching [need], [category], and [mode].
+  /// [load] puts approved records first, so they win over drafts.
   ///
   /// Mode matching: a record with `mode == 'both'` matches any [mode] value.
   /// Returns `null` if no match is found.

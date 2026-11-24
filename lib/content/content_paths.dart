@@ -6,5 +6,5 @@ class ContentPaths {
 
   static const String todayLines = 'assets/content/today_lines.json';
   static const String weekCards = 'assets/content/week_cards.json';
-  static const String guideArticles = 'assets/content/guide_articles.json';
+  static const String guides = 'assets/content/guides.json';
 }

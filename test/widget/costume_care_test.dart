@@ -6,7 +6,7 @@ import 'package:little_bumpy/core/theme/palette.dart';
 import 'package:little_bumpy/domain/models/app_state.dart';
 import 'package:little_bumpy/domain/models/need.dart';
 import 'package:little_bumpy/main.dart';
-import 'package:little_bumpy/domain/models/guide_article.dart';
+import 'package:little_bumpy/domain/models/guide.dart';
 import 'package:little_bumpy/presentation/widgets/bumpy_avatar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -87,9 +87,8 @@ void main() {
         'is_halloween': false,
       });
       final state = await AppState.load();
-      final articles = GuideArticle.reviewed(
-        File('assets/content/guide_articles.json').readAsStringSync(),
-        reviewer: 'Karan',
+      final articles = Guide.reviewAll(
+        File('assets/content/guides.json').readAsStringSync(),
       );
       await tester.pumpWidget(LittleBumpyApp(state: state));
       await tester.pumpAndSettle();
@@ -113,7 +112,7 @@ void main() {
         findsOneWidget,
       );
       if (!articles.containsKey(need)) {
-        expect(find.text('Questions to ask your doctor'), findsNothing);
+        expect(find.text('Ask your doctor or midwife'), findsNothing);
       }
       await tester.tap(find.byTooltip('Switch to Halloween'));
       await tester.pumpAndSettle();
