@@ -129,7 +129,7 @@ void main() {
     });
 
     testWidgets('the date picker opens with no day chosen, and OK alone '
-        'saves nothing', (tester) async {
+        'saves nothing and says why', (tester) async {
       final state = await _freshState();
       await tester.pumpWidget(_wrap(state));
       await tester.pumpAndSettle();
@@ -140,7 +140,12 @@ void main() {
         find.byType(DatePickerDialog),
       );
       expect(dialog.initialDate, isNull);
+      // OK with no day stays open and says why, next to the buttons.
       await tester.tap(find.text('OK'));
+      await tester.pumpAndSettle();
+      expect(find.byType(DatePickerDialog), findsOneWidget);
+      expect(find.text('Pick a day first'), findsOneWidget);
+      await tester.tap(find.text('Cancel'));
       await tester.pumpAndSettle();
 
       expect(find.byType(DatePickerDialog), findsNothing);
@@ -161,6 +166,68 @@ void main() {
         DateTime(2027, 4, 12),
       );
     });
+
+    testWidgets('OK in the date picker stays dimmed until a day is tapped', (
+      tester,
+    ) async {
+      final state = await _freshState();
+      await tester.pumpWidget(_wrap(state));
+      await tester.pumpAndSettle();
+      await _tap(tester, find.text('Start'));
+      await _tap(tester, find.text('Choose due date'));
+
+      Color okColor() => DefaultTextStyle.of(
+        tester.element(find.text('OK')),
+      ).style.color!;
+      final cancelColor = DefaultTextStyle.of(
+        tester.element(find.text('Cancel')),
+      ).style.color!;
+      // Dimmed while empty: not the same as Cancel's full colour.
+      expect(okColor(), isNot(cancelColor));
+      expect(okColor().a, lessThan(1));
+      expect(find.text('Pick a day first'), findsNothing);
+
+      // A day tapped in the calendar lights OK, and OK saves it.
+      await tester.tap(find.byTooltip('Next month'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('15').hitTestable().first);
+      await tester.pumpAndSettle();
+      expect(okColor(), cancelColor);
+      await tester.tap(find.text('OK'));
+      await tester.pumpAndSettle();
+      expect(find.byType(DatePickerDialog), findsNothing);
+      expect(find.text('Dec 15, 2026'), findsOneWidget);
+      final next = find.widgetWithText(ElevatedButton, 'Next');
+      expect(tester.widget<ElevatedButton>(next).onPressed, isNotNull);
+    });
+
+    for (final halloween in [false, true]) {
+      testWidgets('the waiting "Next" is readable in '
+          '${halloween ? 'Halloween' : 'Everyday'}', (tester) async {
+        final state = await _freshState(halloween: halloween);
+        await tester.pumpWidget(_wrap(state));
+        await tester.pumpAndSettle();
+        await _tap(tester, find.text('Start'));
+        final next = find.widgetWithText(ElevatedButton, 'Next');
+        final button = tester.widget<ElevatedButton>(next);
+        expect(button.onPressed, isNull);
+        const disabled = {WidgetState.disabled};
+        final fg = button.style!.foregroundColor!.resolve(disabled)!;
+        final bg = button.style!.backgroundColor!.resolve(disabled)!;
+        double lum(Color c) => c.computeLuminance();
+        final hi = lum(Color.alphaBlend(fg, bg)) > lum(bg)
+            ? lum(Color.alphaBlend(fg, bg))
+            : lum(bg);
+        final lo = lum(Color.alphaBlend(fg, bg)) > lum(bg)
+            ? lum(bg)
+            : lum(Color.alphaBlend(fg, bg));
+        expect((hi + .05) / (lo + .05), greaterThanOrEqualTo(3));
+        // It says why it waits.
+        final data = tester.getSemantics(next).getSemanticsData();
+        expect(data.label, 'Next');
+        expect(data.hint, 'Choose a date first');
+      });
+    }
 
     testWidgets('shows gestational week preview after a date is chosen', (
       tester,

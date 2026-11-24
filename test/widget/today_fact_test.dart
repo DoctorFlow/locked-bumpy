@@ -80,7 +80,9 @@ void main() {
     // One visit entry: with a fact, the topic control leaves the visit card.
     expect(find.byKey(const ValueKey('visit-topic-today')), findsNothing);
 
-    // Reading order: Bumpy's pairing, the fact, then the visit card.
+    // Reading order: Bumpy's pairing, the fact, then the visit card. (This
+    // 800 px view puts the check-ins in a column of their own; the upright
+    // order is checked in phone_accessibility_test.)
     final pairing = find.byKey(const ValueKey('need-pairing'));
     final visit = find.byKey(const ValueKey('visit-empty'));
     expect(t.getTopLeft(pairing).dy, lessThan(t.getTopLeft(fact).dy));

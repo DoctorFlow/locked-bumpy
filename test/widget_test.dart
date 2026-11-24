@@ -57,7 +57,8 @@ void main() {
       await tester.pump();
 
       final need = NeedRotation.forDate(DateTime.now());
-      final tileTitle = '${need.needName} · Need of the Day';
+      final tileTitle =
+          '${need == MaternalNeed.vitamin ? 'Prenatal vitamin' : need.label} · today’s need';
 
       await tester.tap(find.text(tileTitle));
       await tester.pumpAndSettle();

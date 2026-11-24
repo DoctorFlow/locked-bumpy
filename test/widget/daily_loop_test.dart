@@ -17,11 +17,11 @@ void main() {
     await state.toggleCheckIn('water');
     await tester.pumpWidget(LittleBumpyApp(state: state));
     await tester.pumpAndSettle();
-    expect(find.text('WATER · Need of the Day'), findsOneWidget);
+    expect(find.text('Water · today’s need'), findsOneWidget);
     now = DateTime(2026, 11, 27);
     await tester.pump(const Duration(seconds: 2));
     await tester.pumpAndSettle();
-    expect(find.text('REST · Need of the Day'), findsOneWidget);
+    expect(find.text('Rest · today’s need'), findsOneWidget);
     expect(state.completedCheckIns, isEmpty);
     await tester.pumpWidget(const SizedBox());
   });
@@ -82,9 +82,9 @@ void main() {
       await tester.pumpAndSettle();
       for (final need in expected) {
         final label = need == today
-            ? '${need.needName} · Need of the Day'
+            ? '${need == MaternalNeed.vitamin ? 'Prenatal vitamin' : need.label} · today’s need'
             : need == MaternalNeed.vitamin
-            ? 'Prenatal Vitamin'
+            ? 'Prenatal vitamin'
             : need == MaternalNeed.water
             ? 'Water'
             : 'Rest';

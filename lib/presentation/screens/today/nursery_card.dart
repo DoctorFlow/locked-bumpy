@@ -48,6 +48,20 @@ class _NurseryCard extends StatelessWidget {
                     ),
                   )
                 : null,
+            compactCornerAction: palette.isHalloween
+                ? IconButton.filledTonal(
+                    key: const ValueKey('wardrobe-compact'),
+                    tooltip: 'Wardrobe',
+                    onPressed: () => ClosetSheet.open(context, state),
+                    style: IconButton.styleFrom(
+                      fixedSize: const Size.square(48),
+                      minimumSize: const Size.square(48),
+                      backgroundColor: palette.paper,
+                      foregroundColor: palette.ink,
+                    ),
+                    icon: const Icon(Icons.checkroom, size: 24),
+                  )
+                : null,
             avatar: BumpyAvatar(
               need: state.costumeOverride ?? need,
               palette: palette,
@@ -61,30 +75,35 @@ class _NurseryCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Wrap(
-                  spacing: 12,
-                  runSpacing: 8,
-                  crossAxisAlignment: WrapCrossAlignment.center,
-                  children: [
-                    Semantics(
-                      header: true,
-                      child: Text(
-                        state.babyDisplayName,
-                        style: AppText.bodyStrong.copyWith(
-                          color: palette.inkSoft,
-                        ),
-                      ),
-                    ),
-                    _NeedPairing(state: state, need: need, palette: palette),
-                  ],
+                // The same stack in both looks and at every width: the
+                // baby's name, the need tag, then Bumpy's line.
+                Semantics(
+                  header: true,
+                  child: Text(
+                    state.babyDisplayName,
+                    style: AppText.label.copyWith(color: palette.inkSoft),
+                  ),
                 ),
+                const SizedBox(height: 8),
+                _NeedPairing(state: state, need: need, palette: palette),
                 if (babyLine.isNotEmpty) ...[
                   const SizedBox(height: 12),
                   Semantics(
                     liveRegion: true,
                     child: Text(
                       babyLine,
-                      style: AppText.bumpy.copyWith(color: palette.ink),
+                      // The one big serif on Today: Bumpy is talking.
+                      style: AppText.bumpy.copyWith(
+                        color: palette.ink,
+                        fontSize: 26,
+                        height: 32 / 26,
+                        fontVariations: const [
+                          FontVariation('opsz', 26),
+                          FontVariation('wght', 600),
+                          FontVariation('SOFT', 100),
+                          FontVariation('WONK', 1),
+                        ],
+                      ),
                     ),
                   ),
                   if (lineIsDraft) ...[

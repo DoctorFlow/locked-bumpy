@@ -49,18 +49,51 @@ class _VisitCard extends StatelessWidget {
       ),
     ];
     if (empty) {
-      children.add(
-        TextButton.icon(
-          key: const ValueKey('visit-invite'),
-          style: quiet,
-          onPressed: () => VisitTopics.edit(context, state),
-          icon: const Icon(Icons.edit_note, size: 24),
-          label: Text(
-            'A question for your doctor or midwife? Add it here.',
-            style: AppText.body,
+      children.addAll([
+        const SizedBox(height: AppSpace.s),
+        // A raised row on the card, not a link: the whole row is the button.
+        PaperCard(
+          raised: true,
+          child: Semantics(
+            button: true,
+            child: InkWell(
+              key: const ValueKey('visit-invite'),
+              onTap: () => VisitTopics.edit(context, state),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(minHeight: AppSpace.row),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpace.m,
+                    vertical: AppSpace.s,
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.edit_note, size: 24, color: palette.ink),
+                      const SizedBox(width: AppSpace.m),
+                      Expanded(
+                        child: Text(
+                          'A question for your doctor or midwife? Add it here.',
+                          style: AppText.bodyStrong.copyWith(
+                            color: palette.ink,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: AppSpace.s),
+                      ExcludeSemantics(
+                        child: Icon(
+                          Icons.chevron_right,
+                          size: 24,
+                          color: palette.inkSoft,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
           ),
         ),
-      );
+      ]);
     } else {
       // The parent's own words come first; a guide question or a topic after.
       final own = state.visitQuestion;
@@ -140,7 +173,7 @@ class _VisitCard extends StatelessWidget {
     return PaperCard(
       key: ValueKey(empty ? 'visit-empty' : 'visit-card'),
       child: Padding(
-        padding: EdgeInsets.fromLTRB(16, 16, 16, empty ? 8 : 16),
+        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: children,

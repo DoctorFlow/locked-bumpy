@@ -28,36 +28,39 @@ class _CheckInsPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final summary = allDone && !reviewing;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        if (summary)
-          _SavedCheckIns(
-            needs: checkIns,
-            palette: palette,
-            onReview: onReview,
-            onWeek: () => state.setTab(1),
-          )
-        else
+    // Once all are saved the summary card stands in for the list.
+    if (summary) {
+      return _SavedCheckIns(
+        needs: checkIns,
+        palette: palette,
+        onReview: onReview,
+        onWeek: () => state.setTab(1),
+      );
+    }
+    // One card on the page: the heading, the hint and the rows as a raised
+    // piece on it (page, card, piece on a card).
+    return PaperCard(
+      key: const ValueKey('today-check-ins'),
+      padding: const EdgeInsets.all(AppSpace.l),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
           Semantics(
             header: true,
             child: Text(
               allDone ? 'Saved check-ins' : "Today's check-ins",
-              style: AppText.heading.copyWith(color: palette.moonlight),
+              style: AppText.heading.copyWith(color: palette.ink),
             ),
           ),
-        // Always shown, so the rows never jump under a finger mid-tap.
-        if (!summary) ...[
-          const SizedBox(height: 4),
+          // Always shown, so the rows never jump under a finger mid-tap.
+          const SizedBox(height: AppSpace.xs),
           Text(
             allDone
                 ? 'Tap a checked row to undo it.'
                 : 'Tick any that fit your day.',
-            style: AppText.body.copyWith(color: palette.moonlightSoft),
+            style: AppText.small.copyWith(color: palette.inkSoft),
           ),
-        ],
-        const SizedBox(height: 8),
-        if (!summary)
+          const SizedBox(height: AppSpace.m),
           PaperCard(
             raised: true,
             child: Column(
@@ -73,8 +76,8 @@ class _CheckInsPanel extends StatelessWidget {
                   _CheckInTile(
                     key: ValueKey(item),
                     title: item == need
-                        ? '${need.needName} · Need of the Day'
-                        : item.label,
+                        ? '${_needWord(need)} · today’s need'
+                        : _needWord(item),
                     subtitle: _checkInHint(item),
                     need: item,
                     isTicked: state.isChecked(item.name),
@@ -85,51 +88,77 @@ class _CheckInsPanel extends StatelessWidget {
               ],
             ),
           ),
-        if (state.checkInStatus != CheckInSaveStatus.saved)
-          Semantics(
-            liveRegion: true,
-            child: Padding(
-              padding: const EdgeInsets.only(top: AppSpace.s),
-              // Never bare on the page: the save status is a paper piece.
-              child: PaperCard(
-                raised: true,
-                padding: const EdgeInsets.fromLTRB(
-                  AppSpace.m,
-                  AppSpace.m,
-                  AppSpace.m,
-                  AppSpace.xs,
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Text(
-                      state.checkInStatus == CheckInSaveStatus.saving
-                          ? 'Saving check-ins…'
-                          : 'Your check-ins couldn’t be saved on this device.',
-                      textAlign: TextAlign.center,
-                      style: AppText.body.copyWith(color: palette.ink),
-                    ),
-                    if (state.checkInStatus == CheckInSaveStatus.failed)
-                      TextButton(
-                        onPressed: state.retryCheckIns,
-                        child: const Text('Retry save'),
-                      )
-                    else
-                      const SizedBox(height: AppSpace.s),
-                  ],
+          if (state.checkInStatus != CheckInSaveStatus.saved)
+            Semantics(
+              liveRegion: true,
+              child: Padding(
+                padding: const EdgeInsets.only(top: AppSpace.s),
+                // The save status is a paper piece on the card.
+                child: PaperCard(
+                  raised: true,
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpace.m,
+                    AppSpace.m,
+                    AppSpace.m,
+                    AppSpace.xs,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Text(
+                        state.checkInStatus == CheckInSaveStatus.saving
+                            ? 'Saving check-ins…'
+                            : 'Your check-ins couldn’t be saved on this device.',
+                        textAlign: TextAlign.center,
+                        style: AppText.body.copyWith(color: palette.ink),
+                      ),
+                      if (state.checkInStatus == CheckInSaveStatus.failed)
+                        TextButton(
+                          onPressed: state.retryCheckIns,
+                          child: const Text('Retry save'),
+                        )
+                      else
+                        const SizedBox(height: AppSpace.s),
+                    ],
+                  ),
                 ),
               ),
             ),
-          ),
-        if (allDone && reviewing)
-          TextButton(
-            style: TextButton.styleFrom(foregroundColor: palette.moonlight),
-            onPressed: onEndReview,
-            child: const Text('Back to summary'),
-          ),
-        // The way into This Week; the summary card carries its own.
-        if (!summary) ...[
-          const SizedBox(height: 16),
+          if (allDone && reviewing)
+            Padding(
+              padding: const EdgeInsets.only(top: AppSpace.s),
+              child: TextButton(
+                onPressed: onEndReview,
+                child: const Text('Back to summary'),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Footer: the way into This Week, the safety line and the urgent signs ───
+
+class _TodayFooter extends StatelessWidget {
+  const _TodayFooter({
+    required this.state,
+    required this.palette,
+    required this.showWeekLink,
+  });
+
+  final AppState state;
+  final AppPalette palette;
+
+  /// The summary card carries its own way into This Week.
+  final bool showWeekLink;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (showWeekLink) ...[
           Align(
             alignment: AlignmentDirectional.centerStart,
             child: OutlinedButton.icon(
@@ -146,8 +175,8 @@ class _CheckInsPanel extends StatelessWidget {
               ),
             ),
           ),
+          const SizedBox(height: AppSpace.xl),
         ],
-        const SizedBox(height: AppSpace.xl),
         Text(
           TodayScreen.disclaimer,
           style: AppText.small.copyWith(color: palette.moonlightSoft),
@@ -186,8 +215,9 @@ class _SavedCheckIns extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // A card on the page, the same level as the check-in card it replaces.
     return PaperCard(
-      raised: true,
+      key: const ValueKey('today-check-ins-saved'),
       child: Padding(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
         child: Column(
@@ -263,10 +293,15 @@ class _CheckInTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Said once: the title and the hint, then checked or not (a11y audit 2,
+    // fix 6).
     return Semantics(
-      label: '$title check-in',
+      label: '$title. $subtitle',
+      hint: 'Check-in',
       checked: isTicked,
       button: true,
+      excludeSemantics: true,
+      onTap: onTap,
       child: InkWell(
         onTap: onTap,
         child: Container(
@@ -298,6 +333,8 @@ class _CheckInTile extends StatelessWidget {
                   ],
                 ),
               ),
+              // Keeps a wrapped hint off the tick circle.
+              const SizedBox(width: 8),
               if (isTicked)
                 ExcludeSemantics(
                   child: Padding(

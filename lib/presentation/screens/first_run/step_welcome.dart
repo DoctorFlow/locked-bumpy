@@ -56,6 +56,25 @@ class _StepWelcome extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(horizontal: 12),
                 ),
               ),
+              // A narrow room keeps Bumpy's head clear: the lamp alone.
+              compactCornerAction: IconButton.filledTonal(
+                key: const ValueKey('welcome-lamp-compact'),
+                tooltip: palette.isHalloween ? 'Try daylight' : 'Try moonlight',
+                onPressed: onSwitchLamp,
+                style: IconButton.styleFrom(
+                  foregroundColor: palette.ink,
+                  backgroundColor: palette.paper,
+                  fixedSize: const Size.square(48),
+                  minimumSize: const Size.square(48),
+                ),
+                icon: Image.asset(
+                  'assets/images/nursery-lamp.png',
+                  width: 22,
+                  height: 22,
+                  color: palette.ink,
+                  excludeFromSemantics: true,
+                ),
+              ),
             ),
           ),
           const SizedBox(height: AppSpace.xl),

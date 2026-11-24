@@ -125,15 +125,21 @@ class _PrimaryButton extends StatelessWidget {
   final VoidCallback? onPressed;
   final bool loading;
 
+  /// Read by a screen reader while the button waits. Only the date step
+  /// holds its "Next" back.
+  static const disabledHint = 'Choose a date first';
+
   @override
   Widget build(BuildContext context) {
-    return ElevatedButton(
+    final button = ElevatedButton(
       onPressed: onPressed,
       style: ElevatedButton.styleFrom(
         backgroundColor: palette.accent,
         foregroundColor: palette.accentText,
-        disabledBackgroundColor: palette.accent.withValues(alpha: 0.35),
-        disabledForegroundColor: palette.accentText.withValues(alpha: 0.6),
+        // A waiting button is still readable: ink-soft on raised paper
+        // (6.0:1 Everyday, 7.1:1 Halloween; a11y audit 2, fix 4).
+        disabledBackgroundColor: palette.paperRaised,
+        disabledForegroundColor: palette.inkSoft,
         minimumSize: const Size(double.infinity, AppSpace.target),
       ),
       child: loading
@@ -149,6 +155,11 @@ class _PrimaryButton extends StatelessWidget {
               ),
             )
           : Text(label, textAlign: TextAlign.center),
+    );
+    // A dimmed button says why it waits.
+    if (onPressed != null || loading) return button;
+    return MergeSemantics(
+      child: Semantics(hint: disabledHint, child: button),
     );
   }
 }
