@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:little_bumpy/presentation/widgets/visit_topics.dart'
+    show needWord;
 import 'package:little_bumpy/core/services/prefs_service.dart';
 import 'package:little_bumpy/core/theme/palette.dart';
 import 'package:little_bumpy/domain/models/app_state.dart';
@@ -116,7 +118,7 @@ void main() {
       t,
       find.descendant(
         of: find.byKey(const ValueKey('visit-question-$_second')),
-        matching: find.byTooltip('Remove this question'),
+        matching: find.byTooltip(RegExp('^Remove from visit list: ')),
       ),
     );
     await tapOn(t, find.byTooltip('Close visit list'));
@@ -147,7 +149,7 @@ void main() {
       t,
       find.descendant(
         of: find.byKey(const ValueKey('visit-question-$_own')),
-        matching: find.byTooltip('Remove this question'),
+        matching: find.byTooltip(RegExp('^Remove from visit list: ')),
       ),
     );
     expect(find.byKey(const ValueKey('visit-question-$_own')), findsNothing);
@@ -253,7 +255,7 @@ void main() {
       expect(title.style!.color, palette.ink);
       expect(t.getSize(find.byTooltip('Close')).shortestSide, 48);
       await t.dragUntilVisible(
-        find.text(MaternalNeed.vitamin.label),
+        find.text(needWord(MaternalNeed.vitamin)),
         find.descendant(
           of: find.byType(VisitScreen),
           matching: find.byType(SingleChildScrollView),

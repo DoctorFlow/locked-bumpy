@@ -1,6 +1,8 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:little_bumpy/presentation/widgets/visit_topics.dart'
+    show needWord;
 import 'package:little_bumpy/content/content_loader.dart';
 import 'package:little_bumpy/core/theme/palette.dart';
 import 'package:little_bumpy/domain/models/app_state.dart';
@@ -98,7 +100,7 @@ void main() {
       await tester.scrollUntilVisible(tile, 120);
       final heading = find.descendant(
         of: tile,
-        matching: find.text(need.label),
+        matching: find.text(needWord(need)),
       );
       // The need cards are taller now; bring the heading fully into view.
       await tester.ensureVisible(heading);

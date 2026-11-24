@@ -63,7 +63,7 @@ void main() {
       await tester.tap(pause);
       await tester.pumpAndSettle();
       expect(find.text('Everything is paused.'), findsOneWidget);
-      expect(find.text('Start Fresh'), findsNothing);
+      expect(find.text('Reset today’s check-ins and resume'), findsNothing);
       expect(find.text(_welcome), findsNothing);
 
       await tester.pumpWidget(const SizedBox());

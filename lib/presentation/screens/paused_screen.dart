@@ -5,6 +5,7 @@ import '../../core/theme/paper.dart';
 import '../../domain/models/app_state.dart';
 
 import '../widgets/data_confirmation.dart';
+import '../widgets/whole_word_text.dart';
 
 /// Quiet, neutral Paused screen.
 /// App voice only — no baby, no costume, no animations.
@@ -48,24 +49,29 @@ class PausedScreen extends StatelessWidget {
                       mainAxisSize: MainAxisSize.min,
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        // Still moon mark — no animation while paused.
+                        // A still paper moon, no animation while paused. Never
+                        // Bumpy: this is also the screen after a loss.
                         Center(
                           child: Container(
-                            width: 48,
-                            height: 48,
+                            key: const ValueKey('paused-moon'),
+                            width: 72,
+                            height: 72,
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
                               color: palette.moon,
                               border: Border.all(color: palette.edge),
-                              boxShadow: paperShadows(palette, raised: true),
+                              boxShadow: paperShadows(palette),
                             ),
                           ),
                         ),
                         const SizedBox(height: AppSpace.xl),
-                        Text(
-                          'Everything is paused.',
-                          style: AppText.title.copyWith(color: palette.ink),
-                          textAlign: TextAlign.center,
+                        Semantics(
+                          header: true,
+                          child: WholeWordText(
+                            'Everything is paused.',
+                            style: AppText.title.copyWith(color: palette.ink),
+                            textAlign: TextAlign.center,
+                          ),
                         ),
                         const SizedBox(height: AppSpace.m),
                         Text(
@@ -114,7 +120,9 @@ class PausedScreen extends StatelessWidget {
                         ),
                         const SizedBox(height: AppSpace.xxl),
                         if (state.dueDate != null) ...[
-                          // Start Fresh: outlined, the theme's outline edge.
+                          // Resets today's check-ins and leaves Pause (its
+                          // dialog says so). Outlined: Resume stays the one
+                          // main button.
                           OutlinedButton(
                             onPressed: state.erasePending
                                 ? null
@@ -124,7 +132,10 @@ class PausedScreen extends StatelessWidget {
                                 AppSpace.target,
                               ),
                             ),
-                            child: const Text('Start Fresh'),
+                            child: const Text(
+                              'Reset today’s check-ins and resume',
+                              textAlign: TextAlign.center,
+                            ),
                           ),
                           const SizedBox(height: AppSpace.s),
                         ],

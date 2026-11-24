@@ -9,6 +9,7 @@ import '../widgets/data_confirmation.dart';
 import '../widgets/pregnancy_date_picker.dart';
 import '../widgets/pause_button.dart';
 import '../widgets/skin_tone_picker.dart';
+import '../widgets/whole_word_text.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key, required this.state});
@@ -31,6 +32,9 @@ class SettingsScreen extends StatelessWidget {
     var failed = false;
     await showDialog<void>(
       context: context,
+      animationStyle: MediaQuery.disableAnimationsOf(context)
+          ? AnimationStyle.noAnimation
+          : null,
       builder: (dialog) => StatefulBuilder(
         builder: (context, update) {
           Future<void> save() async {
@@ -94,7 +98,7 @@ class SettingsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final palette = AppPalette.of(context);
-    final largeText = MediaQuery.textScalerOf(context).scale(14) > 20;
+    final largeText = MediaQuery.textScalerOf(context).scale(14) > 17;
     final title = AppText.heading.copyWith(color: palette.ink);
     final reading = AppText.body.copyWith(color: palette.inkSoft);
     Widget rule() => Padding(
@@ -103,16 +107,18 @@ class SettingsScreen extends StatelessWidget {
     );
     final heading = Semantics(
       header: true,
-      child: Text(
+      child: WholeWordText(
         'Settings',
         style: AppText.title.copyWith(color: palette.moonlight),
       ),
     );
+    // An outlined button on the page (theme outline edge, moonlight label),
+    // like "Erase all data" below, not an underlined link.
     final pause = Tooltip(
       message: 'Pause',
-      child: TextButton.icon(
+      child: OutlinedButton.icon(
         onPressed: state.pause,
-        style: TextButton.styleFrom(foregroundColor: palette.moonlight),
+        style: OutlinedButton.styleFrom(foregroundColor: palette.moonlight),
         icon: largeText ? null : const Icon(Icons.pause_circle_outline),
         label: Text(largeText ? 'Pause' : 'Pause app'),
       ),
@@ -134,7 +140,7 @@ class SettingsScreen extends StatelessWidget {
                       BackButton(color: palette.moonlight),
                       const Spacer(),
                       pause,
-                      const SizedBox(width: AppSpace.s),
+                      const SizedBox(width: AppSpace.page),
                     ],
                   ),
                   Padding(
@@ -144,14 +150,14 @@ class SettingsScreen extends StatelessWidget {
                     child: heading,
                   ),
                 ] else
-                  SizedBox(
-                    height: AppSpace.row,
+                  ConstrainedBox(
+                    constraints: const BoxConstraints(minHeight: AppSpace.row),
                     child: Row(
                       children: [
                         BackButton(color: palette.moonlight),
                         Expanded(child: heading),
                         pause,
-                        const SizedBox(width: AppSpace.s),
+                        const SizedBox(width: AppSpace.page),
                       ],
                     ),
                   ),
@@ -214,7 +220,10 @@ class SettingsScreen extends StatelessWidget {
                               onTap: () => _editNickname(context),
                             ),
                             rule(),
-                            Text('Appearance', style: title),
+                            Semantics(
+                              header: true,
+                              child: Text('Appearance', style: title),
+                            ),
                             const SizedBox(height: AppSpace.s),
                             Wrap(
                               spacing: AppSpace.s,
@@ -242,7 +251,10 @@ class SettingsScreen extends StatelessWidget {
                               showPreview: true,
                             ),
                             rule(),
-                            Text('Privacy', style: title),
+                            Semantics(
+                              header: true,
+                              child: Text('Privacy', style: title),
+                            ),
                             const SizedBox(height: AppSpace.s),
                             Text(
                               kIsWeb

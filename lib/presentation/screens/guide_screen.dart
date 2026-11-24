@@ -67,7 +67,7 @@ class GuideScreen extends StatelessWidget {
     final palette = AppPalette.of(context);
     final copy = guide;
     return PageOnTable(
-      title: '${need.label} guide',
+      title: '${needWord(need)} guide',
       builder: (context) => ListenableBuilder(
         listenable: state,
         builder: (context, _) => Column(
@@ -95,7 +95,7 @@ class GuideScreen extends StatelessWidget {
     GuideCard(
       palette: palette,
       marker: null,
-      title: need.label,
+      title: needWord(need),
       costume: need.costume,
       isDraft: false,
       children: [
@@ -136,7 +136,7 @@ class GuideScreen extends StatelessWidget {
         key: const ValueKey('guide-card-point'),
         palette: palette,
         marker: '1',
-        title: need.label,
+        title: needWord(need),
         costume: need.costume,
         isDraft: draft,
         children: [
@@ -164,11 +164,13 @@ class GuideScreen extends StatelessWidget {
             padding: const EdgeInsets.symmetric(vertical: AppSpace.l),
             child: Divider(height: 1, thickness: 1, color: palette.rule),
           ),
+          // The point in a larger reading size, not bold: calm, not shouting.
           Text(
             g.point,
-            style: AppText.bodyStrong.copyWith(
+            style: AppText.body.copyWith(
+              fontSize: 18,
+              height: 28 / 18,
               color: palette.ink,
-              height: 24 / 16,
             ),
           ),
         ],
@@ -189,19 +191,64 @@ class GuideScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(fact.text, style: _body(palette)),
+                  const SizedBox(height: 2),
+                  // Quiet source line: `label` size (13) in Regular, so it
+                  // sits under the fact it backs. Bold label type made a
+                  // repeated "Leeds Teaching Hospitals NHS Trust" louder.
                   Text(
                     fact.sourceOrg,
-                    style: AppText.small.copyWith(color: palette.inkSoft),
+                    style: AppText.label.copyWith(
+                      color: palette.inkSoft,
+                      fontWeight: FontWeight.w400,
+                      letterSpacing: 0,
+                    ),
                   ),
                 ],
               ),
             ),
-          const SizedBox(height: AppSpace.s),
-          _SubHeading('Try this', palette: palette),
-          for (final idea in g.tryThis)
-            _Bullet(
-              palette: palette,
-              child: Text(idea, style: _body(palette)),
+          // "Try this" on its own raised piece with a strip in the need's
+          // colour: a change of rhythm after the facts. The last fact's 16
+          // below is the 16 above this piece.
+          if (g.tryThis.isNotEmpty)
+            KeyedSubtree(
+              child: PaperCard(
+                key: const ValueKey('guide-try-this'),
+                raised: true,
+                child: IntrinsicHeight(
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      ExcludeSemantics(
+                        child: SizedBox(
+                          width: 4,
+                          child: ColoredBox(color: need.color),
+                        ),
+                      ),
+                      Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.fromLTRB(
+                            AppSpace.m,
+                            AppSpace.m,
+                            AppSpace.m,
+                            0,
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              _SubHeading('Try this', palette: palette),
+                              for (final idea in g.tryThis)
+                                _Bullet(
+                                  palette: palette,
+                                  child: Text(idea, style: _body(palette)),
+                                ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             ),
         ],
       ),
