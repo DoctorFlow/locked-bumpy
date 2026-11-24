@@ -204,12 +204,19 @@ def first_run_steps(prefix, look_label=None):
     ]
 
 
-def first_run_until(name, step):
+def first_run_until(name, step, look=None):
     """A fresh install played up to first-run step `step` (3 nickname,
-    4 look, 5 needs) with no shots on the way; the one shot is `name`."""
+    4 look, 5 needs) with no shots on the way; the one shot is `name`.
+    look="everyday" starts from a welcome screen with only the Everyday look
+    saved (as after "Try daylight"), so steps before the look step are seen
+    in Everyday."""
     steps = first_run_steps("x")
     end = next(i for i, st in enumerate(steps) if st[0] == "shot" and st[1].startswith(f"x-{step}-"))
-    return S(name, {"fresh_install": True}, [st for st in steps[:end] if st[0] != "shot"],
+    played = [st for st in steps[:end] if st[0] != "shot"]
+    if look == "everyday":
+        return S(name, {"setup": False}, played, looks=["everyday"],
+                 note="welcome with only the Everyday look saved; shot once")
+    return S(name, {"fresh_install": True}, played,
              looks=["halloween"], note="a brand-new install has no saved look; shot once")
 
 
@@ -296,6 +303,7 @@ SCENARIOS = [
       shot=None, looks=["halloween"], note="a brand-new install has no saved look; shot once"),
     # One first-run step each, so --only can ask for just that screen.
     first_run_until("first-run-step3", 3),
+    first_run_until("first-run-step3-everyday", 3, look="everyday"),
     first_run_until("first-run-step4", 4),
     first_run_until("first-run-step5", 5),
 ]
