@@ -977,7 +977,10 @@ class _AddQuestionState extends State<_AddQuestion> {
       _saving = true;
       _notSaved = false;
     });
-    final ok = await widget.state.addVisitQuestion(widget.question);
+    final ok = await widget.state.addVisitQuestion(
+      widget.question,
+      origin: VisitOrigin.week,
+    );
     if (!mounted) return;
     setState(() {
       _saving = false;

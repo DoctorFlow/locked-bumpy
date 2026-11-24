@@ -95,23 +95,27 @@ class _VisitCard extends StatelessWidget {
         ),
       ]);
     } else {
-      // The parent's own words come first; a guide question or a topic after.
-      final own = state.visitQuestion;
+      // The parent's newest own words come first, so they see them the
+      // moment the app opens; else a picked question, else a topic. No count
+      // of the rest: the list is a help, not a pile.
+      final own = state.newestOwnQuestion;
       final first = own.isNotEmpty
           ? own
           : questions.isNotEmpty
-          ? questions.first.text
+          ? state.visitQuestionsOwnFirst.first.text
           : needWord(topics.first);
-      final more = questions.length + topics.length - 1;
+      final more = questions.length + topics.length > 1;
       children.addAll([
         const SizedBox(height: 4),
-        Text(first, style: AppText.heading.copyWith(color: palette.ink)),
-        if (more > 0) ...[
+        Text(
+          first,
+          key: const ValueKey('visit-card-question'),
+          style: AppText.heading.copyWith(color: palette.ink),
+        ),
+        if (more) ...[
           const SizedBox(height: 4),
           Text(
-            more == 1
-                ? 'And 1 more on your list'
-                : 'And $more more on your list',
+            'More on your list',
             style: AppText.body.copyWith(color: palette.inkSoft),
           ),
         ],

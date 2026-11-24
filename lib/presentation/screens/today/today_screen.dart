@@ -86,7 +86,11 @@ class _TodayScreenState extends State<TodayScreen>
     });
     var saved = false;
     try {
-      saved = await widget.state.addVisitQuestion(text, need: need);
+      saved = await widget.state.addVisitQuestion(
+        text,
+        need: need,
+        origin: VisitOrigin.today,
+      );
     } catch (_) {
       saved = false;
     }

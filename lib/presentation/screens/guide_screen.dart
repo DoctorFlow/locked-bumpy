@@ -666,6 +666,7 @@ class _QuestionRowState extends State<_QuestionRow> {
           ? await widget.state.addVisitQuestion(
               widget.question,
               need: widget.need,
+              origin: VisitOrigin.guide,
             )
           : await widget.state.removeVisitQuestion(widget.question);
     } catch (_) {
