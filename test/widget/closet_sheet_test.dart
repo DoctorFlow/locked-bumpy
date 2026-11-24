@@ -177,6 +177,14 @@ void main() {
           find.ancestor(of: title, matching: find.byType(FittedBox)),
         );
         expect(box.height, lessThan(32));
+        // The second row peeks above the footer (at least 24 px of it).
+        final mummy = tester.getTopLeft(
+          find.byKey(const ValueKey('closet-water')),
+        );
+        final footer = tester.getTopLeft(
+          find.text('Wear it for this visit. Today’s check-in stays the same.'),
+        );
+        expect(footer.dy - mummy.dy, greaterThanOrEqualTo(24));
       } else {
         // Enlarged text is never scaled away: it wraps at full size.
         expect(

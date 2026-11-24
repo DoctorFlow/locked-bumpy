@@ -107,12 +107,22 @@ class _ClosetSheetState extends State<ClosetSheet> {
       children: [
         PaperCard(
           raised: true,
-          child: Center(
-            child: BumpyAvatar(
-              need: _preview,
-              palette: palette,
-              skinTone: state.skinTone,
-              happy: state.isChecked(state.todayNeed.name),
+          // On a short phone the preview gives up a little height so the
+          // second row of costumes still peeks above the footer: the
+          // parent can see there is more to scroll to.
+          child: SizedBox(
+            key: const ValueKey('closet-preview'),
+            height: shortPhone ? 136 : null,
+            child: Center(
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: BumpyAvatar(
+                  need: _preview,
+                  palette: palette,
+                  skinTone: state.skinTone,
+                  happy: state.isChecked(state.todayNeed.name),
+                ),
+              ),
             ),
           ),
         ),
@@ -289,7 +299,6 @@ class _CostumeCard extends StatelessWidget {
                     textAlign: TextAlign.center,
                     style: AppText.bodyStrong.copyWith(color: palette.ink),
                   ),
-                  const SizedBox(height: AppSpace.xs),
                   // Icon above the word on all six tiles: the same rhythm
                   // everywhere, and "Prenatal vitamin" wraps under its
                   // icon instead of beside it.
