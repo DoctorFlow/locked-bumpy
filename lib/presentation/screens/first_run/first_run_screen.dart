@@ -266,6 +266,7 @@ class _FirstRunScreenState extends State<FirstRunScreen> {
                                 pickedDate: _pickedDate,
                                 pickedWeek: _weekChoice,
                                 previewWeek: _previewWeek,
+                                dueDate: _dueDateToSave,
                                 onWay: _chooseWay,
                                 onPickDate: _pickDate,
                                 onBack: _back,

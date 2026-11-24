@@ -13,6 +13,7 @@ class _StepDate extends StatelessWidget {
     required this.pickedDate,
     required this.pickedWeek,
     required this.previewWeek,
+    required this.dueDate,
     required this.onWay,
     required this.onPickDate,
     required this.onBack,
@@ -24,6 +25,9 @@ class _StepDate extends StatelessWidget {
   final DateTime? pickedDate;
   final int? pickedWeek;
   final int? previewWeek;
+
+  /// The due date every way leads to; null until a choice.
+  final DateTime? dueDate;
   final ValueChanged<_DateWay> onWay;
 
   /// Opens the picker for the chosen way: the calendar, or the week grid.
@@ -129,11 +133,12 @@ class _StepDate extends StatelessWidget {
             duration: MediaQuery.disableAnimationsOf(context)
                 ? Duration.zero
                 : const Duration(milliseconds: 250),
-            child: previewWeek == null
+            child: previewWeek == null || dueDate == null
                 ? const SizedBox.shrink(key: ValueKey('empty'))
                 : _WeekPreview(
-                    key: ValueKey(previewWeek),
+                    key: ValueKey((previewWeek, dueDate)),
                     week: previewWeek!,
+                    dueDate: dueDate!,
                     palette: palette,
                   ),
           ),
@@ -158,24 +163,7 @@ class _StepDate extends StatelessWidget {
     );
   }
 
-  static String _fmt(DateTime d) {
-    const m = [
-      '',
-      'Jan',
-      'Feb',
-      'Mar',
-      'Apr',
-      'May',
-      'Jun',
-      'Jul',
-      'Aug',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Dec',
-    ];
-    return '${m[d.month]} ${d.day}, ${d.year}';
-  }
+  static String _fmt(DateTime d) => dayMonthYear(d);
 }
 
 // ── The week grid (the "I know how many weeks" way) ──────────────────────
@@ -329,40 +317,106 @@ class _WeekTile extends StatelessWidget {
   }
 }
 
-// ── Week preview ──────────────────────────────────────────────────────────
+// ── What the app now holds ────────────────────────────────────────────────
 
-class _WeekPreview extends StatelessWidget {
-  const _WeekPreview({super.key, required this.week, required this.palette});
+/// After any way in, the step says back plainly what the app will keep:
+/// "Week 9. Due around 15 March." Read aloud when it appears or changes.
+class _WeekPreview extends StatefulWidget {
+  const _WeekPreview({
+    super.key,
+    required this.week,
+    required this.dueDate,
+    required this.palette,
+  });
 
   final int week;
+  final DateTime dueDate;
   final AppPalette palette;
+
+  static String sentence(int week, DateTime dueDate) =>
+      'Week $week. Due around ${dayMonthYear(dueDate, withYear: false)}.';
+
+  @override
+  State<_WeekPreview> createState() => _WeekPreviewState();
+}
+
+class _WeekPreviewState extends State<_WeekPreview> {
+  @override
+  void initState() {
+    super.initState();
+    // A new choice brings the line into view if it landed below the fold
+    // (320 px wide, large text), so it is seen before Next.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      // Only the step's own scroll view: never the page flow around it.
+      final box = context.findRenderObject();
+      final position = Scrollable.maybeOf(context)?.position;
+      if (box == null || position == null) return;
+      position.ensureVisible(
+        box,
+        alignmentPolicy: ScrollPositionAlignmentPolicy.keepVisibleAtEnd,
+        duration: MediaQuery.disableAnimationsOf(context)
+            ? Duration.zero
+            : const Duration(milliseconds: 250),
+      );
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
+    final palette = widget.palette;
     return Padding(
       padding: const EdgeInsets.only(top: AppSpace.l),
-      child: Container(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpace.l,
-          vertical: AppSpace.m,
-        ),
-        decoration: BoxDecoration(
-          borderRadius: AppRadii.control,
-          border: Border.all(color: palette.outline, width: 1.5),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            // Moonlight, not accent: accent on the page is too faint.
-            Icon(Icons.child_friendly, color: palette.moonlight, size: 20),
-            const SizedBox(width: AppSpace.s),
-            Flexible(
-              child: Text(
-                'You are at week $week right now.',
-                style: AppText.bodyStrong.copyWith(color: palette.moonlight),
+      child: Semantics(
+        container: true,
+        liveRegion: true,
+        child: Container(
+          key: const ValueKey('date-step-say-back'),
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpace.l,
+            vertical: AppSpace.m,
+          ),
+          decoration: BoxDecoration(
+            borderRadius: AppRadii.control,
+            border: Border.all(color: palette.outline, width: 1.5),
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Moonlight, not accent: accent on the page is too faint.
+              ExcludeSemantics(
+                child: Padding(
+                  padding: const EdgeInsets.only(top: 2),
+                  child: Icon(
+                    Icons.child_friendly,
+                    color: palette.moonlight,
+                    size: 20,
+                  ),
+                ),
               ),
-            ),
-          ],
+              const SizedBox(width: AppSpace.s),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      _WeekPreview.sentence(widget.week, widget.dueDate),
+                      style: AppText.bodyStrong.copyWith(
+                        color: palette.moonlight,
+                      ),
+                    ),
+                    const SizedBox(height: AppSpace.xs),
+                    Text(
+                      'You can change this later in Settings.',
+                      style: AppText.small.copyWith(
+                        color: palette.moonlightSoft,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
