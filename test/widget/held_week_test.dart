@@ -15,6 +15,9 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   const week9 = 'Week nine. I am no longer an embryo — officially a baby!';
+  const week20 =
+      'Week twenty — halfway! About the size of a banana. '
+      'Thank you for everything.';
   const week35 =
       'Thirty-five weeks. All the big things are done. Just growing now.';
 
@@ -33,7 +36,7 @@ void main() {
     ContentLoader.debugSetHeld(null);
   });
 
-  /// Opens This Week for a parent whose current week is 9 or 35.
+  /// Opens This Week for a parent whose current week is 9, 20 or 35.
   Future<void> openWeek(WidgetTester t, int week) async {
     // 2027-05-11 is week 16 on 2026-11-24.
     final due = DateTime(2027, 5, 11 + 7 * (16 - week));
@@ -49,7 +52,7 @@ void main() {
     expect(find.text('You are here'), findsOneWidget);
   }
 
-  for (final (week, line) in [(9, week9), (35, week35)]) {
+  for (final (week, line) in [(9, week9), (20, week20), (35, week35)]) {
     testWidgets('normal build: week $week falls back like a week with no '
         'card', (t) async {
       ContentGate.debugDrafts = false;
@@ -59,11 +62,11 @@ void main() {
       expect(find.text('Held'), findsNothing);
       // The rest of the page is still there: the week's own invitation.
       expect(
-        find.textContaining(
-          week <= 13
-              ? 'Save your care team'
-              : 'Think through getting to your next visit',
-        ),
+        find.textContaining(switch (week) {
+          <= 13 => 'Save your care team',
+          <= 23 => 'Think back to your last visit',
+          _ => 'Think through getting to your next visit',
+        }),
         findsOneWidget,
       );
       await t.pumpWidget(const SizedBox());
@@ -77,6 +80,14 @@ void main() {
     expect(find.text('Held'), findsOneWidget);
     expect(find.text('Draft'), findsNothing);
     expect(find.bySemanticsLabel('Held for a re-check'), findsOneWidget);
+    await t.pumpWidget(const SizedBox());
+  });
+
+  testWidgets('review build: week 20 shows with a Held tag too', (t) async {
+    ContentGate.debugDrafts = true;
+    await openWeek(t, 20);
+    expect(find.text(week20), findsOneWidget);
+    expect(find.text('Held'), findsOneWidget);
     await t.pumpWidget(const SizedBox());
   });
 

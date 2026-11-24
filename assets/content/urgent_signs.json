@@ -8,7 +8,7 @@
   "intro": "Day or night, do not wait, if you have any of these:",
   "groups": [
     {
-      "title": "Your baby, bleeding or fluid",
+      "title": "Bleeding, fluid or your baby's movements",
       "signs": [
         "Your baby is moving less, has stopped moving, or the pattern has changed.",
         "Any bleeding from your vagina while pregnant, even light spotting.",
@@ -72,6 +72,10 @@
     "Severe sickness: you cannot keep fluids down, or cannot drink for over 8 hours.",
     "Suddenly very tired and weak, not like your usual tiredness.",
     "Very itchy skin, itchy palms or soles, or itching worse at night."
+  ],
+  "sign_weeks": [
+    { "sign": "Your baby is moving less, has stopped moving, or the pattern has changed.", "from_week": 16, "week_claims": ["URGENT-01"] },
+    { "sign": "After birth: soaking a pad within an hour, or clots bigger than an egg.", "from_week": 37, "week_claims": ["URGENT-02"] }
   ],
   "action": "Call your doctor, midwife or hospital. If you cannot reach them, call emergency services.",
   "footer": "Not on this list but worried about yourself or your baby? Call your doctor or midwife anyway.",

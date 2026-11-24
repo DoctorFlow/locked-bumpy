@@ -9,6 +9,7 @@ class GuideFact {
     required this.kind,
     required this.text,
     required this.sourceOrg,
+    this.todayUntilWeek,
   });
 
   final String id;
@@ -19,6 +20,16 @@ class GuideFact {
 
   /// The organisation of the fact's source, e.g. `NHS`.
   final String sourceOrg;
+
+  /// The last pregnancy week Today may pick this fact (GUIDE-CONTRACT
+  /// Amendment 4), or null for every week. The guide always lists it.
+  final int? todayUntilWeek;
+
+  /// Whether Today may pick this fact in [week]. Week unknown: yes.
+  bool fitsToday(int? week) {
+    final until = todayUntilWeek;
+    return week == null || until == null || week <= until;
+  }
 }
 
 /// Where a fact comes from. Shown as text; the app opens no links.
@@ -68,7 +79,18 @@ class Guide {
   final List<GuideSource> sources;
 
   /// The fact Today shows: it changes once per full turn of the six needs.
-  GuideFact factFor(int dayNumber) => facts[(dayNumber ~/ 6) % facts.length];
+  ///
+  /// With the parent's [week], a fact whose `today_until_week` is earlier
+  /// is skipped and the same rotation runs over the facts left (GUIDE-CONTRACT
+  /// Amendment 4). Week unknown, or every fact skipped: the plain rotation.
+  GuideFact factFor(int dayNumber, {int? week}) {
+    final fits = [
+      for (final f in facts)
+        if (f.fitsToday(week)) f,
+    ];
+    final pool = fits.isEmpty ? facts : fits;
+    return pool[(dayNumber ~/ 6) % pool.length];
+  }
 
   // ── Parsing behind the gate ───────────────────────────────────────────────
 
@@ -206,6 +228,7 @@ class Guide {
             kind: f['kind'] as String,
             text: (f['text'] as String).trim(),
             sourceOrg: orgs[f['source']]!,
+            todayUntilWeek: _weekOf(f['today_until_week']),
           ),
       ]),
       tryThis: List.unmodifiable([
@@ -216,6 +239,15 @@ class Guide {
       ]),
       sources: List.unmodifiable(sources),
     );
+  }
+
+  /// A whole week from 4 to 42, or null (absent or not a usable week: the
+  /// fact then shows at every week, so nothing is ever lost).
+  static int? _weekOf(Object? v) {
+    final w = v is int
+        ? v
+        : (v is double && v == v.roundToDouble() ? v.toInt() : null);
+    return w != null && w >= 4 && w <= 42 ? w : null;
   }
 
   static int _words(String text) =>

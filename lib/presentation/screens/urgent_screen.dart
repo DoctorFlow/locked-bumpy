@@ -55,7 +55,11 @@ class UrgentScreen extends StatelessWidget {
         children: [
           PaperCard(
             padding: const EdgeInsets.all(AppSpace.l),
-            child: UrgentSignsBlock(urgent: list, palette: palette),
+            child: UrgentSignsBlock(
+              urgent: list,
+              palette: palette,
+              week: state.currentWeek,
+            ),
           ),
           if (list != null) ...[
             const SizedBox(height: AppSpace.xl),
@@ -100,11 +104,17 @@ class UrgentSignsBlock extends StatelessWidget {
     required this.urgent,
     required this.palette,
     this.compact = false,
+    this.week,
   });
 
   final UrgentSigns? urgent;
   final AppPalette palette;
   final bool compact;
+
+  /// The parent's current week, or null when unknown. A sign whose
+  /// `from_week` is later moves to the end (Amendment 4); nothing is hidden,
+  /// and with no week the order is the file's.
+  final int? week;
 
   @override
   Widget build(BuildContext context) {
@@ -201,7 +211,7 @@ class UrgentSignsBlock extends StatelessWidget {
                   Text(list.intro, style: strong),
                   SizedBox(height: compact ? AppSpace.m : AppSpace.l),
                   if (list.groups.isEmpty)
-                    for (final (i, s) in list.signs.indexed) sign(i, s)
+                    for (final (i, s) in list.signsFor(week).indexed) sign(i, s)
                   else
                     ..._grouped(list, sign),
                   SizedBox(height: compact ? AppSpace.s : AppSpace.m),
@@ -221,17 +231,37 @@ class UrgentSignsBlock extends StatelessWidget {
     Widget Function(int i, String text) sign,
   ) {
     var i = 0;
+    final gap = compact ? AppSpace.s : AppSpace.m;
     return [
-      for (final (g, group) in list.groups.indexed) ...[
-        if (g > 0) SizedBox(height: compact ? AppSpace.s : AppSpace.m),
+      for (final (g, group) in list.groupsFor(week).indexed) ...[
+        if (g > 0) SizedBox(height: gap),
+        // The last quiet group (signs that belong later than the parent's
+        // week): set apart by a hairline and a softer title. The signs
+        // themselves read exactly as the others do.
+        if (group.later) ...[
+          Divider(height: 1, thickness: 1, color: palette.rule),
+          SizedBox(height: gap),
+        ],
         Padding(
+          key: group.later ? const ValueKey('urgent-later-group') : null,
           padding: const EdgeInsets.only(bottom: AppSpace.s),
-          child: Semantics(
-            header: true,
-            child: Text(
-              group.title,
-              style: AppText.bodyStrong.copyWith(color: palette.ink),
-            ),
+          child: Wrap(
+            spacing: AppSpace.s,
+            runSpacing: AppSpace.xs,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              Semantics(
+                header: true,
+                child: Text(
+                  group.title,
+                  style: group.later
+                      ? AppText.body.copyWith(color: palette.inkSoft)
+                      : AppText.bodyStrong.copyWith(color: palette.ink),
+                ),
+              ),
+              if (group.later && group.isDraft && !list.isDraft)
+                DraftTag(palette: palette),
+            ],
           ),
         ),
         for (final s in group.signs) sign(i++, s),

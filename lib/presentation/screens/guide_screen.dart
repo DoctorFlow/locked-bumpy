@@ -307,8 +307,12 @@ class GuideScreen extends StatelessWidget {
           withUrgentSigns(
             fromBundle: urgentFromBundle,
             given: urgent,
-            builder: (list) =>
-                UrgentSignsBlock(urgent: list, palette: palette, compact: true),
+            builder: (list) => UrgentSignsBlock(
+              urgent: list,
+              palette: palette,
+              compact: true,
+              week: state.currentWeek,
+            ),
           ),
           const SizedBox(height: AppSpace.l),
           Text(g.closing, style: _body(palette)),

@@ -1,6 +1,8 @@
 import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:flutter/services.dart' show rootBundle;
+import '../domain/models/app_line.dart';
 import '../domain/models/urgent_signs.dart';
+import 'content_loader.dart';
 
 /// Loads the shared urgent list from the bundle, once, through the same
 /// review gate as guides. Null means hidden: screens then show
@@ -24,7 +26,10 @@ class UrgentLoader {
 
   static Future<UrgentSigns?> _read() async {
     try {
-      return UrgentSigns.review(await rootBundle.loadString(path));
+      final list = UrgentSigns.review(await rootBundle.loadString(path));
+      if (list == null || list.fromWeeks.isEmpty) return list;
+      final lines = await ContentLoader.loadAppLines();
+      return list.withLaterTitle(lines[AppLines.urgentLaterTitle]);
     } catch (_) {
       return null;
     }

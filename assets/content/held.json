@@ -11,6 +11,11 @@
   },
   {
     "file": "week_cards.json",
+    "id": "week-20",
+    "reason": "Two rounds of the parent test lab (round 3 REPORT.md, problem 2) read the closing \"Thank you for everything.\" as a goodbye, which can hurt a parent after a loss. Held for the physician's re-check; proposed text without that sentence and without the em dash is in review/restamp-proposals.json."
+  },
+  {
+    "file": "week_cards.json",
     "id": "week-35",
     "reason": "specs/PRODUCT.md (section 2, section 6 item 2, question 5) names the week 35 card as stating a wrong fact under the physician's approval: \"All the big things are done\", when the brain, lungs and liver are still maturing (the app's own weeks 36 to 40 chapter says so). Held for the physician's re-check (review sheet item W35)."
   }

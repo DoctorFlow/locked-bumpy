@@ -138,14 +138,14 @@
       "url": "https://www.nhs.uk/best-start-in-life/pregnancy/week-by-week-guide-to-pregnancy/2nd-trimester/week-21/"
     },
     "ready": {
-      "text": "Make a little rest corner: a cushion, a blanket, a glass of water and something to read. Somewhere to put your feet up for a moment.",
+      "text": "A mid-pregnancy scan is often offered around now. You can ask what it looks at, if someone can come with you, and if you can find out the sex.",
       "suggested_question": "When might I start feeling my baby move, and who do I call if I'm ever unsure?"
     },
     "look_forward": {
       "text": "The middle of the map is a fine spot for a photo of your bump, or of anything that marks this time. Yours to keep or share."
     },
     "curious": {
-      "question": "What can help me rest and sleep a little better?",
+      "question": "I feel tired a lot these days. What can help me rest?",
       "need": "REST"
     }
   },
@@ -228,7 +228,7 @@
       "url": "https://www.nhs.uk/pregnancy/keeping-well/your-babys-movements/"
     },
     "ready": {
-      "text": "Save the numbers for your doctor or midwife and the place you plan to give birth, and share them with someone close if you like. Easy to find, any hour.",
+      "text": "Some swelling in feet, ankles and fingers is common now, often worse by evening. Putting feet up can help. Sudden swelling is different: see When to get help right away.",
       "suggested_question": "Where do I go, and who do I call, when labour starts or if something feels different?"
     },
     "look_forward": {

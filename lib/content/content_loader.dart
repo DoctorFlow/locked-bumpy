@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:flutter/services.dart' show rootBundle;
+import '../domain/models/app_line.dart';
 import '../domain/models/content_record.dart';
 import '../domain/models/guide.dart';
 import '../domain/models/held_list.dart';
@@ -45,7 +46,33 @@ class ContentLoader {
     _weekCards = null;
     _guides = null;
     _held = null;
+    _appLines = null;
   }
+
+  // A value, not a Future, for the same reason as the hold list below.
+  static Map<String, AppLine>? _appLines;
+
+  /// The short app-voice lines in `app_lines.json` that the gate lets
+  /// through, by id. A missing or broken file shows none of them.
+  static Future<Map<String, AppLine>> loadAppLines() async =>
+      _appLines ??= await _readAppLines();
+
+  static Future<Map<String, AppLine>> _readAppLines() async {
+    try {
+      return AppLines.review(await rootBundle.loadString(AppLines.assetPath));
+    } catch (_) {
+      return const {};
+    }
+  }
+
+  /// The app lines already loaded, or null before the first [loadAppLines]
+  /// finishes: lets a screen draw them on its first frame.
+  static Map<String, AppLine>? get loadedAppLines => _appLines;
+
+  /// Replaces the loaded app lines (null reads the file again). Tests only.
+  @visibleForTesting
+  static void debugSetAppLines(Map<String, AppLine>? lines) =>
+      _appLines = lines;
 
   // The value, not a Future: a Future completed in one zone can stall an
   // await in another (a widget test's fake clock).
