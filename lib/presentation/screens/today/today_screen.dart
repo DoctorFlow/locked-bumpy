@@ -223,6 +223,7 @@ class _TodayScreenState extends State<TodayScreen>
           needTicked: needTicked,
           babyLine: line?.text ?? '',
           lineIsDraft: line?.isDraft ?? false,
+          lineIsHeld: line?.isHeld ?? false,
           hopAnimation: _hopAnimation,
         );
         final fact = hasFact

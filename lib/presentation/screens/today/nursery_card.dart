@@ -11,6 +11,7 @@ class _NurseryCard extends StatelessWidget {
     required this.needTicked,
     required this.babyLine,
     required this.lineIsDraft,
+    this.lineIsHeld = false,
     required this.hopAnimation,
   });
 
@@ -21,6 +22,9 @@ class _NurseryCard extends StatelessWidget {
   final bool needTicked;
   final String babyLine;
   final bool lineIsDraft;
+
+  /// Bumpy's line is a stamped line held back for a re-check (review build).
+  final bool lineIsHeld;
   final Animation<double> hopAnimation;
 
   @override
@@ -108,7 +112,7 @@ class _NurseryCard extends StatelessWidget {
                   ),
                   if (lineIsDraft) ...[
                     const SizedBox(height: 4),
-                    DraftTag(palette: palette),
+                    DraftTag.of(palette: palette, held: lineIsHeld),
                   ],
                 ],
                 const SizedBox(height: 8),

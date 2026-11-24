@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:flutter/services.dart' show rootBundle;
 import '../domain/models/content_record.dart';
 import '../domain/models/guide.dart';
+import '../domain/models/held_list.dart';
 import '../domain/models/need.dart';
 import '../domain/models/week_card.dart';
 import 'content_paths.dart';
@@ -11,7 +12,8 @@ import 'content_paths.dart';
 /// All assets are offline (bundled with the app via `rootBundle`).
 /// No network calls, no runtime AI. Results are cached after first load.
 /// Every pack passes the one gate in [ContentGate.review]: approved rows
-/// always, draft rows only in a review build.
+/// always, draft rows only in a review build. A record named in
+/// `assets/content/held.json` is marked held and so counts as a draft.
 class ContentLoader {
   ContentLoader._();
 
@@ -24,7 +26,11 @@ class ContentLoader {
   static Future<List<ContentRecord>> load(String assetPath) async {
     if (_cache.containsKey(assetPath)) return _cache[assetPath]!;
     final raw = await rootBundle.loadString(assetPath);
-    final records = ContentRecord.listFromJsonString(raw);
+    final held = await loadHeld();
+    final records = [
+      for (final r in ContentRecord.listFromJsonString(raw))
+        r.withHold(held.holds(assetPath, r.id)),
+    ];
     final validated = List<ContentRecord>.unmodifiable([
       ...records.where((r) => ContentGate.reviewRecord(r) == Review.shown),
       ...records.where((r) => ContentGate.reviewRecord(r) == Review.draft),
@@ -38,6 +44,34 @@ class ContentLoader {
     _cache.clear();
     _weekCards = null;
     _guides = null;
+    _held = null;
+  }
+
+  // The value, not a Future: a Future completed in one zone can stall an
+  // await in another (a widget test's fake clock).
+  static HeldList? _held;
+
+  /// The records held back for the physician's re-check. A missing or
+  /// broken `held.json` holds nothing at run time; the content tests fail
+  /// loudly on it instead.
+  static Future<HeldList> loadHeld() async => _held ??= await _readHeld();
+
+  static Future<HeldList> _readHeld() async {
+    try {
+      return HeldList.parse(await rootBundle.loadString(HeldList.assetPath));
+    } catch (_) {
+      return HeldList.empty;
+    }
+  }
+
+  /// Replaces the hold list (null reads the asset again) and drops the
+  /// loaded Today lines and week cards so the next load applies it. Tests
+  /// only.
+  @visibleForTesting
+  static void debugSetHeld(HeldList? held) {
+    _held = held;
+    _cache.clear();
+    _weekCards = null;
   }
 
   static List<WeekCard>? _weekCards;
@@ -46,7 +80,11 @@ class ContentLoader {
     final cached = _weekCards;
     if (cached != null) return cached;
     final raw = await rootBundle.loadString(ContentPaths.weekCards);
-    return _weekCards = List.unmodifiable(WeekCard.listFromJsonString(raw));
+    final held = await loadHeld();
+    return _weekCards = List.unmodifiable([
+      for (final c in WeekCard.listFromJsonString(raw))
+        c.withHold(held.holds(ContentPaths.weekCards, c.id)),
+    ]);
   }
 
   static Future<Map<MaternalNeed, Guide>>? _guides;
