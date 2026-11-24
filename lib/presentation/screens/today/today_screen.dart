@@ -10,9 +10,11 @@ import '../../sheets/closet_sheet.dart';
 import '../../widgets/bumpy_avatar.dart';
 import '../../widgets/nursery_scene.dart';
 import '../../widgets/visit_topics.dart';
+import '../visit_screen.dart';
 
 part 'nursery_card.dart';
 part 'check_in_list.dart';
+part 'visit_card.dart';
 
 /// Today tab — daily loop under 30 seconds.
 /// Baby-voice lines are loaded from [ContentLoader] (bundled JSON, offline).
@@ -183,6 +185,7 @@ class _TodayScreenState extends State<TodayScreen>
           onEndReview: () => setState(() => _reviewingDay = null),
           onCheckIn: _onCheckIn,
         );
+        final visit = _VisitCard(state: state, palette: palette);
         if (sideBySide) {
           return Padding(
             padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
@@ -191,7 +194,18 @@ class _TodayScreenState extends State<TodayScreen>
               children: [
                 Expanded(child: SingleChildScrollView(child: nursery)),
                 const SizedBox(width: 16),
-                Expanded(child: SingleChildScrollView(child: checkInsPanel)),
+                Expanded(
+                  child: SingleChildScrollView(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        visit,
+                        const SizedBox(height: 12),
+                        checkInsPanel,
+                      ],
+                    ),
+                  ),
+                ),
               ],
             ),
           );
@@ -200,7 +214,13 @@ class _TodayScreenState extends State<TodayScreen>
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [nursery, const SizedBox(height: 20), checkInsPanel],
+            children: [
+              nursery,
+              const SizedBox(height: 12),
+              visit,
+              const SizedBox(height: 20),
+              checkInsPanel,
+            ],
           ),
         );
       },
