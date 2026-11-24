@@ -53,17 +53,16 @@ class WeekCard {
   bool get isDraft => status != 'approved';
 
   /// The content gate's verdict for this card.
-  Review review({bool drafts = ContentGate.draftsByDefault}) =>
-      ContentGate.review(
-        status: status,
-        reviewer: approvedBy,
-        date: approvedDate,
-        rulesPass:
-            babyLine.trim().isNotEmpty &&
-            ContentGate.bannedTerm(babyLine) == null &&
-            ContentGate.bannedTerm(sizeObject ?? '') == null,
-        drafts: drafts,
-      );
+  Review review({bool? drafts}) => ContentGate.review(
+    status: status,
+    reviewer: approvedBy,
+    date: approvedDate,
+    rulesPass:
+        babyLine.trim().isNotEmpty &&
+        ContentGate.bannedTerm(babyLine) == null &&
+        ContentGate.bannedTerm(sizeObject ?? '') == null,
+    drafts: drafts,
+  );
 
   /// Returns the first shown card for [week] matching [mode]; in a review
   /// build, a draft card only when no approved card exists for that week.
@@ -72,7 +71,7 @@ class WeekCard {
     required List<WeekCard> cards,
     required int week,
     required String mode,
-    bool drafts = ContentGate.draftsByDefault,
+    bool? drafts,
   }) {
     WeekCard? draft;
     for (final c in cards) {

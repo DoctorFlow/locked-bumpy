@@ -5,12 +5,25 @@ part of 'this_week_screen.dart';
 // one thing to know, the card for this exact week, one thing to get ready,
 // something to look forward to, then the curious question as a quiet link.
 
-/// Opens the guide for [need]. The one place the chapter page leaves for a
-/// guide, so the integrator changes a single line.
-void _openGuide(BuildContext context, AppState state, MaternalNeed need) {
-  // integration: GuideScreen.open(context, state, need)
-  state.setTab(2);
+/// Opens the guide for [need]. When the gate hides that guide (not approved,
+/// and not a draft in a review build), the Guides tab opens instead, where
+/// the need's card still offers its visit-list control: never an empty page.
+Future<void> _openGuide(
+  BuildContext context,
+  AppState state,
+  MaternalNeed need,
+) async {
+  final guides = await ContentLoader.loadGuides();
+  if (!context.mounted) return;
+  if (guides[need] == null) {
+    state.setTab(2);
+    return;
+  }
+  await GuideScreen.open(context, state, need);
 }
+
+/// Width over height of every chapter picture (1200 x 900).
+const double chapterPictureAspect = 4 / 3;
 
 const _darkOnAccent = Color(0xFF2E2040);
 const _lightOnAccent = Color(0xFFFFF8EE);
@@ -109,8 +122,13 @@ class _ChapterPage extends StatelessWidget {
                   const SizedBox(height: 6),
                   Text(chapter.knowText, style: bodyStyle),
                   const SizedBox(height: 6),
+                  // Quiet text only: the app opens no links.
                   Text(
-                    'Source: ${chapter.knowSourceOrg}',
+                    chapter.knowSourceTitle.isEmpty
+                        ? 'Source: ${chapter.knowSourceOrg}'
+                        : 'Source: ${chapter.knowSourceOrg}, '
+                              '${chapter.knowSourceTitle}',
+                    key: const ValueKey('chapter-know-source'),
                     style: softStyle.copyWith(fontStyle: FontStyle.italic),
                   ),
                   const SizedBox(height: 20),
@@ -205,7 +223,6 @@ class _ChapterHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final accent = chapter.accent;
-    final short = MediaQuery.sizeOf(context).height < 560;
     final panel = _AccentPaperPanel(
       accent: accent,
       palette: palette,
@@ -224,8 +241,12 @@ class _ChapterHeader extends StatelessWidget {
           ClipPath(
             clipper: const _DeckledEdge(),
             child: ExcludeSemantics(
-              child: SizedBox(
-                height: short ? 132 : 184,
+              // The pictures are 4:3 (1200 x 900). Show all of it at every
+              // width; the torn edge trims only its lowest few pixels. The
+              // missing-picture panel takes the same 4:3 box.
+              child: AspectRatio(
+                key: const ValueKey('chapter-picture'),
+                aspectRatio: chapterPictureAspect,
                 child: Image.asset(
                   chapter.illustrationPath(halloween: palette.isHalloween),
                   key: ValueKey(
@@ -290,7 +311,8 @@ class _ChapterHeader extends StatelessWidget {
                         ),
                       ),
                     ),
-                    if (!chapter.isApproved) _DraftChip(palette: palette),
+                    if (chapter.review() == Review.draft)
+                      DraftTag(palette: palette),
                   ],
                 ),
               ],
@@ -421,38 +443,6 @@ class _DeckledEdge extends CustomClipper<Path> {
 
   @override
   bool shouldReclip(_DeckledEdge oldClipper) => false;
-}
-
-/// Private Draft tag. The integrator swaps it for the shared one.
-class _DraftChip extends StatelessWidget {
-  const _DraftChip({required this.palette});
-
-  final AppPalette palette;
-
-  @override
-  Widget build(BuildContext context) {
-    return Semantics(
-      label: 'Draft, waiting for review',
-      excludeSemantics: true,
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          color: palette.ink,
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-          child: Text(
-            'Draft',
-            style: TextStyle(
-              color: palette.paper,
-              fontSize: 14,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
 }
 
 /// A small cut-paper diamond in the chapter's colour before each heading.
@@ -617,6 +607,8 @@ class _ChapterWeekCard extends StatelessWidget {
                     fontWeight: FontWeight.w600,
                   ),
                 ),
+              // Only a review build ever shows a draft card.
+              if (card?.isDraft ?? false) DraftTag(palette: palette),
             ],
           ),
           if (card != null) ...[

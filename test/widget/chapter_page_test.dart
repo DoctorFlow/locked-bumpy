@@ -1,11 +1,21 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:little_bumpy/content/chapter_loader.dart';
+import 'package:little_bumpy/content/content_loader.dart';
 import 'package:little_bumpy/domain/models/app_state.dart';
+import 'package:little_bumpy/domain/models/content_record.dart';
+import 'package:little_bumpy/domain/models/guide.dart';
+import 'package:little_bumpy/domain/models/need.dart';
 import 'package:little_bumpy/main.dart';
+import 'package:little_bumpy/presentation/screens/guide_screen.dart';
+import 'package:little_bumpy/presentation/screens/guides_screen.dart';
+import 'package:little_bumpy/presentation/widgets/draft_tag.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../chapter_fixtures.dart';
+import '../support/guide_fixture.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -26,7 +36,8 @@ void main() {
 
   tearDown(() {
     ChapterLoader.debugUse(null);
-    ChapterLoader.debugReviewBuild = null;
+    ContentGate.debugDrafts = null;
+    ContentLoader.debugSetGuides(null);
   });
 
   /// Current week is 16, inside the kites chapter (16 to 19).
@@ -36,7 +47,7 @@ void main() {
     bool review = false,
   }) async {
     ChapterLoader.debugUse(ChapterLoader.parse(chapterJson([kites, lanterns])));
-    ChapterLoader.debugReviewBuild = review;
+    ContentGate.debugDrafts = review;
     SharedPreferences.setMockInitialValues({
       'due_date_iso': '2027-05-11',
       'is_halloween': halloween,
@@ -57,7 +68,7 @@ void main() {
       'Weeks 16 to 19',
       'I folded a tiny paper kite today.',
       'One thing to know',
-      'Source: Test Kite Club',
+      'Source: Test Kite Club, Kite basics',
       'Week 16',
       'One thing to get ready',
       'Something to look forward to',
@@ -94,14 +105,38 @@ void main() {
     expect(find.text('Write my own question'), findsOneWidget);
   });
 
-  testWidgets('the curious question opens the guides', (t) async {
+  testWidgets('the curious question opens that need\'s guide page', (t) async {
+    ContentLoader.debugSetGuides({
+      MaternalNeed.rest: Guide.reviewAll(
+        jsonEncode([paperBoatGuide(need: 'REST')]),
+      )[MaternalNeed.rest]!,
+    });
     final state = await openThisWeek(t);
     final link = find.text('How long can a kite string be?');
     await t.ensureVisible(link);
     await t.pumpAndSettle();
     await t.tap(link);
     await t.pumpAndSettle();
+    expect(find.byType(GuideScreen), findsOneWidget);
+    expect(find.text('Rest guide'), findsOneWidget);
+    expect(state.currentTab, 1);
+  });
+
+  testWidgets('a hidden guide sends the curious question to the Guides tab', (
+    t,
+  ) async {
+    ContentLoader.debugSetGuides(const {});
+    final state = await openThisWeek(t);
+    final link = find.text('How long can a kite string be?');
+    await t.ensureVisible(link);
+    await t.pumpAndSettle();
+    await t.tap(link);
+    await t.pumpAndSettle();
+    expect(find.byType(GuideScreen), findsNothing);
     expect(state.currentTab, 2);
+    // The Guides tab, where Rest still has its name and visit-list control.
+    expect(find.byType(GuidesScreen), findsOneWidget);
+    expect(find.text('Care topics'), findsOneWidget);
   });
 
   testWidgets('a week without a chapter keeps the card and invitation', (
@@ -142,7 +177,7 @@ void main() {
     await t.tap(find.text('21'));
     await t.pumpAndSettle();
     expect(find.text('Lantern night'), findsOneWidget);
-    expect(find.text('Draft'), findsOneWidget);
+    expect(find.byType(DraftTag), findsOneWidget);
     expect(find.text('Add to my visit list'), findsNothing);
     expect(band('Lantern night'), isNot(kitesColour));
     expect(band('Lantern night'), const Color(0xFFF2A65A));

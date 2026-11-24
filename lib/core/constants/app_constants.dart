@@ -38,7 +38,7 @@ class AppConstants {
   // ── Medical disclaimer ──────────────────────────────────────────────────
   static const String disclaimer =
       'This app is not medical advice. '
-      'If you are worried about anything, call your doctor.';
+      'If you are worried about anything, call your doctor or midwife.';
 
   // ── Check-in IDs ────────────────────────────────────────────────────────
   static const String checkInNeed = 'need_of_the_day';

@@ -125,10 +125,8 @@ class Guide {
   /// Reads every record in [json] and returns the guides the gate lets
   /// through. A broken record hides only its own guide; two records for one
   /// need hide that need.
-  static Map<MaternalNeed, Guide> reviewAll(
-    String json, {
-    bool drafts = ContentGate.draftsByDefault,
-  }) {
+  static Map<MaternalNeed, Guide> reviewAll(String json, {bool? drafts}) {
+    final shows = drafts ?? ContentGate.showsDrafts;
     final rows = jsonDecode(json);
     if (rows is! List) return const {};
     final seen = <MaternalNeed>{};
@@ -138,7 +136,7 @@ class Guide {
       final need = row is Map ? _needOf(row['need']) : null;
       if (need == null) continue;
       if (!seen.add(need)) twice.add(need);
-      final guide = _tryParse(row as Map, need, drafts);
+      final guide = _tryParse(row as Map, need, shows);
       if (guide != null) guides[need] = guide;
     }
     guides.removeWhere((need, _) => twice.contains(need));
