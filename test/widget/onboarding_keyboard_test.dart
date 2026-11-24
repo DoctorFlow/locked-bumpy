@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:little_bumpy/domain/models/app_state.dart';
 import 'package:little_bumpy/main.dart';
+import 'package:little_bumpy/presentation/widgets/pregnancy_date_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 Future<AppState> _showOnboarding(WidgetTester tester) async {
@@ -46,24 +47,28 @@ void main() {
 
       await _press(tester, LogicalKeyboardKey.tab); // Pause
       await _press(tester, LogicalKeyboardKey.tab);
-      _expectFocused(tester, 'Due date');
+      _expectFocused(tester, 'I know my due date');
       await _press(tester, LogicalKeyboardKey.tab);
-      _expectFocused(tester, 'Last period');
+      _expectFocused(tester, 'I know how many weeks');
+      await _press(tester, LogicalKeyboardKey.tab);
+      _expectFocused(tester, 'I know when my last period started');
       await _press(tester, LogicalKeyboardKey.space);
       expect(find.text('Choose period start date'), findsOneWidget);
 
       await tester.sendKeyDownEvent(LogicalKeyboardKey.shiftLeft);
       await _press(tester, LogicalKeyboardKey.tab);
+      await _press(tester, LogicalKeyboardKey.tab);
       await tester.sendKeyUpEvent(LogicalKeyboardKey.shiftLeft);
-      _expectFocused(tester, 'Due date');
+      _expectFocused(tester, 'I know my due date');
       await _press(tester, LogicalKeyboardKey.enter);
       expect(find.text('Choose due date'), findsOneWidget);
 
       await _press(tester, LogicalKeyboardKey.tab);
       await _press(tester, LogicalKeyboardKey.tab);
+      await _press(tester, LogicalKeyboardKey.tab);
       _expectFocused(tester, 'Pick your due date\nChoose due date');
       await _press(tester, LogicalKeyboardKey.space);
-      expect(find.byType(DatePickerDialog), findsOneWidget);
+      expect(find.byType(PregnancyCalendarDialog), findsOneWidget);
       await _press(tester, LogicalKeyboardKey.escape);
       _expectFocused(tester, 'Pick your due date\nChoose due date');
       await tester.pumpWidget(const SizedBox());

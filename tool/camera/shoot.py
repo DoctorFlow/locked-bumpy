@@ -52,6 +52,7 @@ SIZES = [  # (width, height, device scale)
     (412, 915, 2.625),
 ]
 SHEET_SIZE = (375, 812, 3)
+DATE_SIZES = [(320, 568, 2), (375, 812, 3)]  # the date-step scenarios, even with --fast
 
 # Saved questions, encoded as lib/domain/models/visit_question.dart does:
 # topic names first, then "question:<text>" or "question@<need>:<text>".
@@ -163,11 +164,15 @@ def describe(step):
 # shot:    final shot name (default: the scenario name); None = no final shot
 # planned: lane notes this scenario waits on; its steps are a best guess
 # looks:   limit to some looks (default both)
+# sizes:   this scenario's own sizes, even with --fast (default: the run's)
+# text:    browser text size as a multiple of 16 px (2 = 200%); Flutter web
+#          reads the root font size as the text scale
 
-def S(name, seed=None, steps=(), shot=..., planned=None, looks=None, note=None):
+def S(name, seed=None, steps=(), shot=..., planned=None, looks=None, note=None,
+      sizes=None, text=None):
     return {"name": name, "seed": seed or {}, "steps": list(steps),
             "shot": name if shot is ... else shot, "planned": planned,
-            "looks": looks, "note": note}
+            "looks": looks, "note": note, "sizes": sizes, "text": text}
 
 
 def chapter_scenario(n):
@@ -189,9 +194,10 @@ def first_run_steps(prefix, look_label=None):
         shot(f"{p}-1-welcome"),
         tap("Start", "button"), wait(500), shot(f"{p}-2-date"),
         tap_first(["Choose due date", "Pick your due date"]), wait(600), shot(f"{p}-2-picker"),
-        # The picker opens with no day chosen, on this month. Step to March
-        # 2027 and pick the 15th (the camera's DUE_DATE, week 24), then OK.
-        *[st for _ in range(4) for st in (tap("Next month", "button"), wait(350))],
+        # The picker opens with no day chosen, on May 2027 (the month a
+        # parent 13 weeks along is due in). Step back to March 2027 and pick
+        # the 15th (the camera's DUE_DATE, week 24), then OK.
+        *[st for _ in range(2) for st in (tap("Previous month", "button"), wait(350))],
         tap_first(["15, Monday, March 15, 2027", "15,"]), wait(400), shot(f"{p}-2-day"),
         tap_first(["OK", "Ok"]), wait(600), shot(f"{p}-2-picked"),
         tap_first(["Next"], find=True), wait(500), shot(f"{p}-3-nickname"),
@@ -360,6 +366,37 @@ SCENARIOS = [
     S("today-wk20", {"week": 20}, [
         wait(500), shot("today-wk20"), scroll(), shot("today-wk20-2"),
     ], shot=None, note="calm-content: Today at week 20"),
+    # Date step (roles/date-step.md): the weeks way, the picker's opening
+    # month and month list, and the whole step at 320 px with 200% text.
+    # Started from a welcome with only the look saved, so both looks show.
+    S("date-weeks", {"setup": False}, [
+        tap("Start", "button"), wait(500),
+        tap("I know how many weeks", "button"), wait(700), shot("date-weeks-grid"),
+        tap("Week 9", "button", find=True), wait(700), shot("date-weeks-picked"),
+    ], shot=None, sizes=DATE_SIZES, note="date-step: one tap on a week, then the say-back"),
+    S("date-picker", {"setup": False}, [
+        tap("Start", "button"), wait(500),
+        tap_first(["Choose due date", "Pick your due date"]), wait(700), shot("date-picker-open"),
+        tap("May 2027. Choose another month", "button"), wait(500), shot("date-picker-months"),
+        tap("March 2027", "button", find=True), wait(500),
+        tap_first(["15, Monday, March 15, 2027"], find=True), wait(400), shot("date-picker-day"),
+        tap_first(["OK"]), wait(700), shot("date-picker-picked"),
+    ], shot=None, sizes=DATE_SIZES, note="date-step: opens on May 2027; month list; say-back"),
+    S("date-big-text", {"setup": False}, [
+        tap("Start", "button"), wait(600), shot("date-big-step"),
+        tap_first(["Choose due date", "Pick your due date"], find=True), wait(700),
+        shot("date-big-picker"),
+        *[st for _ in range(2) for st in (tap("Previous month", "button"), wait(350))],
+        tap_first(["15, Monday, March 15, 2027"], find=True), wait(400), shot("date-big-day"),
+        tap_first(["OK"], find=True), wait(700), shot("date-big-picked"),
+    ], shot=None, sizes=[(320, 568, 2)], text=2,
+      note="date-step: 320 px at 200% text (browser root font 32 px)"),
+    S("date-big-weeks", {"setup": False}, [
+        tap("Start", "button"), wait(600),
+        tap("I know how many weeks", "button", find=True), wait(700), shot("date-big-weeks"),
+        tap("Week 9", "button", find=True), wait(700), shot("date-big-weeks-picked"),
+    ], shot=None, sizes=[(320, 568, 2)], text=2,
+      note="date-step: the weeks way at 320 px and 200% text"),
 ]
 
 # Three key moments for sheet__journey.png: first existing shot name of each.
@@ -628,11 +665,18 @@ async def reveal_into_view(page, label, at, vw, vh, notes, tries=8):
 
 # ── one scenario at one size and look ───────────────────────────────────────
 
-async def open_app(browser, url, w, h, s, prefs, blocked):
+async def open_app(browser, url, w, h, s, prefs, blocked, text=None):
     context = await browser.new_context(viewport={"width": w, "height": h},
                                         device_scale_factor=s, is_mobile=True, has_touch=True,
                                         reduced_motion="reduce", service_workers="block")
     await context.clock.set_fixed_time(FIXED_NOW)
+    if text:
+        # Browser text size: Flutter web reads the root font size as the text scale.
+        px = round(16 * text)
+        await context.add_init_script(
+            "(() => { const s = () => document.documentElement && "
+            f"(document.documentElement.style.fontSize = '{px}px'); s(); "
+            "document.addEventListener('DOMContentLoaded', s); })();")
     await context.add_init_script(init_script(prefs))
 
     async def gate(route):
@@ -680,7 +724,8 @@ async def play(browser, url, out, run, start, counter, total, blocked):
         log(start, f"{counter[0]} of {total}  {job['file']}  {status}")
 
     try:
-        context, page = await open_app(browser, url, w, h, s, run["prefs"], blocked)
+        context, page = await open_app(browser, url, w, h, s, run["prefs"], blocked,
+                                       text=sc.get("text"))
         steps = sc["steps"] + ([shot(sc["shot"])] if sc["shot"] else [])
         for step in steps:
             kind = step[0]
@@ -915,7 +960,7 @@ def main():
         if not names:
             continue
         for look in LOOKS:
-            for size in sizes:
+            for size in (sc.get("sizes") or sizes):
                 prefs = seed_for(look, sc["seed"], args.week)
                 run_jobs = []
                 for n in names:

@@ -7,6 +7,7 @@ import 'package:little_bumpy/main.dart';
 import 'package:little_bumpy/presentation/screens/first_run_screen.dart';
 import 'package:little_bumpy/presentation/widgets/bumpy_avatar.dart';
 import 'package:little_bumpy/presentation/widgets/need_word.dart';
+import 'package:little_bumpy/presentation/widgets/pregnancy_date_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'pick_date_helper.dart';
@@ -121,8 +122,9 @@ void main() {
 
       expect(find.text('2 of 5'), findsOneWidget);
       expect(find.text('When am I due?'), findsOneWidget);
-      expect(find.text('Due date'), findsOneWidget);
-      expect(find.text('Last period'), findsOneWidget);
+      expect(find.text('I know my due date'), findsOneWidget);
+      expect(find.text('I know how many weeks'), findsOneWidget);
+      expect(find.text('I know when my last period started'), findsOneWidget);
       expect(find.text('Choose due date'), findsOneWidget);
       final next = find.widgetWithText(ElevatedButton, 'Next');
       expect(tester.widget<ElevatedButton>(next).onPressed, isNull);
@@ -138,21 +140,22 @@ void main() {
       await _tap(tester, find.text('Start'));
       await _tap(tester, find.text('Choose due date'));
 
-      final dialog = tester.widget<DatePickerDialog>(
-        find.byType(DatePickerDialog),
+      final dialog = tester.widget<PregnancyCalendarDialog>(
+        find.byType(PregnancyCalendarDialog),
       );
-      expect(dialog.initialDate, isNull);
+      expect(dialog.initial, isNull);
+      expect(find.text('No day chosen yet'), findsOneWidget);
       // OK with no day stays open and says why, next to the buttons.
       await tester.tap(find.text('OK'));
       await tester.pumpAndSettle();
-      expect(find.byType(DatePickerDialog), findsOneWidget);
+      expect(find.byType(PregnancyCalendarDialog), findsOneWidget);
       expect(find.text('Pick a day first'), findsOneWidget);
       await tester.tap(find.text('Cancel'));
       await tester.pumpAndSettle();
 
-      expect(find.byType(DatePickerDialog), findsNothing);
+      expect(find.byType(PregnancyCalendarDialog), findsNothing);
       expect(find.text('Choose due date'), findsOneWidget);
-      expect(find.textContaining('You are at week'), findsNothing);
+      expect(find.byKey(const ValueKey('date-step-say-back')), findsNothing);
       final next = find.widgetWithText(ElevatedButton, 'Next');
       expect(tester.widget<ElevatedButton>(next).onPressed, isNull);
 
@@ -160,11 +163,13 @@ void main() {
       await _tap(tester, find.text('Choose due date'));
       await chooseDateInPicker(tester, dueIn140(DateTime(2026, 11, 23)));
       expect(tester.widget<ElevatedButton>(next).onPressed, isNotNull);
-      await _tap(tester, find.text('Apr 12, 2027'));
+      await _tap(tester, find.text('12 April 2027'));
       expect(
         tester
-            .widget<DatePickerDialog>(find.byType(DatePickerDialog))
-            .initialDate,
+            .widget<PregnancyCalendarDialog>(
+              find.byType(PregnancyCalendarDialog),
+            )
+            .initial,
         DateTime(2027, 4, 12),
       );
     });
@@ -193,13 +198,14 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.text('15').hitTestable().first);
       await tester.pumpAndSettle();
+      expect(find.text('15 June 2027'), findsOneWidget);
       // Lit: full strength, and the main action, not a second Cancel.
       expect(okColor().a, 1.0);
       expect(okColor(), isNot(cancelColor));
       await tester.tap(find.text('OK'));
       await tester.pumpAndSettle();
-      expect(find.byType(DatePickerDialog), findsNothing);
-      expect(find.text('Dec 15, 2026'), findsOneWidget);
+      expect(find.byType(PregnancyCalendarDialog), findsNothing);
+      expect(find.text('15 June 2027'), findsOneWidget);
       final next = find.widgetWithText(ElevatedButton, 'Next');
       expect(tester.widget<ElevatedButton>(next).onPressed, isNotNull);
     });
@@ -241,21 +247,21 @@ void main() {
       await _tap(tester, find.text('Start'));
 
       // No preview chip before a date is picked.
-      expect(find.textContaining('You are at week'), findsNothing);
+      expect(find.byKey(const ValueKey('date-step-say-back')), findsNothing);
 
-      await tester.tap(find.text('Last period'));
+      await tester.tap(find.text('I know when my last period started'));
       await tester.pumpAndSettle();
       await tester.ensureVisible(find.text('Choose period start date'));
       await tester.tap(find.text('Choose period start date'));
       await tester.pumpAndSettle();
       await chooseDateInPicker(tester, periodBack140(DateTime(2026, 11, 23)));
-      expect(find.text('You are at week 20 right now.'), findsOneWidget);
-      await tester.tap(find.text('Due date'));
+      expect(find.text('Week 20. Due around 12 April.'), findsOneWidget);
+      await tester.tap(find.text('I know my due date'));
       await tester.pumpAndSettle();
       expect(find.text('Choose due date'), findsOneWidget);
-      await tester.tap(find.text('Last period'));
+      await tester.tap(find.text('I know when my last period started'));
       await tester.pumpAndSettle();
-      expect(find.text('You are at week 20 right now.'), findsOneWidget);
+      expect(find.text('Week 20. Due around 12 April.'), findsOneWidget);
     });
 
     testWidgets('medical disclaimer present on the date step', (tester) async {

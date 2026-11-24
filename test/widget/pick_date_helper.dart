@@ -4,22 +4,22 @@ import 'package:flutter_test/flutter_test.dart';
 /// Chooses [day] in the open pregnancy date picker and taps OK.
 ///
 /// The picker opens with no day chosen (a tired parent must not save a week
-/// by tapping OK), so a test types the date in the picker's own input mode.
+/// by tapping OK), so a test jumps with the month list, as a parent can:
+/// the month's name, then the month, then the day.
 Future<void> chooseDateInPicker(WidgetTester tester, DateTime day) async {
-  await tester.tap(find.byTooltip('Switch to input'));
-  await tester.pumpAndSettle();
-  final field = find.descendant(
-    of: find.byType(DatePickerDialog),
-    matching: find.byType(TextField),
+  Future<void> tap(Finder f) async {
+    await tester.ensureVisible(f);
+    await tester.pumpAndSettle();
+    await tester.tap(f);
+    await tester.pumpAndSettle();
+  }
+
+  await tap(find.byKey(const ValueKey('picker-month')));
+  await tap(find.byKey(ValueKey('picker-month-${day.year}-${day.month}')));
+  await tap(
+    find.byKey(ValueKey('picker-day-${day.year}-${day.month}-${day.day}')),
   );
-  String two(int n) => n.toString().padLeft(2, '0');
-  await tester.enterText(
-    field,
-    '${two(day.month)}/${two(day.day)}/${day.year}',
-  );
-  await tester.pumpAndSettle();
-  await tester.tap(find.text('OK'));
-  await tester.pumpAndSettle();
+  await tap(find.byKey(const ValueKey('picker-ok')));
 }
 
 /// The date the old picker opened on for a due date (today + 140 days) and a

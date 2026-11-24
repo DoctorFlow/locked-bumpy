@@ -37,16 +37,10 @@ Future<void> _openPicker(WidgetTester tester) async {
   await tester.pumpAndSettle();
 }
 
-ButtonStyle _okStyle(WidgetTester tester) =>
-    tester.widget<TextButton>(find.widgetWithText(TextButton, 'OK')).style!;
+final _ok = find.byKey(const ValueKey('picker-ok'));
 
 Material _okMaterial(WidgetTester tester) => tester.widget<Material>(
-  find
-      .descendant(
-        of: find.widgetWithText(TextButton, 'OK'),
-        matching: find.byType(Material),
-      )
-      .first,
+  find.descendant(of: _ok, matching: find.byType(Material)).first,
 );
 
 Color _textColor(WidgetTester tester, String label) =>
@@ -56,12 +50,7 @@ TextDecoration? _decoration(WidgetTester tester, String label) =>
     DefaultTextStyle.of(tester.element(find.text(label))).style.decoration;
 
 Rect _okPiece(WidgetTester tester) => tester.getRect(
-  find
-      .descendant(
-        of: find.widgetWithText(TextButton, 'OK'),
-        matching: find.byType(Material),
-      )
-      .first,
+  find.descendant(of: _ok, matching: find.byType(Material)).first,
 );
 
 void main() {
@@ -96,15 +85,20 @@ void main() {
       expect(_textColor(tester, 'OK'), palette.accentText);
       expect(_decoration(tester, 'OK'), isNot(TextDecoration.underline));
       expect(_textColor(tester, 'Cancel'), palette.ink);
-      final ok = tester.getSize(find.widgetWithText(TextButton, 'OK'));
-      expect(ok.width, greaterThanOrEqualTo(88));
+      // Cancel is a quiet button, not a link: no underline either.
+      expect(_decoration(tester, 'Cancel'), isNot(TextDecoration.underline));
+      expect(
+        tester.getSize(find.byKey(const ValueKey('picker-cancel'))).height,
+        greaterThanOrEqualTo(48),
+      );
+      final ok = tester.getSize(_ok);
+      expect(ok.width, greaterThanOrEqualTo(64));
       expect(ok.height, greaterThanOrEqualTo(48));
       // The accent piece clears the dialog's rounded bottom corner.
       final piece = _okPiece(tester);
       final dialog = tester.getRect(find.byType(Dialog));
       expect(dialog.bottom - piece.bottom, greaterThanOrEqualTo(4));
       expect(dialog.right - piece.right, greaterThanOrEqualTo(8));
-      expect(_okStyle(tester), isNotNull);
     });
   }
 

@@ -25,6 +25,22 @@ class PregnancyCalculator {
   }) => (daysFromDueDate(dueDate: dueDate, currentDate: currentDate) ~/ 7)
       .clamp(4, 42);
 
+  /// The due date that [weekFromDueDate] turns back into [week] on
+  /// [currentDate]: the first day of that week (day 0), so the week holds
+  /// for the next six days and then moves on as any other date would.
+  /// [week] is kept within 4 to 42, like every week the app shows.
+  static DateTime dueDateForWeek({
+    required int week,
+    required DateTime currentDate,
+  }) {
+    final w = week.clamp(4, 42);
+    return DateTime(
+      currentDate.year,
+      currentDate.month,
+      currentDate.day + fullTermDays - 7 * w,
+    );
+  }
+
   static int weekFromLmp({
     required DateTime lmpDate,
     required DateTime currentDate,
