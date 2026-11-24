@@ -111,12 +111,24 @@ class _ChapterPage extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                // Opening: where the parent is, then Bumpy speaks.
+                _ChapterWeekCard(
+                  week: week,
+                  card: card,
+                  palette: palette,
+                  band: band,
+                  onBand: onBand,
+                  isCurrentWeek: isCurrentWeek,
+                  onReturn: onReturn,
+                ),
+                const SizedBox(height: AppSpace.l),
                 _BumpySays(
                   line: chapter.bumpyLine,
                   palette: palette,
                   bumpy: bumpy,
                 ),
-                const SizedBox(height: AppSpace.xxl),
+                const SizedBox(height: AppSpace.xl),
+                // Know: plain text on the card, the calmest section.
                 _SectionTitle(
                   'One thing to know',
                   marker: band,
@@ -132,22 +144,11 @@ class _ChapterPage extends StatelessWidget {
                       : 'Source: ${chapter.knowSourceOrg}, '
                             '${chapter.knowSourceTitle}',
                   key: const ValueKey('chapter-know-source'),
-                  style: AppText.small.copyWith(
-                    color: palette.inkSoft,
-                    fontStyle: FontStyle.italic,
-                  ),
-                ),
-                const SizedBox(height: AppSpace.xl),
-                _ChapterWeekCard(
-                  week: week,
-                  card: card,
-                  palette: palette,
-                  band: band,
-                  onBand: onBand,
-                  isCurrentWeek: isCurrentWeek,
-                  onReturn: onReturn,
+                  style: AppText.label.copyWith(color: palette.inkSoft),
                 ),
                 const SizedBox(height: AppSpace.xxl),
+                // Get ready: the suggested question is its own piece with
+                // its one action; writing your own sits outside it.
                 _SectionTitle(
                   'One thing to get ready',
                   marker: band,
@@ -156,41 +157,43 @@ class _ChapterPage extends StatelessWidget {
                 const SizedBox(height: AppSpace.s),
                 Text(chapter.readyText, style: body),
                 const SizedBox(height: AppSpace.l),
-                PaperCard(
-                  raised: true,
-                  padding: const EdgeInsets.all(AppSpace.l),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      if (chapter.suggestedQuestion.isNotEmpty) ...[
-                        _AddQuestion(
-                          question: chapter.suggestedQuestion,
-                          state: state,
-                          palette: palette,
-                          fill: band,
-                          onFill: onBand,
-                        ),
-                        const SizedBox(height: AppSpace.s),
-                      ],
-                      OutlinedButton.icon(
-                        onPressed: onVisit,
-                        icon: const Icon(Icons.edit_note_rounded),
-                        label: const Text('Write my own question'),
-                      ),
-                    ],
+                if (chapter.suggestedQuestion.isNotEmpty) ...[
+                  PaperCard(
+                    key: const ValueKey('chapter-question-piece'),
+                    raised: true,
+                    padding: const EdgeInsets.all(AppSpace.l),
+                    child: _AddQuestion(
+                      question: chapter.suggestedQuestion,
+                      state: state,
+                      palette: palette,
+                      fill: band,
+                      onFill: onBand,
+                    ),
                   ),
+                  const SizedBox(height: AppSpace.m),
+                ],
+                OutlinedButton.icon(
+                  onPressed: onVisit,
+                  icon: const Icon(Icons.edit_note_rounded),
+                  label: const Text('Write my own question'),
                 ),
                 const SizedBox(height: AppSpace.xxl),
+                // Look forward: a piece washed in the chapter colour, with
+                // Bumpy looking forward too.
                 _TintedPiece(
+                  key: const ValueKey('chapter-look-forward'),
                   tint: band,
                   palette: palette,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _SectionTitle(
-                        'Something to look forward to',
-                        marker: band,
-                        palette: palette,
+                      _WithBumpy(
+                        bumpy: bumpy,
+                        child: _SectionTitle(
+                          'Something to look forward to',
+                          marker: band,
+                          palette: palette,
+                        ),
                       ),
                       const SizedBox(height: AppSpace.s),
                       Text(chapter.lookForward, style: body),
@@ -211,6 +214,48 @@ class _ChapterPage extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// True when a side-by-side face and bubble would squeeze the words: a
+/// narrow column or large system text. Bumpy then stands above instead.
+bool _stackBumpy(BuildContext context, double width) =>
+    width < 300 || MediaQuery.textScalerOf(context).scale(16) > 24;
+
+/// [child] with a small Bumpy face at its right; no face when narrow.
+class _WithBumpy extends StatelessWidget {
+  const _WithBumpy({required this.bumpy, required this.child});
+
+  final Widget bumpy;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, box) {
+        const size = 48.0;
+        // The face is decoration: where it would squeeze the words (a
+        // narrow phone or large text), the words keep the whole width.
+        if (box.maxWidth < 240 ||
+            MediaQuery.textScalerOf(context).scale(16) > 24) {
+          return child;
+        }
+        final face = ExcludeSemantics(
+          key: const ValueKey('chapter-look-forward-face'),
+          child: SizedBox.square(
+            dimension: size,
+            child: FittedBox(child: bumpy),
+          ),
+        );
+        return Row(
+          children: [
+            Expanded(child: child),
+            const SizedBox(width: AppSpace.m),
+            face,
+          ],
+        );
+      },
     );
   }
 }
@@ -244,28 +289,44 @@ class _ChapterHeader extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          ClipPath(
-            clipper: const _DeckledEdge(),
-            child: ExcludeSemantics(
-              // The pictures are 4:3 (1200 x 900). Show all of it at every
-              // width; the torn edge trims only its lowest few pixels. The
-              // missing-picture panel takes the same 4:3 box.
-              child: AspectRatio(
-                key: const ValueKey('chapter-picture'),
-                aspectRatio: chapterPictureAspect,
-                child: Image.asset(
-                  chapter.illustrationPath(halloween: palette.isHalloween),
-                  key: ValueKey(
-                    chapter.illustrationPath(halloween: palette.isHalloween),
+          // The review marker is a sticker on the picture's corner, never
+          // part of the band: the band lays out the same with or without
+          // it, and a release build never has it.
+          Stack(
+            children: [
+              ClipPath(
+                clipper: const _DeckledEdge(),
+                child: ExcludeSemantics(
+                  // The pictures are 4:3 (1200 x 900). Show all of it at every
+                  // width; the torn edge trims only its lowest few pixels. The
+                  // missing-picture panel takes the same 4:3 box.
+                  child: AspectRatio(
+                    key: const ValueKey('chapter-picture'),
+                    aspectRatio: chapterPictureAspect,
+                    child: Image.asset(
+                      chapter.illustrationPath(halloween: palette.isHalloween),
+                      key: ValueKey(
+                        chapter.illustrationPath(
+                          halloween: palette.isHalloween,
+                        ),
+                      ),
+                      fit: BoxFit.cover,
+                      width: double.infinity,
+                      frameBuilder: (context, child, frame, sync) =>
+                          frame == null && !sync ? panel : child,
+                      errorBuilder: (context, error, stack) => panel,
+                    ),
                   ),
-                  fit: BoxFit.cover,
-                  width: double.infinity,
-                  frameBuilder: (context, child, frame, sync) =>
-                      frame == null && !sync ? panel : child,
-                  errorBuilder: (context, error, stack) => panel,
                 ),
               ),
-            ),
+              if (chapter.review() == Review.draft)
+                Positioned(
+                  key: const ValueKey('chapter-draft-sticker'),
+                  top: AppSpace.m,
+                  right: AppSpace.m,
+                  child: DraftTag(palette: palette),
+                ),
+            ],
           ),
           Padding(
             padding: const EdgeInsets.fromLTRB(
@@ -285,32 +346,24 @@ class _ChapterHeader extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: AppSpace.s),
-                Wrap(
-                  spacing: AppSpace.s,
-                  runSpacing: AppSpace.s,
-                  crossAxisAlignment: WrapCrossAlignment.center,
-                  children: [
-                    // A small paper tag, readable on any chapter colour.
-                    DecoratedBox(
-                      decoration: BoxDecoration(
-                        color: palette.paper,
-                        borderRadius: AppRadii.tag,
-                        boxShadow: paperShadows(palette, raised: true),
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: AppSpace.m,
-                          vertical: AppSpace.s,
-                        ),
-                        child: Text(
-                          'Weeks ${chapter.fromWeek} to ${chapter.toWeek}',
-                          style: AppText.label.copyWith(color: palette.ink),
-                        ),
-                      ),
+                // A small paper tag, readable on any chapter colour.
+                DecoratedBox(
+                  key: const ValueKey('chapter-weeks-tag'),
+                  decoration: BoxDecoration(
+                    color: palette.paper,
+                    borderRadius: AppRadii.tag,
+                    boxShadow: paperShadows(palette, raised: true),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpace.m,
+                      vertical: AppSpace.s,
                     ),
-                    if (chapter.review() == Review.draft)
-                      DraftTag(palette: palette),
-                  ],
+                    child: Text(
+                      'Weeks ${chapter.fromWeek} to ${chapter.toWeek}',
+                      style: AppText.label.copyWith(color: palette.ink),
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -518,6 +571,7 @@ class _PaperDiamond extends StatelessWidget {
 /// corners and shadow.
 class _TintedPiece extends StatelessWidget {
   const _TintedPiece({
+    super.key,
     required this.tint,
     required this.palette,
     required this.child,
@@ -549,7 +603,11 @@ class _TintedPiece extends StatelessWidget {
 /// Bumpy's line, spoken: a small Bumpy beside a paper speech bubble whose
 /// tail points at them. On a narrow or large-text screen Bumpy stands above
 /// the bubble instead.
-class _BumpySays extends StatelessWidget {
+///
+/// When the page first builds, Bumpy hops once (the Today room's hop: up
+/// 18 px with ease-out, down with a bounce) and the bubble fades in while
+/// sliding up 8 px. Both are skipped when the system asks for less motion.
+class _BumpySays extends StatefulWidget {
   const _BumpySays({
     required this.line,
     required this.palette,
@@ -560,48 +618,146 @@ class _BumpySays extends StatelessWidget {
   final AppPalette palette;
   final Widget bumpy;
 
+  /// The whole opening: the hop takes all of it, the bubble the first 250 ms.
+  static const opening = Duration(milliseconds: 450);
+  static const hopHeight = 18.0;
+  static const bubbleRise = 8.0;
+
+  @override
+  State<_BumpySays> createState() => _BumpySaysState();
+}
+
+class _BumpySaysState extends State<_BumpySays>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _opening = AnimationController(
+    vsync: this,
+    duration: _BumpySays.opening,
+  );
+
+  // The same curve as the Today room's hop (today_screen.dart). That tween
+  // lives in Today's private state, so it is repeated here, not shared.
+  late final Animation<double> _hop = TweenSequence<double>([
+    TweenSequenceItem(
+      tween: Tween<double>(
+        begin: 0,
+        end: -_BumpySays.hopHeight,
+      ).chain(CurveTween(curve: Curves.easeOut)),
+      weight: 50,
+    ),
+    TweenSequenceItem(
+      tween: Tween<double>(
+        begin: -_BumpySays.hopHeight,
+        end: 0,
+      ).chain(CurveTween(curve: Curves.bounceOut)),
+      weight: 50,
+    ),
+  ]).animate(_opening);
+
+  late final Animation<double> _bubble = CurvedAnimation(
+    parent: _opening,
+    curve: Interval(
+      0,
+      250 / _BumpySays.opening.inMilliseconds,
+      curve: Curves.easeOut,
+    ),
+  );
+
+  bool _started = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_started) return;
+    _started = true;
+    if (MediaQuery.disableAnimationsOf(context)) {
+      _opening.value = 1;
+    } else {
+      _opening.forward();
+    }
+  }
+
+  @override
+  void dispose() {
+    _opening.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
+    final palette = widget.palette;
+    final still = MediaQuery.disableAnimationsOf(context);
+    final pixelRatio = MediaQuery.devicePixelRatioOf(context);
     return Semantics(
       container: true,
       label: 'Bumpy says',
       child: LayoutBuilder(
         builder: (context, box) {
-          final stacked =
-              box.maxWidth < 300 ||
-              MediaQuery.textScalerOf(context).scale(16) > 24;
+          final stacked = _stackBumpy(context, box.maxWidth);
           const size = 64.0;
           final face = ExcludeSemantics(
             child: SizedBox.square(
+              key: const ValueKey('chapter-bumpy-face'),
               dimension: size,
-              child: FittedBox(child: bumpy),
+              child: FittedBox(child: widget.bumpy),
             ),
           );
+          final hopping = still
+              ? face
+              : AnimatedBuilder(
+                  animation: _hop,
+                  child: face,
+                  builder: (_, child) => Transform.translate(
+                    key: const ValueKey('chapter-bumpy-hop'),
+                    // Whole device pixels, so the paper is not resampled.
+                    offset: Offset(
+                      0,
+                      (_hop.value * pixelRatio).roundToDouble() / pixelRatio,
+                    ),
+                    child: child,
+                  ),
+                );
           final bubble = _SpeechBubble(
             palette: palette,
             tailUp: stacked,
             child: Text(
-              line,
+              widget.line,
               style: AppText.bumpyStory.copyWith(color: palette.ink),
             ),
           );
+          final arriving = still
+              ? bubble
+              : AnimatedBuilder(
+                  animation: _bubble,
+                  child: bubble,
+                  builder: (_, child) => Opacity(
+                    key: const ValueKey('chapter-bubble-fade'),
+                    opacity: _bubble.value,
+                    child: Transform.translate(
+                      offset: Offset(
+                        0,
+                        _BumpySays.bubbleRise * (1 - _bubble.value),
+                      ),
+                      child: child,
+                    ),
+                  ),
+                );
           if (stacked) {
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Padding(
                   padding: const EdgeInsets.only(left: AppSpace.s),
-                  child: face,
+                  child: hopping,
                 ),
-                bubble,
+                arriving,
               ],
             );
           }
           return Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              face,
-              Expanded(child: bubble),
+              hopping,
+              Expanded(child: arriving),
             ],
           );
         },

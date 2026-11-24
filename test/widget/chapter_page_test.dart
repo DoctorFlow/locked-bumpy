@@ -11,6 +11,7 @@ import 'package:little_bumpy/domain/models/need.dart';
 import 'package:little_bumpy/main.dart';
 import 'package:little_bumpy/presentation/screens/guide_screen.dart';
 import 'package:little_bumpy/presentation/screens/guides_screen.dart';
+import 'package:little_bumpy/core/theme/paper.dart';
 import 'package:little_bumpy/presentation/widgets/draft_tag.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -45,7 +46,14 @@ void main() {
     WidgetTester t, {
     bool halloween = false,
     bool review = false,
+    bool reduceMotion = false,
+    bool settle = true,
   }) async {
+    if (reduceMotion) {
+      t.platformDispatcher.accessibilityFeaturesTestValue =
+          const FakeAccessibilityFeatures(disableAnimations: true);
+      addTearDown(t.platformDispatcher.clearAccessibilityFeaturesTestValue);
+    }
     ChapterLoader.debugUse(ChapterLoader.parse(chapterJson([kites, lanterns])));
     ContentGate.debugDrafts = review;
     SharedPreferences.setMockInitialValues({
@@ -57,7 +65,13 @@ void main() {
     await t.pumpWidget(LittleBumpyApp(state: state));
     await t.pumpAndSettle();
     await t.tap(find.text('This Week'));
-    await t.pumpAndSettle();
+    if (settle) {
+      await t.pumpAndSettle();
+    } else {
+      // The chapters load in a microtask; two frames build the page.
+      await t.pump();
+      await t.pump();
+    }
     return state;
   }
 
@@ -66,10 +80,10 @@ void main() {
     final order = [
       'Paper kites',
       'Weeks 16 to 19',
+      'Week 16',
       'I folded a tiny paper kite today.',
       'One thing to know',
       'Source: Test Kite Club, Kite basics',
-      'Week 16',
       'One thing to get ready',
       'Something to look forward to',
     ];
@@ -229,5 +243,172 @@ void main() {
       );
     }
     handle.dispose();
+  });
+
+  Finder bandOf(String title) => find
+      .ancestor(of: find.text(title), matching: find.byType(ColoredBox))
+      .first;
+
+  testWidgets('the week card sits right under the cover, 24 above Bumpy', (
+    t,
+  ) async {
+    await openThisWeek(t);
+    final week = find.ancestor(
+      of: find.text('Week 16'),
+      matching: find.byType(PaperCard),
+    );
+    expect(
+      t.getTopLeft(week.first).dy - t.getBottomLeft(bandOf('Paper kites')).dy,
+      AppSpace.xl,
+    );
+  });
+
+  testWidgets('Bumpy hops once and the bubble fades in when the page opens', (
+    t,
+  ) async {
+    await openThisWeek(t, settle: false);
+    final hop = find.byKey(const ValueKey('chapter-bumpy-hop'));
+    final fade = find.byKey(const ValueKey('chapter-bubble-fade'));
+    expect(hop, findsOneWidget);
+    await t.pump(const Duration(milliseconds: 120));
+    final lifted = t.widget<Transform>(hop).transform.getTranslation().y;
+    expect(lifted, lessThan(-8));
+    expect(lifted, greaterThanOrEqualTo(-18));
+    expect(t.widget<Opacity>(fade).opacity, inExclusiveRange(0, 1));
+    await t.pump(const Duration(milliseconds: 140));
+    expect(t.widget<Opacity>(fade).opacity, 1);
+    await t.pumpAndSettle();
+    expect(t.widget<Transform>(hop).transform.getTranslation().y, 0);
+    // Once only: a rebuild of the same page (a new look) does not hop again.
+    await t.tap(find.text('Switch look'));
+    await t.pump(const Duration(milliseconds: 120));
+    expect(t.widget<Transform>(hop).transform.getTranslation().y, 0);
+    await t.pumpAndSettle();
+  });
+
+  testWidgets('with less motion Bumpy stays still and the bubble is there', (
+    t,
+  ) async {
+    await openThisWeek(t, reduceMotion: true, settle: false);
+    expect(find.text('I folded a tiny paper kite today.'), findsOneWidget);
+    expect(find.byKey(const ValueKey('chapter-bumpy-hop')), findsNothing);
+    expect(find.byKey(const ValueKey('chapter-bubble-fade')), findsNothing);
+    await t.pumpAndSettle();
+  });
+
+  testWidgets('the cover band needs no Draft tag (release build)', (t) async {
+    await openThisWeek(t);
+    final band = bandOf('Paper kites');
+    expect(find.byType(DraftTag), findsNothing);
+    expect(find.byKey(const ValueKey('chapter-draft-sticker')), findsNothing);
+    final weeks = find.byKey(const ValueKey('chapter-weeks-tag'));
+    expect(find.descendant(of: band, matching: weeks), findsOneWidget);
+    // The band ends one card padding below the weeks tag.
+    expect(t.getBottomLeft(band).dy - t.getBottomLeft(weeks).dy, AppSpace.l);
+  });
+
+  testWidgets('in a review build the Draft tag is a sticker on the picture', (
+    t,
+  ) async {
+    await openThisWeek(t, review: true);
+    await t.tap(find.text('Choose week'));
+    await t.pumpAndSettle();
+    await t.tap(find.text('21'));
+    await t.pumpAndSettle();
+    final sticker = find.byKey(const ValueKey('chapter-draft-sticker'));
+    expect(sticker, findsOneWidget);
+    final picture = t.getRect(find.byKey(const ValueKey('chapter-picture')));
+    final tag = t.getRect(
+      find.descendant(of: sticker, matching: find.byType(DraftTag)),
+    );
+    expect(picture.contains(tag.topLeft), isTrue);
+    expect(picture.contains(tag.bottomRight), isTrue);
+    final weeks = find.byKey(const ValueKey('chapter-weeks-tag'));
+    expect(
+      t.getBottomLeft(bandOf('Lantern night')).dy - t.getBottomLeft(weeks).dy,
+      AppSpace.l,
+    );
+  });
+
+  testWidgets('every tappable thing on the chapter is at least 48 x 48', (
+    t,
+  ) async {
+    await openThisWeek(t);
+    final page = find.byType(PageView);
+    for (final type in [FilledButton, OutlinedButton, TextButton, IconButton]) {
+      final found = find.descendant(of: page, matching: find.byType(type));
+      for (final e in found.evaluate()) {
+        final size = (e.renderObject! as RenderBox).size;
+        expect(size.height, greaterThanOrEqualTo(48), reason: '$type');
+        expect(size.width, greaterThanOrEqualTo(48), reason: '$type');
+      }
+    }
+    final row = find.ancestor(
+      of: find.text('How long can a kite string be?'),
+      matching: find.byType(InkWell),
+    );
+    expect(t.getSize(row.first).height, greaterThanOrEqualTo(48));
+  });
+
+  for (final halloween in [false, true]) {
+    testWidgets(
+      'at 320 x 568 and 200 percent the chapter keeps 60 percent of the '
+      'height (${halloween ? 'Halloween' : 'Everyday'})',
+      (t) async {
+        t.view.physicalSize = const Size(320, 568);
+        t.view.devicePixelRatio = 1;
+        t.platformDispatcher.textScaleFactorTestValue = 2;
+        addTearDown(t.view.reset);
+        addTearDown(t.platformDispatcher.clearTextScaleFactorTestValue);
+        await openThisWeek(t, halloween: halloween);
+        expect(find.byKey(const ValueKey('week-strip-fixed')), findsNothing);
+        expect(
+          t.getSize(find.byType(PageView)).height,
+          greaterThanOrEqualTo(568 * .6),
+        );
+        for (final text in [
+          'Week 16',
+          'I folded a tiny paper kite today.',
+          'Something to look forward to',
+          'Write my own question',
+        ]) {
+          await t.ensureVisible(
+            find.descendant(
+              of: find.byType(PageView),
+              matching: find.text(text),
+            ),
+          );
+          await t.pumpAndSettle();
+        }
+        // The strip still works: it scrolls with the page, at its top.
+        final next = find.byIcon(Icons.arrow_forward_ios);
+        await t.scrollUntilVisible(
+          next,
+          -200,
+          scrollable: find
+              .descendant(
+                of: find.byType(CustomScrollView),
+                matching: find.byType(Scrollable),
+              )
+              .first,
+        );
+        await t.pumpAndSettle();
+        await t.tap(next);
+        await t.pumpAndSettle();
+        expect(find.text('Week 17'), findsOneWidget);
+        expect(t.takeException(), isNull);
+      },
+    );
+  }
+
+  testWidgets('at normal text on a tall phone the week strip stays fixed', (
+    t,
+  ) async {
+    t.view.physicalSize = const Size(375, 812);
+    t.view.devicePixelRatio = 1;
+    addTearDown(t.view.reset);
+    await openThisWeek(t);
+    expect(find.byKey(const ValueKey('week-strip-fixed')), findsOneWidget);
+    expect(find.byKey(const ValueKey('week-strip-in-page')), findsNothing);
   });
 }
