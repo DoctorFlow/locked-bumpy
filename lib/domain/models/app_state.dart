@@ -5,6 +5,8 @@ import 'need.dart';
 import 'need_rotation.dart';
 import 'skin_tone.dart';
 
+enum CheckInSaveStatus { saved, saving, failed }
+
 /// Central app state. Loaded from [PrefsService] at startup.
 /// Preferences and check-ins are saved on-device. Dress-up lasts for the day
 /// or until the app closes.
@@ -197,6 +199,10 @@ class AppState extends ChangeNotifier {
     return days < 0 ? 0 : days;
   }
 
+  int _checkInRevision = 0;
+  CheckInSaveStatus _checkInStatus = CheckInSaveStatus.saved;
+  CheckInSaveStatus get checkInStatus => _checkInStatus;
+
   late Set<String> _completedCheckIns;
   Set<String> get completedCheckIns => Set.unmodifiable(_completedCheckIns);
 
@@ -217,6 +223,8 @@ class AppState extends ChangeNotifier {
       return false;
     }
     _day = now;
+    _checkInRevision++;
+    _checkInStatus = CheckInSaveStatus.saved;
     _costumeOverride = null;
     _completedCheckIns = _prefs.loadTodayCheckIns(now);
     notifyListeners();
@@ -241,8 +249,27 @@ class AppState extends ChangeNotifier {
       next.add(id);
     }
     _completedCheckIns = next;
-    notifyListeners(); // immediate — UI rebuilds before persistence completes
-    await _prefs.saveTodayCheckIns(_day, _completedCheckIns);
+    await _saveCheckIns();
+  }
+
+  Future<void> retryCheckIns() async {
+    if (refreshDay() ||
+        isPaused ||
+        _checkInStatus != CheckInSaveStatus.failed) {
+      return;
+    }
+    await _saveCheckIns();
+  }
+
+  Future<void> _saveCheckIns() async {
+    final revision = ++_checkInRevision;
+    _checkInStatus = CheckInSaveStatus.saving;
+    final pending = _prefs.saveTodayCheckIns(_day, _completedCheckIns);
+    notifyListeners();
+    final saved = await pending;
+    if (revision != _checkInRevision) return;
+    _checkInStatus = saved ? CheckInSaveStatus.saved : CheckInSaveStatus.failed;
+    notifyListeners();
   }
 
   /// Clears today's check-ins and unpauses. Used by Start Fresh.
@@ -254,11 +281,10 @@ class AppState extends ChangeNotifier {
     _isPaused = false;
     _eraseFailed = false;
     _currentTab = 0;
-    notifyListeners();
     // Queue the pause write now, not after the check-in write: a Pause tapped
     // in between must be queued after this one, so it wins on disk.
     final pauseSaved = _savePause();
-    await _prefs.saveTodayCheckIns(_day, {});
+    await _saveCheckIns();
     await pauseSaved;
   }
 
@@ -308,6 +334,8 @@ class AppState extends ChangeNotifier {
     _dueDate = null;
     _originalDueDate = null;
     _visitRevision++;
+    _checkInRevision++;
+    _checkInStatus = CheckInSaveStatus.saved;
     _visitTopics = {};
     _nickname = '';
     _isHalloween = true;

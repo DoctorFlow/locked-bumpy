@@ -24,16 +24,16 @@ class PrefsService {
 
   // ── Privacy writes ───────────────────────────────────────────────────────
   //
-  // Pause and Erase writes run one at a time, in the order they were asked
+  // Pause, daily choices, visit topics and Erase run in the order they were asked
   // for, so an older write can never land after a newer one. Each reports
   // success instead of throwing: a failed platform write still updates the
   // in-memory cache, so callers must trust the returned bool, not a read-back.
 
-  Future<void> _privacyTail = Future<void>.value();
+  Future<void> _writeTail = Future<void>.value();
 
-  Future<bool> _privacyWrite(Future<bool> Function() op) {
-    final result = _privacyTail.then((_) => _attempt(op));
-    _privacyTail = result;
+  Future<bool> _orderedWrite(Future<bool> Function() op) {
+    final result = _writeTail.then((_) => _attempt(op));
+    _writeTail = result;
     return result;
   }
 
@@ -83,7 +83,7 @@ class PrefsService {
 
   /// Queued behind earlier Pause/Erase writes. True only if storage confirmed.
   Future<bool> saveIsPaused(bool value) =>
-      _privacyWrite(() => _prefs.setBool(AppConstants.prefsIsPausedKey, value));
+      _orderedWrite(() => _prefs.setBool(AppConstants.prefsIsPausedKey, value));
 
   Set<MaternalNeed> get visitTopics {
     final saved = _prefs.getStringList(AppConstants.prefsVisitTopicsKey) ?? [];
@@ -93,10 +93,13 @@ class PrefsService {
   }
 
   Future<void> saveVisitTopics(Set<MaternalNeed> topics) async {
-    final saved = await _prefs.setStringList(AppConstants.prefsVisitTopicsKey, [
+    final values = <String>[
       for (final need in MaternalNeed.values)
         if (topics.contains(need)) need.name,
-    ]);
+    ];
+    final saved = await _orderedWrite(
+      () => _prefs.setStringList(AppConstants.prefsVisitTopicsKey, values),
+    );
     if (!saved) throw StateError('Could not save visit topics');
   }
 
@@ -137,11 +140,11 @@ class PrefsService {
     };
   }
 
-  Future<void> saveTodayCheckIns(DateTime date, Set<String> ids) async {
-    await _prefs.setStringList(AppConstants.prefsDailyNeedsKey, [
-      _isoDate(date),
-      ...ids,
-    ]);
+  Future<bool> saveTodayCheckIns(DateTime date, Set<String> ids) {
+    final values = [_isoDate(date), ...ids];
+    return _orderedWrite(
+      () => _prefs.setStringList(AppConstants.prefsDailyNeedsKey, values),
+    );
   }
 
   // ── Nuclear erase ────────────────────────────────────────────────────────
@@ -196,7 +199,7 @@ class PrefsService {
   /// 4. Only then remove the marker, and reload to confirm it is gone.
   /// A crash or failure anywhere leaves the marker, so the next start fails
   /// closed instead of showing a fresh setup over leftover data.
-  Future<bool> clearAll() => _privacyWrite(() async {
+  Future<bool> clearAll() => _orderedWrite(() async {
     final marked = await _attempt(
       () => _prefs.setBool(AppConstants.prefsEraseInProgressKey, true),
     );

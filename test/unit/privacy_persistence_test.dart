@@ -1,8 +1,10 @@
 import 'dart:async';
 
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:little_bumpy/core/services/prefs_service.dart';
 import 'package:little_bumpy/domain/models/app_state.dart';
+import 'package:little_bumpy/main.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 const marker = 'erase_in_progress';
@@ -19,6 +21,9 @@ class FlakyPrefs implements SharedPreferences {
   bool failMarkerWrite = false;
   bool failReload = false;
   Completer<void>? pauseGate;
+  Completer<void>? dailyGate;
+  bool failDaily = false;
+  bool throwDaily = false;
   final pauseWrites = <bool>[];
   final _cacheGone = <String>{};
   final _cacheBools = <String, bool>{}; // failed setBool still cached
@@ -57,7 +62,13 @@ class FlakyPrefs implements SharedPreferences {
   }
 
   @override
-  Future<bool> setStringList(String key, List<String> value) {
+  Future<bool> setStringList(String key, List<String> value) async {
+    if (key == 'daily_needs_v2') {
+      final gate = dailyGate;
+      if (gate != null) await gate.future;
+      if (throwDaily) throw StateError('daily save failed');
+      if (failDaily) return false;
+    }
     _cacheGone.remove(key);
     return disk.setStringList(key, value);
   }
@@ -112,6 +123,105 @@ void main() {
     'due_date_iso': '2027-05-10',
     'baby_nickname': 'Cub',
   };
+
+  test(
+    'rapid taps retain all choices across a failed save and retry',
+    () async {
+      await start(active);
+      flaky.dailyGate = Completer<void>();
+      flaky.failDaily = true;
+      final writes = [
+        for (final need in state.dailyCheckIns) state.toggleCheckIn(need.name),
+      ];
+      expect(state.allChecked, isTrue);
+      expect(state.checkInStatus, CheckInSaveStatus.saving);
+      flaky.dailyGate!.complete();
+      await Future.wait(writes);
+      expect(state.checkInStatus, CheckInSaveStatus.failed);
+      expect(state.allChecked, isTrue);
+      expect(disk.getStringList('daily_needs_v2'), isNull);
+      flaky.failDaily = false;
+      flaky.throwDaily = true;
+      await state.retryCheckIns();
+      expect(state.checkInStatus, CheckInSaveStatus.failed);
+      flaky.throwDaily = false;
+      await state.retryCheckIns();
+      expect(state.checkInStatus, CheckInSaveStatus.saved);
+      expect(disk.getStringList('daily_needs_v2'), [
+        '2026-11-23',
+        ...state.dailyCheckIns.map((need) => need.name),
+      ]);
+    },
+  );
+
+  testWidgets('Today shows saved only after a retry succeeds', (tester) async {
+    await start(active);
+    await tester.pumpWidget(LittleBumpyApp(state: state));
+    await tester.pumpAndSettle();
+    flaky.dailyGate = Completer<void>();
+    flaky.failDaily = true;
+    final writes = [
+      for (final need in state.dailyCheckIns) state.toggleCheckIn(need.name),
+    ];
+    await tester.pump();
+    expect(find.text('Saving check-ins…'), findsOneWidget);
+    expect(find.text('Today’s check-ins are saved'), findsNothing);
+    flaky.dailyGate!.complete();
+    await Future.wait(writes);
+    await tester.pumpAndSettle();
+    final retry = find.text('Retry save');
+    expect(retry, findsOneWidget);
+    expect(find.text('Today’s check-ins are saved'), findsNothing);
+    flaky.failDaily = false;
+    await tester.ensureVisible(retry);
+    await tester.tap(retry);
+    await tester.pumpAndSettle();
+    expect(find.text('Today’s check-ins are saved'), findsOneWidget);
+    await tester.pumpWidget(const SizedBox());
+  });
+
+  test('Start Fresh follows a delayed check-in on disk', () async {
+    await start(active);
+    flaky.dailyGate = Completer<void>();
+    final checkIn = state.toggleCheckIn('water');
+    final fresh = state.clearTodayCheckIns();
+    flaky.dailyGate!.complete();
+    await Future.wait([checkIn, fresh]);
+    expect(state.completedCheckIns, isEmpty);
+    expect(disk.getStringList('daily_needs_v2'), ['2026-11-23']);
+  });
+
+  test('yesterday’s failed write cannot mark today as unsaved', () async {
+    await start(active);
+    var now = DateTime(2026, 11, 23, 23, 59);
+    state = AppState.withPrefs(PrefsService.wrap(flaky), now: () => now);
+    flaky.dailyGate = Completer<void>();
+    flaky.failDaily = true;
+    final yesterday = state.toggleCheckIn('water');
+    now = DateTime(2026, 11, 24);
+    state.refreshDay();
+    flaky.dailyGate!.complete();
+    await yesterday;
+    expect(state.completedCheckIns, isEmpty);
+    expect(state.checkInStatus, CheckInSaveStatus.saved);
+    flaky.failDaily = false;
+    await state.toggleCheckIn('water');
+    expect(disk.getStringList('daily_needs_v2'), ['2026-11-24', 'water']);
+  });
+
+  test('Erase finishes after in-flight check-in and visit writes', () async {
+    await start(active);
+    flaky.dailyGate = Completer<void>();
+    final checkIn = state.toggleCheckIn('water');
+    final visit = state.saveVisitTopics({state.todayNeed});
+    final erase = state.eraseAll();
+    flaky.dailyGate!.complete();
+    await Future.wait([checkIn, visit]);
+    expect(await erase, isTrue);
+    expect(disk.getKeys(), isEmpty);
+    expect(state.completedCheckIns, isEmpty);
+    expect(state.visitTopics, isEmpty);
+  });
 
   group('Pause persistence under failure', () {
     test('Pause hides at once and a failed write never un-hides', () async {

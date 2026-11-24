@@ -123,7 +123,8 @@ class _TodayScreenState extends State<TodayScreen>
     final state = widget.state;
     final need = state.todayNeed;
     final needTicked = state.isChecked(need.name);
-    final allDone = state.allChecked;
+    final allDone =
+        state.allChecked && state.checkInStatus == CheckInSaveStatus.saved;
     final checkIns = state.dailyCheckIns;
     final reviewing = DateUtils.isSameDay(_reviewingDay, state.today);
     final babyLine = _babyLine(need, needTicked, allDone, palette);
@@ -280,6 +281,33 @@ class _TodayScreenState extends State<TodayScreen>
                       ),
                     ],
                   ],
+                ),
+              ),
+            if (state.checkInStatus != CheckInSaveStatus.saved)
+              Semantics(
+                liveRegion: true,
+                child: Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: Column(
+                    children: [
+                      Text(
+                        state.checkInStatus == CheckInSaveStatus.saving
+                            ? 'Saving check-ins…'
+                            : 'Your check-ins couldn’t be saved on this device.',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(color: palette.moonlight),
+                      ),
+                      if (state.checkInStatus == CheckInSaveStatus.failed)
+                        TextButton(
+                          onPressed: state.retryCheckIns,
+                          style: TextButton.styleFrom(
+                            minimumSize: const Size(48, 48),
+                            foregroundColor: palette.moonlight,
+                          ),
+                          child: const Text('Retry save'),
+                        ),
+                    ],
+                  ),
                 ),
               ),
             if (allDone && reviewing)
