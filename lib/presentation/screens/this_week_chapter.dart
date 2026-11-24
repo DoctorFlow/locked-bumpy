@@ -96,6 +96,8 @@ class _ChapterPage extends StatelessWidget {
       state.visitQuestions,
       dueDate: state.dueDate,
     );
+    final showSuggestion = chapter.suggestedQuestion.trim().isNotEmpty &&
+        !state.hasVisitQuestion(chapter.suggestedQuestion);
     final bumpy = BumpyAvatar(
       need: state.costumeOverride ?? state.todayNeed,
       palette: palette,
@@ -184,10 +186,14 @@ class _ChapterPage extends StatelessWidget {
                       const SizedBox(height: AppSpace.s),
                       Text(chapter.readyText, style: body),
                       const SizedBox(height: AppSpace.l),
+                      // What the parent saved shows back; the chapter's own
+                      // suggestion stays on offer until it is on the list
+                      // too, so writing your own words never hides it.
                       if (onList.isNotEmpty) ...[
                         _OnYourList(questions: onList, palette: palette),
                         const SizedBox(height: AppSpace.m),
-                      ] else if (chapter.suggestedQuestion.isNotEmpty) ...[
+                      ],
+                      if (showSuggestion) ...[
                         PaperCard(
                           key: const ValueKey('chapter-question-piece'),
                           raised: true,
