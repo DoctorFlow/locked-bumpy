@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'app_line.dart';
 import 'content_record.dart';
 import 'guide.dart';
 
@@ -16,6 +17,8 @@ class UrgentSigns {
     required this.sources,
     this.groups = const [],
     this.footer,
+    this.fromWeeks = const {},
+    this.laterTitle,
   });
 
   /// True when this list is visible only because this is a review build.
@@ -34,6 +37,97 @@ class UrgentSigns {
 
   /// The closing line under the action, or null when the file has none.
   final String? footer;
+
+  /// `sign_weeks` (GUIDE-CONTRACT Amendment 4): the week from which a sign
+  /// belongs in its place, by the sign's exact text. Order only: a sign is
+  /// never hidden. Entries that do not name a sign in [signs] are ignored.
+  final Map<String, int> fromWeeks;
+
+  /// The title of the last quiet group (from `app_lines.json`, through the
+  /// gate), or null when that line is hidden. With a title, signs not yet
+  /// due at the parent's week move into that last group; without one, each
+  /// moves to the end of its own group, as Amendment 4 reads.
+  final AppLine? laterTitle;
+
+  /// This list with the last group's title, or without it when [title] is
+  /// null.
+  UrgentSigns withLaterTitle(AppLine? title) => UrgentSigns(
+    isDraft: isDraft,
+    lastChecked: lastChecked,
+    title: this.title,
+    intro: intro,
+    signs: signs,
+    action: action,
+    sources: sources,
+    groups: groups,
+    footer: footer,
+    fromWeeks: fromWeeks,
+    laterTitle: title,
+  );
+
+  /// Whether [sign] belongs later than [week]. Week unknown: never.
+  bool isLater(String sign, int? week) {
+    final from = fromWeeks[sign];
+    return week != null && from != null && week < from;
+  }
+
+  /// Every sign, in the order a parent at [week] reads it: signs not yet due
+  /// move to the end, keeping file order among themselves. Week unknown: the
+  /// file's order. Always every sign, once.
+  List<String> signsFor(int? week) => groups.isNotEmpty
+      ? [for (final g in groupsFor(week)) ...g.signs]
+      : [
+          for (final s in signs)
+            if (!isLater(s, week)) s,
+          for (final s in signs)
+            if (isLater(s, week)) s,
+        ];
+
+  /// The groups as a parent at [week] reads them. Groups keep their order.
+  /// With [laterTitle], signs not yet due leave their group for one last
+  /// quiet group under that title (a group left empty is dropped); without
+  /// it, each such sign moves to the end of its own group. Week unknown, or
+  /// nothing to move: the file's groups. Nothing is ever hidden.
+  List<UrgentGroup> groupsFor(int? week) {
+    final later = [
+      for (final g in groups)
+        for (final s in g.signs)
+          if (isLater(s, week)) s,
+    ];
+    if (later.isEmpty) return groups;
+    final title = laterTitle;
+    if (title == null) {
+      return [
+        for (final g in groups)
+          UrgentGroup(
+            title: g.title,
+            signs: [
+              for (final s in g.signs)
+                if (!isLater(s, week)) s,
+              for (final s in g.signs)
+                if (isLater(s, week)) s,
+            ],
+          ),
+      ];
+    }
+    return [
+      for (final g in groups)
+        if (g.signs.any((s) => !isLater(s, week)))
+          UrgentGroup(
+            title: g.title,
+            signs: [
+              for (final s in g.signs)
+                if (!isLater(s, week)) s,
+            ],
+          ),
+      UrgentGroup(
+        title: title.text,
+        signs: later,
+        later: true,
+        isDraft: title.isDraft,
+      ),
+    ];
+  }
 
   /// Shown in place of the list when the gate hides it, so "When to call"
   /// is never empty. Fixed by the contract; not content.
@@ -91,6 +185,7 @@ class UrgentSigns {
         ]),
         groups: List.unmodifiable(groups),
         footer: footer == null || footer.isEmpty ? null : footer,
+        fromWeeks: _fromWeeks(row),
         action: (row['action'] as String).trim(),
         sources: List.unmodifiable([
           for (final s in row['sources'] as List)
@@ -105,6 +200,31 @@ class UrgentSigns {
     } catch (_) {
       return null;
     }
+  }
+
+  /// Reads `sign_weeks`, leniently: an entry that is not a whole week from
+  /// 4 to 42 for a sign in the list is skipped (that sign keeps its place).
+  /// The checker in the factory refuses such a file before it ships.
+  static Map<String, int> _fromWeeks(Map<dynamic, dynamic> row) {
+    final known = <String>{
+      for (final s in (row['signs'] as List?) ?? const [])
+        if (s is String) s.trim(),
+      for (final g in (row['groups'] as List?) ?? const [])
+        if (g is Map)
+          for (final s in (g['signs'] as List?) ?? const [])
+            if (s is String) s.trim(),
+    };
+    final out = <String, int>{};
+    final entries = row['sign_weeks'];
+    if (entries is! List) return out;
+    for (final e in entries) {
+      if (e is! Map) continue;
+      final sign = e['sign'], week = e['from_week'];
+      if (sign is! String || week is! int) continue;
+      if (week < 4 || week > 42 || !known.contains(sign.trim())) continue;
+      out.putIfAbsent(sign.trim(), () => week);
+    }
+    return Map.unmodifiable(out);
   }
 
   /// The file holds one record: the object itself, or an array of one.
@@ -192,7 +312,19 @@ class UrgentSigns {
 
 /// One group of urgent signs under a plain title (Amendment 3).
 class UrgentGroup {
-  const UrgentGroup({required this.title, required this.signs});
+  const UrgentGroup({
+    required this.title,
+    required this.signs,
+    this.later = false,
+    this.isDraft = false,
+  });
   final String title;
   final List<String> signs;
+
+  /// True for the last quiet group: signs that belong later than the
+  /// parent's week. Shown in full, just set apart.
+  final bool later;
+
+  /// True when this group's own title is a draft line (review build only).
+  final bool isDraft;
 }
