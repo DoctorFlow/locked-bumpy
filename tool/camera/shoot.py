@@ -152,13 +152,17 @@ def chapter_scenario(n):
 
 def first_run_steps(prefix, look_label=None):
     """From roles/lane-firstrun.md: welcome (Start), date (Choose due date,
-    OK in the picker, Next), nickname (Next), look (Next), six needs
-    (Enter the nursery). look_label picks a look card on step 4."""
+    a day in the picker, OK, Next), nickname (Next), look (Next), six needs
+    (Meet Bumpy). look_label picks a look card on step 4."""
     p = prefix
     return [
         shot(f"{p}-1-welcome"),
         tap("Start", "button"), wait(500), shot(f"{p}-2-date"),
         tap_first(["Choose due date", "Pick your due date"]), wait(600), shot(f"{p}-2-picker"),
+        # The picker opens with no day chosen, on this month. Step to March
+        # 2027 and pick the 15th (the camera's DUE_DATE, week 24), then OK.
+        *[st for _ in range(4) for st in (tap("Next month", "button"), wait(350))],
+        tap_first(["15, Monday, March 15, 2027", "15,"]), wait(400), shot(f"{p}-2-day"),
         tap_first(["OK", "Ok"]), wait(600), shot(f"{p}-2-picked"),
         tap_first(["Next"], find=True), wait(500), shot(f"{p}-3-nickname"),
         tap_first(["Next"], find=True), wait(500),
@@ -166,7 +170,7 @@ def first_run_steps(prefix, look_label=None):
         shot(f"{p}-4-look"),
         tap_first(["Next"], find=True), wait(500), shot(f"{p}-5-needs"),
         scroll(), shot(f"{p}-5-needs-more"),
-        tap_first(["Enter the nursery"], find=True), wait(1500), shot(f"{p}-6-nursery"),
+        tap_first(["Meet Bumpy", "Enter the nursery"], find=True), wait(1500), shot(f"{p}-6-nursery"),
     ]
 
 
@@ -363,12 +367,40 @@ FIND_JS = """([needle, role]) => {
 }"""
 
 
+BOTTOM_JS = """(vh) => {
+  // The tab bar sits on top of the page: a button scrolled under it is not
+  // tappable (a tap there lands on a tab). Return where the usable screen ends.
+  let bottom = vh;
+  for (const el of document.querySelectorAll('flt-semantics[role="tablist"]')) {
+    const r = el.getBoundingClientRect();
+    if (r.height > 2 && r.top > vh * 0.5) bottom = Math.min(bottom, r.top);
+  }
+  return bottom;
+}"""
+
+
+async def usable_bottom(page, vh):
+    """Bottom of the tappable screen: the top of the tab bar, if there is one."""
+    try:
+        return await page.evaluate(BOTTOM_JS, vh)
+    except Exception:
+        return vh
+
+
 async def find(page, label, role, vw, vh):
-    """Best on-screen match, or ('offscreen', match) / (None, None)."""
+    """Best on-screen match, or ('offscreen', match) / (None, None).
+    A match hidden under the tab bar counts as off screen. A box taller than
+    45% of the screen is a whole page or panel carrying every word in it, not
+    the thing asked for: tapping its middle used to land on Today's nursery
+    while the real button was still below the fold."""
     found = await page.evaluate(FIND_JS, [label, role or ""])
+    found = [m for m in found if m["h"] <= vh * 0.45]
+    bottom = await usable_bottom(page, vh)
     for m in found:
         cx, cy = m["x"] + m["w"] / 2, m["y"] + m["h"] / 2
-        if 0 <= cx <= vw and 8 <= cy <= vh - 8 and not m["disabled"]:
+        is_tab = role == "tab"  # the tabs themselves stay tappable
+        limit = vh if is_tab else bottom
+        if 0 <= cx <= vw and 8 <= cy <= limit - 8 and not m["disabled"]:
             return "visible", m
     return ("offscreen", found[0]) if found else (None, None)
 
