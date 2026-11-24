@@ -69,29 +69,29 @@ class _ClosetSheetState extends State<ClosetSheet> {
     final name = _costumeName(_preview);
     final size = MediaQuery.sizeOf(context);
     final shortPhone = size.width <= 375 && size.height <= 600;
+    // One line at every phone width: beside the two 48 px buttons a 320 px
+    // sheet leaves about 190 px, so the title shrinks to fit there rather
+    // than wrap. With enlarged system text it wraps instead, so the
+    // parent's chosen size is never scaled away.
+    final title = Text(
+      'Tonight’s wardrobe',
+      key: const ValueKey('closet-title'),
+      maxLines: _largeText(context) ? null : 1,
+      softWrap: _largeText(context),
+      style: AppText.title.copyWith(color: palette.ink),
+    );
     final header = Row(
       children: [
         Expanded(
           child: Semantics(
             header: true,
-            child: Text(
-              'Tonight’s wardrobe',
-              // Below 350 px wide the title steps down one size so it sits
-              // on one line and never touches the preview card.
-              style: size.width < 350
-                  ? AppText.title.copyWith(
-                      color: palette.ink,
-                      fontSize: 20,
-                      height: 26 / 20,
-                      fontVariations: const [
-                        FontVariation('opsz', 20),
-                        FontVariation('wght', 700),
-                        FontVariation('SOFT', 100),
-                        FontVariation('WONK', 0),
-                      ],
-                    )
-                  : AppText.title.copyWith(color: palette.ink),
-            ),
+            child: _largeText(context)
+                ? title
+                : FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: AlignmentDirectional.centerStart,
+                    child: title,
+                  ),
           ),
         ),
         PauseButton(onPressed: state.pause, color: palette.ink),
@@ -202,6 +202,7 @@ class _ClosetSheetState extends State<ClosetSheet> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
+                    const SizedBox(height: AppSpace.m),
                     header,
                     const SizedBox(height: AppSpace.s),
                     rail,
@@ -213,6 +214,7 @@ class _ClosetSheetState extends State<ClosetSheet> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
+                  const SizedBox(height: AppSpace.m),
                   header,
                   const SizedBox(height: AppSpace.s),
                   Flexible(child: SingleChildScrollView(child: rail)),
@@ -223,6 +225,10 @@ class _ClosetSheetState extends State<ClosetSheet> {
     );
   }
 }
+
+/// System text enlarged past 130%: let the title wrap at its full size.
+bool _largeText(BuildContext context) =>
+    MediaQuery.textScalerOf(context).scale(24) > 24 * 1.3;
 
 String _costumeName(MaternalNeed need) =>
     need.costume[0] + need.costume.substring(1).toLowerCase();
@@ -283,35 +289,29 @@ class _CostumeCard extends StatelessWidget {
                     textAlign: TextAlign.center,
                     style: AppText.bodyStrong.copyWith(color: palette.ink),
                   ),
-                  // Icon beside the word; a long word ("Prenatal vitamin")
-                  // wraps beside its icon instead of pushing it to a line
-                  // of its own.
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      // The need's paper icon, drawn as decoration so the
-                      // sheet's only Image widgets stay the six portraits.
-                      SizedBox.square(
-                        dimension: 18,
-                        child: DecoratedBox(
-                          decoration: BoxDecoration(
-                            image: DecorationImage(
-                              image: AssetImage(need.iconPath),
-                              onError: (_, _) {},
-                            ),
-                          ),
+                  const SizedBox(height: AppSpace.xs),
+                  // Icon above the word on all six tiles: the same rhythm
+                  // everywhere, and "Prenatal vitamin" wraps under its
+                  // icon instead of beside it.
+                  // The need's paper icon, drawn as decoration so the
+                  // sheet's only Image widgets stay the six portraits.
+                  SizedBox.square(
+                    key: ValueKey('closet-need-icon-${need.name}'),
+                    dimension: 18,
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        image: DecorationImage(
+                          image: AssetImage(need.iconPath),
+                          onError: (_, _) {},
                         ),
                       ),
-                      const SizedBox(width: AppSpace.xs),
-                      Flexible(
-                        child: Text(
-                          needWord(need),
-                          textAlign: TextAlign.center,
-                          style: AppText.small.copyWith(color: palette.inkSoft),
-                        ),
-                      ),
-                    ],
+                    ),
+                  ),
+                  const SizedBox(height: AppSpace.xs),
+                  Text(
+                    needWord(need),
+                    textAlign: TextAlign.center,
+                    style: AppText.small.copyWith(color: palette.inkSoft),
                   ),
                 ],
               ),
