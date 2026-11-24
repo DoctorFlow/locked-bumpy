@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:ui' as ui;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/painting.dart';
@@ -60,6 +61,19 @@ class PaperTintImage extends ImageProvider<PaperTintImage> {
     int width,
     int height,
   ) async {
+    if (kIsWeb) {
+      // The web ImageDescriptor encodes a BMP, which applies alpha a second
+      // time to translucent paper. Send premultiplied pixels to CanvasKit directly.
+      final frame = Completer<ui.Image>();
+      ui.decodeImageFromPixels(
+        pixels,
+        width,
+        height,
+        ui.PixelFormat.rgba8888,
+        frame.complete,
+      );
+      return ImageInfo(image: await frame.future);
+    }
     final buffer = await ui.ImmutableBuffer.fromUint8List(pixels);
     ui.ImageDescriptor? descriptor;
     ui.Codec? codec;
