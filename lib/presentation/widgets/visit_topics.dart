@@ -194,7 +194,12 @@ class VisitTopics extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 4),
-            if (topics.isEmpty)
+            if (state.visitQuestion.isNotEmpty)
+              Text(
+                'Your question is saved here for your visit.',
+                style: TextStyle(color: palette.ink),
+              ),
+            if (topics.isEmpty && state.visitQuestion.isEmpty)
               Text(
                 'Keep a list of topics to ask your care team about.',
                 style: TextStyle(color: palette.inkSoft),
@@ -241,7 +246,9 @@ class VisitTopics extends StatelessWidget {
               onPressed: () => edit(context, state),
               icon: const Icon(Icons.edit_outlined, size: 18),
               label: Text(
-                topics.isEmpty && state.visitQuestion.isEmpty
+                state.visitQuestion.isNotEmpty
+                    ? 'Open my visit list'
+                    : topics.isEmpty
                     ? 'Choose topics'
                     : 'Edit visit list',
               ),
