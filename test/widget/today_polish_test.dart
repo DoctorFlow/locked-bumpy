@@ -5,6 +5,7 @@ import 'package:little_bumpy/domain/models/app_state.dart';
 import 'package:little_bumpy/domain/models/content_record.dart';
 import 'package:little_bumpy/presentation/widgets/bumpy_avatar.dart';
 import 'package:little_bumpy/presentation/widgets/draft_tag.dart';
+import 'package:little_bumpy/presentation/widgets/nursery_scene.dart';
 import 'package:little_bumpy/presentation/screens/today_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -194,4 +195,36 @@ void main() {
       await t.pumpWidget(const SizedBox());
     });
   });
+
+  for (final width in [320.0, 375.0]) {
+    testWidgets('the Wardrobe chip is a paper tag 12 in from the corner at '
+        '$width px', (t) async {
+      await phone(t, width, 800);
+      final state = await start(halloween: true);
+      await t.pumpWidget(wrap(state));
+      await t.pumpAndSettle();
+      final palette = AppPalette.halloween;
+      final tag = find.byKey(const ValueKey('wardrobe-tag'));
+      expect(tag, findsOne);
+      final room = t.getTopLeft(find.byType(NurseryScene));
+      expect(t.getTopLeft(tag) - room, const Offset(12, 12));
+      final shadow = t.widget<DecoratedBox>(tag).decoration as BoxDecoration;
+      expect(shadow.boxShadow, isNotEmpty);
+      final ButtonStyle? style = width < 340
+          ? t.widget<IconButton>(find.byKey(const ValueKey('wardrobe-compact'))).style
+          : t
+                .widget<ButtonStyleButton>(
+                  find.descendant(
+                    of: tag,
+                    matching: find.byWidgetPredicate(
+                      (w) => w is ButtonStyleButton,
+                    ),
+                  ),
+                )
+                .style;
+      expect(style!.backgroundColor!.resolve({}), palette.paperRaised);
+      expect(style.side!.resolve({})!.color, palette.edge);
+      await t.pumpWidget(const SizedBox());
+    });
+  }
 }

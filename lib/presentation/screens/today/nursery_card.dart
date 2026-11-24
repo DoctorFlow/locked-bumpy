@@ -33,33 +33,45 @@ class _NurseryCardBody extends StatelessWidget {
             palette: palette,
             height: sceneHeight,
             cornerAction: palette.isHalloween
-                ? Tooltip(
-                    message: 'Costume closet',
-                    child: FilledButton.tonalIcon(
-                      onPressed: () => ClosetSheet.open(context, state),
-                      icon: const Icon(Icons.checkroom, size: 18),
-                      label: const Text('Wardrobe'),
-                      style: FilledButton.styleFrom(
-                        minimumSize: const Size(0, 48),
-                        padding: const EdgeInsets.symmetric(horizontal: 12),
-                        backgroundColor: palette.paper,
-                        foregroundColor: palette.ink,
+                ? _PaperTagShadow(
+                    palette: palette,
+                    child: Tooltip(
+                      message: 'Costume closet',
+                      child: FilledButton.tonalIcon(
+                        onPressed: () => ClosetSheet.open(context, state),
+                        icon: const Icon(Icons.checkroom, size: 18),
+                        label: const Text('Wardrobe'),
+                        style: FilledButton.styleFrom(
+                          minimumSize: const Size(0, 48),
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          backgroundColor: palette.paperRaised,
+                          foregroundColor: palette.ink,
+                          side: BorderSide(color: palette.edge),
+                        ),
                       ),
                     ),
                   )
                 : null,
             compactCornerAction: palette.isHalloween
-                ? IconButton.filledTonal(
-                    key: const ValueKey('wardrobe-compact'),
-                    tooltip: 'Wardrobe',
-                    onPressed: () => ClosetSheet.open(context, state),
-                    style: IconButton.styleFrom(
-                      fixedSize: const Size.square(48),
-                      minimumSize: const Size.square(48),
-                      backgroundColor: palette.paper,
-                      foregroundColor: palette.ink,
+                ? _PaperTagShadow(
+                    palette: palette,
+                    child: IconButton.filledTonal(
+                      key: const ValueKey('wardrobe-compact'),
+                      tooltip: 'Wardrobe',
+                      onPressed: () => ClosetSheet.open(context, state),
+                      style: IconButton.styleFrom(
+                        fixedSize: const Size.square(48),
+                        minimumSize: const Size.square(48),
+                        backgroundColor: palette.paperRaised,
+                        foregroundColor: palette.ink,
+                        side: BorderSide(color: palette.edge),
+                        // The same cut corners as its shadow: a paper tag.
+                        shape: const RoundedRectangleBorder(
+                          borderRadius: AppRadii.control,
+                        ),
+                      ),
+                      icon: const Icon(Icons.checkroom, size: 24),
                     ),
-                    icon: const Icon(Icons.checkroom, size: 24),
                   )
                 : null,
             avatar: BumpyAvatar(
@@ -304,4 +316,23 @@ class _NurseryCardState extends State<_NurseryCard>
       hopAnimation: _hop,
     );
   }
+}
+
+/// The hard paper shadow under the Wardrobe tag, so it lies on the sky like
+/// cut paper instead of a soft smudge.
+class _PaperTagShadow extends StatelessWidget {
+  const _PaperTagShadow({required this.palette, required this.child});
+
+  final AppPalette palette;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) => DecoratedBox(
+    key: const ValueKey('wardrobe-tag'),
+    decoration: BoxDecoration(
+      borderRadius: AppRadii.control,
+      boxShadow: paperShadows(palette, raised: true),
+    ),
+    child: child,
+  );
 }
