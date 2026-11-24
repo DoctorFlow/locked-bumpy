@@ -87,6 +87,12 @@ def reveal(label):
     return ("reveal", label)
 
 
+def expect(label):
+    """Check `label` is on screen now (no scroll, no tap); otherwise the rest
+    of the scenario is 'not reached'. Use it to prove a page opened."""
+    return ("expect", label)
+
+
 def scroll(px=None):
     """Drag the page up by px CSS pixels (default: 70% of the screen)."""
     return ("scroll", px)
@@ -108,6 +114,8 @@ def describe(step):
         return "tap one of " + " / ".join(f"'{s}'" for s in step[1])
     if kind == "reveal":
         return f"scroll to '{step[1]}'"
+    if kind == "expect":
+        return f"see '{step[1]}'"
     if kind == "scroll":
         return f"scroll {step[1] or 'one screen'}"
     if kind == "wait":
@@ -132,12 +140,14 @@ def S(name, seed=None, steps=(), shot=..., planned=None, looks=None, note=None):
             "looks": looks, "note": note}
 
 
-def week_scenario(n):
-    return S(f"week-{n}", {"week": n}, [
-        tap("This Week", "tab"), wait(400), shot(f"week-{n}"),
-        scroll(), shot(f"week-{n}-more"),
-        scroll(), shot(f"week-{n}-end"),
-    ], shot=None)
+def chapter_scenario(n):
+    """This Week at week n: the chapter page (roles/lane-chapter.md; drafts,
+    so --review), top of page and three scrolled shots."""
+    p = f"chapter-wk{n}"
+    return S(p, {"week": n}, [
+        tap("This Week", "tab"), wait(600), shot(p),
+        scroll(), shot(f"{p}-2"), scroll(), shot(f"{p}-3"), scroll(), shot(f"{p}-4"),
+    ], shot=None, note="from lane-chapter.md; drafts show only with --review")
 
 
 def first_run_steps(prefix, look_label=None):
@@ -176,20 +186,29 @@ SCENARIOS = [
     S("settings", steps=[tap("Settings", "button")]),
     S("paused", {"is_paused": True}),
 
-    # Weeks: the This Week page at weeks 12, 20, 32, top and scrolled.
-    week_scenario(12),
-    week_scenario(20),
-    week_scenario(32),
+    # Chapters: weeks 12, 20, 24, 32, top and scrolled, both looks.
+    chapter_scenario(12),
+    chapter_scenario(20),
+    chapter_scenario(24),
+    chapter_scenario(32),
 
     # Visit list with questions already saved.
     S("visit-questions", {"visit_topics": VISIT_WITH_QUESTIONS},
       [tap("Guides", "tab"), tap_first(["Open my visit list", "Edit visit list", "Choose topics"], find=True)]),
 
-    # Planned: finish from the lane notes in little-bumpy-factory/roles/.
+    # Guides, from roles/lane-guides.md. A guide that passed the review gate
+    # opens a full page from its Guides card; "Good to know" proves the page
+    # opened. While assets/content/guides.json is empty every guide is
+    # hidden: the card just expands, so guide-iron is "not reached" and
+    # guide-iron-hidden shows what a parent sees instead.
     S("guide-iron", steps=[
-        tap("Guides", "tab"), tap("Iron", "button", find=True), wait(500), shot("guide-iron"),
-        scroll(), shot("guide-iron-2"), scroll(), shot("guide-iron-3"),
-    ], shot=None, planned="lane-guides.md"),
+        tap("Guides", "tab"), tap("Iron", "button", find=True), wait(600), expect("Good to know"),
+        shot("guide-iron"), scroll(), shot("guide-iron-2"), scroll(), shot("guide-iron-3"),
+    ], shot=None, note="from lane-guides.md; needs an approved or (with --review) draft Iron guide"),
+    S("guide-iron-hidden", steps=[
+        tap("Guides", "tab"), wait(500), shot("guide-iron-hidden"),
+        scroll(), shot("guide-iron-hidden-2"),
+    ], shot=None, note="guides tab while the Iron guide is hidden (empty guides.json)"),
     # Visit: steps from roles/lane-visit.md (Today card "For your visit" with
     # the parent's own question and a "Show at my visit" button; show page
     # with Close and Edit).
@@ -205,13 +224,6 @@ SCENARIOS = [
     ], note="from lane-visit.md"),
     S("visit-invite", {}, [reveal("A question for your doctor or midwife")],
       note="from lane-visit.md: empty list shows one quiet line"),
-    # Chapter: from roles/lane-chapter.md. Weeks 12-15, 20-23, 32-35 show a
-    # chapter page inside This Week; the chapters are drafts, so only a
-    # --review build shows them (a release build shows the plain week card).
-    S("chapter", {"week": 20}, [
-        tap("This Week", "tab"), wait(500), shot("chapter"),
-        scroll(), shot("chapter-2"), scroll(), shot("chapter-3"), scroll(), shot("chapter-4"),
-    ], shot=None, note="from lane-chapter.md; needs --review"),
     # First run: brand-new install, from roles/lane-firstrun.md (five steps).
     # No look is saved yet, so it runs once; first-run-everyday picks the
     # Everyday card on the look step.
@@ -222,9 +234,9 @@ SCENARIOS = [
 ]
 
 # Three key moments for sheet__journey.png: first existing shot name of each.
-JOURNEY = [("chapter page", ["chapter", "week-20", "this-week"]),
+JOURNEY = [("chapter page", ["chapter-wk20", "this-week"]),
            ("Today with the question", ["today-question", "today-fresh"]),
-           ("guide page", ["guide-iron", "guide-open"])]
+           ("guide page", ["guide-iron", "guide-iron-hidden", "guide-open"])]
 
 
 def log(start, msg):
@@ -503,6 +515,8 @@ async def play(browser, url, out, run, start, counter, total, blocked):
                 continue
             if kind == "reveal":
                 ok = await do_tap(page, [step[1]], None, True, None, w, h, notes, timeout=2.0, press=False)
+            elif kind == "expect":
+                ok = await do_tap(page, [step[1]], None, False, None, w, h, notes, timeout=3.0, press=False)
             elif kind == "tap":
                 ok = await do_tap(page, [step[1]], step[2], step[3], step[4], w, h, notes)
             else:  # tap_first
