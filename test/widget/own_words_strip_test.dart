@@ -285,6 +285,47 @@ void main() {
       await t.pumpWidget(const SizedBox());
     });
 
+    testWidgets('the copied note stays on the show view: back on Today it '
+        'never covers the tab bar ($look)', (t) async {
+      t.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        SystemChannels.platform,
+        (call) async => null,
+      );
+      addTearDown(
+        () => t.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+          SystemChannels.platform,
+          null,
+        ),
+      );
+      await _phone(t, const Size(320, 568), text: 2);
+      final state = await _start(halloween: halloween);
+      await state.addVisitQuestion(_own);
+      await _reopen(t);
+      await t.ensureVisible(find.byKey(_strip));
+      await t.pumpAndSettle();
+      await t.tap(find.byKey(_strip));
+      await t.pumpAndSettle();
+      final copy = find.byKey(const ValueKey('visit-copy'));
+      await t.ensureVisible(copy);
+      await t.pumpAndSettle();
+      await t.tap(copy);
+      await t.pump();
+      await t.pump(const Duration(milliseconds: 300));
+      expect(find.byKey(const ValueKey('visit-copied')), findsWidgets);
+      // Back to Today while the note is still up.
+      t.state<NavigatorState>(find.byType(Navigator).first).pop();
+      await t.pumpAndSettle();
+      expect(find.byType(VisitScreen), findsNothing);
+      expect(find.byKey(const ValueKey('visit-copied')), findsNothing);
+      final tabs = find.byType(AppNavBar);
+      expect(
+        find.descendant(of: tabs, matching: find.text('Guides')).hitTestable(),
+        findsOneWidget,
+      );
+      expect(t.takeException(), isNull);
+      await t.pumpWidget(const SizedBox());
+    });
+
     testWidgets('the saved note from Today floats above the tab bar at 320 '
         'px and 200 percent text ($look)', (t) async {
       await _phone(t, const Size(320, 568), text: 2);

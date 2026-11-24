@@ -29,7 +29,11 @@ class VisitScreen extends StatelessWidget {
 
   static Future<void> open(BuildContext context, AppState state) =>
       Navigator.of(context).push(
-        MaterialPageRoute<void>(builder: (_) => VisitScreen(state: state)),
+        MaterialPageRoute<void>(
+          // Its own messenger: "Your list is copied." stays on this page and
+          // never floats over the tab bar on the page underneath.
+          builder: (_) => ScaffoldMessenger(child: VisitScreen(state: state)),
+        ),
       );
 
   @override

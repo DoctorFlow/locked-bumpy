@@ -18,9 +18,13 @@ class SettingsScreen extends StatelessWidget {
   static Future<void> open(BuildContext context, AppState state) {
     return Navigator.of(context).push(
       MaterialPageRoute<void>(
-        builder: (_) => ListenableBuilder(
-          listenable: state,
-          builder: (context, _) => SettingsScreen(state: state),
+        // Its own messenger: a note shown here stays on this page and never
+        // floats over the tab bar on the page underneath.
+        builder: (_) => ScaffoldMessenger(
+          child: ListenableBuilder(
+            listenable: state,
+            builder: (context, _) => SettingsScreen(state: state),
+          ),
         ),
       ),
     );
