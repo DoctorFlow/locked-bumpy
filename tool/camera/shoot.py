@@ -247,6 +247,22 @@ SCENARIOS = [
     chapter_scenario(20),
     chapter_scenario(24),
     chapter_scenario(32),
+    # Round 12 (roles/yours.md): week 9, and week 20 as one parent's own
+    # (a nickname and the chapter's question already saved), at 320 px and
+    # 375 px; week 9 again at 320 px with 200 percent text.
+    chapter_scenario(9),
+    S("chapter-wk20-mine", {"week": 20, "baby_nickname": "Peanut", "visit_topics": [
+        _q2("When might I start feeling my baby move, and who do I call if I'm ever unsure?",
+            "week", week=20, day="2026-11-20"),
+        _q2("Can my partner come in with me?", "own", day="2026-11-21")]}, [
+        tap("This Week", "tab"), wait(600), shot("chapter-wk20-mine"),
+        scroll(), shot("chapter-wk20-mine-2"), scroll(), shot("chapter-wk20-mine-3"),
+    ], shot=None, sizes=[(320, 568, 2), (375, 812, 3)],
+      note="yours: nickname and saved question shown back"),
+    S("chapter-wk9-big", {"week": 9}, [
+        tap("This Week", "tab"), wait(600), shot("chapter-wk9-big"),
+        scroll(), shot("chapter-wk9-big-2"), scroll(), shot("chapter-wk9-big-3"),
+    ], shot=None, sizes=[(320, 568, 2)], text=2, note="yours: 320 px, 200 percent"),
 
     # Visit list with questions already saved.
     S("visit-questions", {"visit_topics": VISIT_WITH_QUESTIONS},
