@@ -11,6 +11,7 @@ import '../widgets/draft_tag.dart';
 import '../widgets/paper_portrait.dart';
 import '../widgets/visit_topics.dart';
 import 'guide_screen.dart';
+import 'urgent_screen.dart';
 
 /// Six need cards. A card whose guide passed the gate opens the guide page;
 /// a hidden guide's card keeps its name, Bumpy and the visit-list control.
@@ -66,12 +67,76 @@ class _GuidesScreenState extends State<GuidesScreen> {
                     VisitTopics.edit(context, widget.state, include: need),
               ),
             ),
+          const SizedBox(height: 8),
+          _UrgentRow(
+            palette: palette,
+            onOpen: () => UrgentScreen.open(context, widget.state),
+          ),
+          const SizedBox(height: 16),
           Text(
             AppConstants.disclaimer,
             textAlign: TextAlign.center,
             style: TextStyle(color: palette.moonlightSoft, fontSize: 14),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// The one row that opens the shared urgent list. Plain ink on paper with a
+/// heavy ink edge: calm, but clearly not like the playful need cards.
+class _UrgentRow extends StatelessWidget {
+  const _UrgentRow({required this.palette, required this.onOpen});
+  final AppPalette palette;
+  final VoidCallback onOpen;
+
+  @override
+  Widget build(BuildContext context) {
+    final shape = RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(16),
+      side: BorderSide(color: palette.ink, width: 2),
+    );
+    return Material(
+      key: const ValueKey('urgent-row'),
+      shape: shape,
+      clipBehavior: Clip.antiAlias,
+      color: palette.paper,
+      child: Semantics(
+        button: true,
+        label: UrgentScreen.rowLabel,
+        excludeSemantics: true,
+        child: InkWell(
+          onTap: onOpen,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: 56),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(14, 12, 8, 12),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.health_and_safety_outlined,
+                    color: palette.ink,
+                    size: 28,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      UrgentScreen.rowLabel,
+                      style: TextStyle(
+                        color: palette.ink,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                        height: 1.3,
+                      ),
+                    ),
+                  ),
+                  Icon(Icons.chevron_right, color: palette.ink),
+                ],
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }

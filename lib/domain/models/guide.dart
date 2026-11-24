@@ -44,7 +44,6 @@ class Guide {
     required this.point,
     required this.ifHard,
     required this.callToday,
-    required this.callNow,
     required this.closing,
     required this.facts,
     required this.tryThis,
@@ -59,7 +58,11 @@ class Guide {
 
   /// `yyyy-MM-dd`.
   final String lastChecked;
-  final String costumeLine, point, ifHard, callToday, callNow, closing;
+  final String costumeLine, point, ifHard, closing;
+
+  /// This need's own non-urgent signs, or empty when it has none. Urgent
+  /// signs live in the one shared list (`UrgentSigns`), not here.
+  final String callToday;
   final List<GuideFact> facts;
   final List<String> tryThis, questions;
   final List<GuideSource> sources;
@@ -71,7 +74,6 @@ class Guide {
 
   static const callTodayStart = 'Call your doctor or midwife today if ';
   static const callTodayEnd = ', even if you are not sure.';
-  static const callNowStart = 'Call emergency services now if ';
   static const closings = [
     'Your doctor or midwife decides what is right for you.',
     'Your doctor or midwife decides the amount.',
@@ -197,8 +199,7 @@ class Guide {
       costumeLine: (row['costume_line'] as String).trim(),
       point: (row['point'] as String).trim(),
       ifHard: (row['if_hard'] as String).trim(),
-      callToday: (row['call_today'] as String).trim(),
-      callNow: (row['call_now'] as String? ?? '').trim(),
+      callToday: (row['call_today'] as String? ?? '').trim(),
       closing: (row['closing'] as String).trim(),
       facts: List.unmodifiable([
         for (final f in row['facts'] as List)
@@ -349,27 +350,21 @@ class Guide {
       if (!asked.add(q.trim())) return 'two questions are the same';
     }
 
-    final callToday = row['call_today'];
-    if (callToday is! String ||
-        !callToday.startsWith(callTodayStart) ||
-        !callToday.trimRight().endsWith(callTodayEnd) ||
-        callToday.trim().length <=
-            callTodayStart.length + callTodayEnd.length) {
-      return 'call_today must begin "$callTodayStart" and end "$callTodayEnd"';
-    }
-    final callNow = row['call_now'] ?? '';
-    if (callNow is! String ||
-        (callNow.trim().isNotEmpty &&
-            (!callNow.startsWith(callNowStart) ||
-                callNow.trim().length <= callNowStart.length))) {
-      return 'call_now must be empty or begin "$callNowStart"';
-    }
-    for (final (field, text) in [
-      ('call_today', callToday),
-      ('call_now', callNow),
-    ]) {
-      if (_doctorAlone.hasMatch(text)) {
-        return '$field says "doctor" without "or midwife"';
+    // Amendment 2: `call_today` may be empty (or absent); when present it
+    // keeps its fixed start and end. `call_now` is gone and is ignored, so a
+    // record that still carries it is not rejected for it.
+    final callToday = row['call_today'] ?? '';
+    if (callToday is! String) return 'call_today is not text';
+    if (callToday.trim().isNotEmpty) {
+      if (!callToday.startsWith(callTodayStart) ||
+          !callToday.trimRight().endsWith(callTodayEnd) ||
+          callToday.trim().length <=
+              callTodayStart.length + callTodayEnd.length) {
+        return 'call_today must begin "$callTodayStart" and end '
+            '"$callTodayEnd"';
+      }
+      if (_doctorAlone.hasMatch(callToday)) {
+        return 'call_today says "doctor" without "or midwife"';
       }
     }
     final closing = row['closing'];
