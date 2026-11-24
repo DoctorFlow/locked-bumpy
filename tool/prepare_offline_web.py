@@ -28,9 +28,9 @@ def package(root):
     required = {"index.html", "flutter_bootstrap.js", "manifest.json"}
     for prefix in ["canvaskit/", "canvaskit/chromium/"]:
         required.update(prefix + name for name in ["canvaskit.js", "canvaskit.wasm"])
-    for source in (ROOT / "assets").rglob("*"):
-        if source.is_file():
-            required.add("assets/" + source.relative_to(ROOT).as_posix())
+    bundled = {"assets/" + source.relative_to(ROOT).as_posix(): source
+               for source in (ROOT / "assets").rglob("*") if source.is_file()}
+    required.update(bundled)
     for font in (ROOT / "web/fonts").rglob("*.woff2"):
         required.add(font.relative_to(ROOT / "web").as_posix())
     manifest = json.loads((ROOT / "web/manifest.json").read_text(encoding="utf-8"))
@@ -38,6 +38,9 @@ def package(root):
     missing = sorted(name for name in required if not (root / name).is_file())
     if missing:
         raise SystemExit("Incomplete offline release. Missing " + ", ".join(missing))
+    stale = [name for name, source in bundled.items() if (root / name).read_bytes() != source.read_bytes()]
+    if stale:
+        raise SystemExit("Rebuild before packaging. Bundled files differ from this checkout: " + ", ".join(sorted(stale)))
     if not any((root / name).is_file() for name in ["main.dart.js", "main.dart.wasm"]):
         raise SystemExit("Missing the compiled app entry point.")
     # Development's Dart debugger needs capabilities the release site does not.

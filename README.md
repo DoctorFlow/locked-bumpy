@@ -39,7 +39,8 @@ Install that test dependency once with `python -m pip install playwright`.
 For an installable web release, run `python tool/prepare_offline_web.py --build`
 and serve `build/web/` over HTTPS or localhost. The command uses the local
 CanvasKit renderer and bundles the fonts, app shell, costumes and content for
-offline use. For a site hosted below the root, run Flutter with the site's base
+offline use. Packaging verifies the bundled content and paper art against the
+current checkout before writing the worker. For a site hosted below the root, run Flutter with the site's base
 path first, then package that output:
 
 ```bash

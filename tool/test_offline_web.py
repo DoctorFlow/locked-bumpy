@@ -32,6 +32,26 @@ class PackageTest(unittest.TestCase):
                     self.assertFalse((root / "bumpy-offline.js").exists())
                     file.write_bytes(data)
 
+    def test_stale_reviewed_copy_or_art_cannot_be_published(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self.make_output(root)
+            for rel in ["assets/assets/content/today_lines.json", "assets/assets/images/body-witch.png"]:
+                with self.subTest(rel=rel):
+                    artifact = root / rel
+                    current = artifact.read_bytes()
+                    artifact.write_bytes(b"earlier build")
+                    result = self.run_tool(root, check=False)
+                    self.assertNotEqual(result.returncode, 0)
+                    self.assertIn(rel, result.stderr)
+                    self.assertFalse((root / "bumpy-offline.js").exists())
+                    artifact.write_bytes(current)
+
+    def test_app_art_stays_within_the_four_megabyte_demo_budget(self):
+        images = Path(__file__).resolve().parents[1] / "assets/images"
+        size = sum(p.stat().st_size for p in images.rglob("*") if p.is_file())
+        self.assertLess(size, 4_000_000, f"App art totals {size:,} bytes")
+
     @staticmethod
     def make_output(root):
         project = Path(__file__).resolve().parents[1]
@@ -47,7 +67,8 @@ class PackageTest(unittest.TestCase):
         for name in names:
             file = root / name
             file.parent.mkdir(parents=True, exist_ok=True)
-            file.write_bytes(name.encode())
+            source = project / name.removeprefix("assets/")
+            file.write_bytes(source.read_bytes() if name.startswith("assets/assets/") else name.encode())
         (root / "manifest.json").write_text(manifest)
         (root / "index.html").write_text("<html><head></head><body></body></html>")
 
@@ -68,7 +89,7 @@ class PackageTest(unittest.TestCase):
             self.assertEqual((root / "flutter_bootstrap.js").read_text().count('bumpy-offline.js'), 1)
             self.assertEqual((root / "index.html").read_text().count("Content-Security-Policy"), 1)
             self.assertIn(b'assets/assets/images/body-witch.png', first)
-            (root / "assets/assets/images/body-witch.png").write_bytes(b"new cut")
+            (root / "version.json").write_text('{"version":"2"}')
             self.assertNotEqual(first, package())
 
 
