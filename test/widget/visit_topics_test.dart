@@ -6,6 +6,37 @@ import 'package:little_bumpy/main.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
+  testWidgets(
+    'Today saves a visit topic independently of care and can remove it',
+    (t) async {
+      SharedPreferences.setMockInitialValues({'due_date_iso': '2027-05-10'});
+      final state = await AppState.load(now: () => DateTime(2026, 11, 23));
+      await state.saveVisitTopics({MaternalNeed.water});
+      await t.pumpWidget(LittleBumpyApp(state: state));
+      await t.pumpAndSettle();
+      Future<void> tap(Finder finder) async {
+        await t.ensureVisible(finder);
+        await t.pumpAndSettle();
+        await t.tap(finder.hitTestable());
+        await t.pumpAndSettle();
+      }
+
+      await tap(find.text('Save Iron for my visit'));
+      expect((await AppState.load()).visitTopics, {
+        MaternalNeed.iron,
+        MaternalNeed.water,
+      });
+      expect(state.completedCheckIns, isEmpty);
+      await tap(find.text('Iron saved · View visit list'));
+      await tap(find.byKey(const ValueKey('visit-topic-iron')));
+      await tap(find.text('Save visit list'));
+      expect(find.text('Save Iron for my visit'), findsOneWidget);
+      expect((await AppState.load()).visitTopics, {MaternalNeed.water});
+      expect(state.completedCheckIns, isEmpty);
+      await t.pumpWidget(const SizedBox());
+    },
+  );
+
   testWidgets('a parent can prepare, change and erase a private visit list', (
     t,
   ) async {

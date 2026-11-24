@@ -8,6 +8,7 @@ import '../../domain/models/need.dart';
 import '../sheets/closet_sheet.dart';
 import '../widgets/bumpy_avatar.dart';
 import '../widgets/nursery_scene.dart';
+import '../widgets/visit_topics.dart';
 
 /// Today tab — daily loop under 30 seconds.
 /// Baby-voice lines are loaded from [ContentLoader] (bundled JSON, offline).
@@ -30,6 +31,23 @@ class _TodayScreenState extends State<TodayScreen>
 
   bool _hopping = false;
   DateTime? _reviewingDay;
+  bool _savingTopic = false;
+  MaternalNeed? _failedTopic;
+
+  Future<void> _saveForVisit(MaternalNeed need) async {
+    if (_savingTopic) return;
+    setState(() {
+      _savingTopic = true;
+      _failedTopic = null;
+    });
+    try {
+      await widget.state.saveVisitTopics({...widget.state.visitTopics, need});
+    } catch (_) {
+      if (mounted) setState(() => _failedTopic = need);
+    } finally {
+      if (mounted) setState(() => _savingTopic = false);
+    }
+  }
 
   @override
   void initState() {
@@ -110,7 +128,11 @@ class _TodayScreenState extends State<TodayScreen>
               : needTicked
               ? 'thank_you'
               : 'greeting',
-          mode: palette.isHalloween ? 'halloween' : 'everyday',
+          mode:
+              palette.isHalloween &&
+                  (widget.state.costumeOverride ?? need) == need
+              ? 'halloween'
+              : 'everyday',
         )?.text ??
         '';
   }
@@ -128,6 +150,7 @@ class _TodayScreenState extends State<TodayScreen>
     final checkIns = state.dailyCheckIns;
     final reviewing = DateUtils.isSameDay(_reviewingDay, state.today);
     final babyLine = _babyLine(need, needTicked, allDone, palette);
+    final savedForVisit = state.visitTopics.contains(need);
 
     return LayoutBuilder(
       builder: (context, bounds) {
@@ -215,6 +238,48 @@ class _TodayScreenState extends State<TodayScreen>
                         ),
                       ),
                     ],
+                    const SizedBox(height: 6),
+                    Semantics(
+                      liveRegion: true,
+                      child: TextButton.icon(
+                        style: TextButton.styleFrom(
+                          foregroundColor: palette.ink,
+                          minimumSize: const Size(0, 48),
+                        ),
+                        icon:
+                            Uri.base.queryParameters['visit-control'] == 'plain'
+                            ? Icon(
+                                savedForVisit
+                                    ? Icons.bookmark
+                                    : Icons.bookmark_add_outlined,
+                                size: 28,
+                              )
+                            : CustomPaint(
+                                size: const Size.square(28),
+                                painter: _PaperPocket(palette, savedForVisit),
+                              ),
+                        label: Text(
+                          savedForVisit
+                              ? '${need.label} saved · View visit list'
+                              : _savingTopic
+                              ? 'Saving…'
+                              : 'Save ${need.label} for my visit',
+                        ),
+                        onPressed: _savingTopic
+                            ? null
+                            : savedForVisit
+                            ? () => VisitTopics.edit(context, state)
+                            : () => _saveForVisit(need),
+                      ),
+                    ),
+                    if (_failedTopic == need && !savedForVisit)
+                      Semantics(
+                        liveRegion: true,
+                        child: Text(
+                          'Couldn’t save to your visit list. Tap to try again.',
+                          style: TextStyle(color: palette.ink),
+                        ),
+                      ),
                   ],
                 ),
               ),
@@ -360,6 +425,62 @@ class _TodayScreenState extends State<TodayScreen>
       },
     );
   }
+}
+
+class _PaperPocket extends CustomPainter {
+  const _PaperPocket(this.palette, this.saved);
+
+  final AppPalette palette;
+  final bool saved;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    canvas.save();
+    canvas.scale(size.width / 28, size.height / 28);
+    final paint = Paint()..color = palette.inkSoft;
+    canvas.drawPath(
+      Path()
+        ..moveTo(2, 8)
+        ..lineTo(25, 6)
+        ..lineTo(24, 19)
+        ..lineTo(3, 21)
+        ..close(),
+      paint,
+    );
+    if (saved) {
+      paint.color = palette.isHalloween
+          ? const Color(0xffffeac5)
+          : const Color(0xfffffae8);
+      canvas.drawPath(
+        Path()
+          ..moveTo(7, 3)
+          ..lineTo(20, 1)
+          ..lineTo(22, 15)
+          ..lineTo(9, 17)
+          ..close(),
+        paint,
+      );
+    }
+    paint.color = palette.isHalloween
+        ? const Color(0xffd7a4bc)
+        : const Color(0xff90526e);
+    canvas.drawPath(
+      Path()
+        ..moveTo(2, 9)
+        ..lineTo(13, 14)
+        ..lineTo(25, 7)
+        ..lineTo(24, 21)
+        ..lineTo(14, 26)
+        ..lineTo(4, 22)
+        ..close(),
+      paint,
+    );
+    canvas.restore();
+  }
+
+  @override
+  bool shouldRepaint(_PaperPocket old) =>
+      old.saved != saved || old.palette != palette;
 }
 
 class _SavedCheckIns extends StatelessWidget {

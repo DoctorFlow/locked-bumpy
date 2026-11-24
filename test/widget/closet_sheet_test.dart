@@ -53,7 +53,7 @@ void main() {
     expect(state.completedCheckIns, {'iron'});
     expect(find.text('IRON · Need of the Day'), findsOneWidget);
     expect(find.text('TODAY · IRON'), findsOneWidget);
-    expect(find.text('Cape on. Thank you!'), findsOneWidget);
+    expect(find.text('Iron in. Thank you!'), findsOneWidget);
     await tester.tap(find.byTooltip('Switch to Everyday'));
     await tester.pumpAndSettle();
     expect(trigger, findsNothing);
