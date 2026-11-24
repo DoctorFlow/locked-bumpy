@@ -206,14 +206,13 @@ void main() {
       await t.pumpAndSettle();
       final row = find.byKey(const ValueKey('urgent-row'));
       expect(row, findsOneWidget);
-      expect(find.bySemanticsLabel('When to get help right away'),
-          findsOneWidget);
-      // Below every need card.
+      expect(
+        find.bySemanticsLabel('When to get help right away'),
+        findsOneWidget,
+      );
+      // Near the top: above every need card (Amendment 3).
       for (final need in MaternalNeed.values) {
-        expect(
-          top(t, row),
-          greaterThan(top(t, find.byKey(PageStorageKey(need)))),
-        );
+        expect(top(t, row), lessThan(top(t, find.byKey(PageStorageKey(need)))));
       }
       expect(t.getSize(row).height, greaterThanOrEqualTo(48));
       await t.tap(row);
@@ -234,9 +233,87 @@ void main() {
     });
   }
 
-  testWidgets('the page shows the fallback when the list is hidden', (
+  testWidgets('the Guides row shows without scrolling on a 375 x 812 phone', (
     t,
   ) async {
+    t.view.devicePixelRatio = 1;
+    t.view.physicalSize = const Size(375, 812);
+    addTearDown(t.view.reset);
+    final state = await boot();
+    await t.pumpWidget(LittleBumpyApp(state: state));
+    await t.pumpAndSettle();
+    await t.tap(find.text('Guides'));
+    await t.pumpAndSettle();
+    final row = find.byKey(const ValueKey('urgent-row'));
+    expect(row.hitTestable(), findsOneWidget);
+    expect(t.getBottomLeft(row).dy, lessThan(812 - 80));
+    await t.pumpWidget(const SizedBox());
+  });
+
+  group('grouped list (Amendment 3)', () {
+    final grouped = {
+      ...paperBoatUrgent(),
+      'groups': [
+        {
+          'title': 'Sail trouble',
+          'signs': ['The sail has a hole in it'],
+        },
+        {
+          'title': 'Hull trouble',
+          'signs': [
+            'The hull is soaked through',
+            'A duck is sitting on the deck',
+          ],
+        },
+      ],
+      'footer': 'Not sure about the boat? Ask the pond keeper anyway.',
+    };
+    UrgentSigns groupedList() =>
+        UrgentSigns.review(jsonEncode(grouped), drafts: false)!;
+
+    for (final onPage in [true, false]) {
+      testWidgets('group titles, their signs, the action, then the footer '
+          '(${onPage ? 'page' : 'card 5'})', (t) async {
+        tallView(t);
+        final state = await boot();
+        final list = groupedList();
+        if (onPage) {
+          await t.pumpWidget(
+            MaterialApp(
+              theme: buildTheme(AppPalette.everyday),
+              home: UrgentScreen(state: state, urgent: list),
+            ),
+          );
+          await t.pumpAndSettle();
+        } else {
+          await pumpGuide(t, state, guideWith(), list);
+        }
+        Finder f(String s) => onPage ? find.text(s) : inCard5(find.text(s));
+        final order = [
+          f('Sail trouble'),
+          f('The sail has a hole in it'),
+          f('Hull trouble'),
+          f('The hull is soaked through'),
+          f('A duck is sitting on the deck'),
+          f(list.action),
+          f(list.footer!),
+        ];
+        for (final x in order) {
+          expect(x, findsOneWidget);
+        }
+        final tops = [for (final x in order) top(t, x)];
+        expect(tops, orderedEquals([...tops]..sort()));
+        // The action is the strongest line: larger than every sign.
+        final action = t.widget<Text>(order[5]).style!;
+        final sign = t.widget<Text>(order[1]).style!;
+        expect(action.fontSize, greaterThan(sign.fontSize!));
+        expect(action.fontWeight, FontWeight.w700);
+        expect(find.byType(ExpansionTile), findsNothing);
+      });
+    }
+  });
+
+  testWidgets('the page shows the fallback when the list is hidden', (t) async {
     tallView(t);
     UrgentLoader.debugSet(null);
     final state = await boot();

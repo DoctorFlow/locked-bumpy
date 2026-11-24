@@ -118,6 +118,21 @@ void main() {
       );
       expect(find.byType(DraftTag), findsNothing);
       if (halloween) expect(find.text('VAMPIRE'), findsWidgets);
+      // Card 1: Bumpy in the vampire costume in both looks, since Bumpy's
+      // line is about the costume.
+      expect(
+        find.descendant(
+          of: find.byKey(const ValueKey('guide-card-point')),
+          matching: find.byKey(
+            ValueKey(MaternalNeed.iron.assetPath(AppPalette.halloween)),
+          ),
+        ),
+        findsOneWidget,
+      );
+      expect(
+        find.bySemanticsLabel(RegExp('Bumpy in a vampire costume')),
+        findsWidgets,
+      );
       expect(t.takeException(), isNull);
 
       // Pause closes the guide with everything else.

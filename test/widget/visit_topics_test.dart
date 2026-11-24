@@ -53,6 +53,8 @@ void main() {
 
     await tap(find.text('Guides'));
     final waterGuide = find.byKey(const PageStorageKey(MaternalNeed.water));
+    // The need cards are taller now: scroll the Water card into view first.
+    await t.scrollUntilVisible(waterGuide, 120);
     await tap(find.descendant(of: waterGuide, matching: find.text('Water')));
     await tap(
       find.descendant(
@@ -76,13 +78,17 @@ void main() {
     await tap(find.text('Save visit list'));
     expect(state.visitTopics, {MaternalNeed.water, MaternalNeed.rest});
     expect(state.completedCheckIns, isEmpty);
-    await tap(find.text('On my visit list'));
+    final waterSaved = find.descendant(
+      of: waterGuide,
+      matching: find.text('On my visit list'),
+    );
+    await tap(waterSaved);
     await tap(find.byKey(const ValueKey('visit-topic-rest')));
     await tap(find.byTooltip('Close visit list'));
     final restored = await AppState.load();
     expect(restored.visitQuestion, 'Could we talk about my routine?');
     expect(restored.visitTopics, {MaternalNeed.water, MaternalNeed.rest});
-    await tap(find.text('On my visit list'));
+    await tap(waterSaved);
     expect(find.text('Could we talk about my routine?'), findsOneWidget);
     await tap(find.byKey(const ValueKey('visit-topic-water')));
     await tap(find.byTooltip('Pause').hitTestable());

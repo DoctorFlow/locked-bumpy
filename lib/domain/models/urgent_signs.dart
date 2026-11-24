@@ -14,6 +14,8 @@ class UrgentSigns {
     required this.signs,
     required this.action,
     required this.sources,
+    this.groups = const [],
+    this.footer,
   });
 
   /// True when this list is visible only because this is a review build.
@@ -24,6 +26,14 @@ class UrgentSigns {
   final String title, intro, action;
   final List<String> signs;
   final List<GuideSource> sources;
+
+  /// The signs in plain groups, most serious first (Amendment 3). Empty
+  /// when the file has no `groups`: screens then show the flat [signs].
+  /// When present, every sign is in exactly one group, in [signs] order.
+  final List<UrgentGroup> groups;
+
+  /// The closing line under the action, or null when the file has none.
+  final String? footer;
 
   /// Shown in place of the list when the gate hides it, so "When to call"
   /// is never empty. Fixed by the contract; not content.
@@ -58,14 +68,29 @@ class UrgentSigns {
         drafts: drafts,
       );
       if (verdict == Review.hidden) return null;
+      final groups = <UrgentGroup>[
+        for (final g in (row['groups'] as List?) ?? const [])
+          UrgentGroup(
+            title: (g['title'] as String).trim(),
+            signs: List.unmodifiable([
+              for (final s in g['signs'] as List) (s as String).trim(),
+            ]),
+          ),
+      ];
+      final footer = (row['footer'] as String?)?.trim();
       return UrgentSigns(
         isDraft: verdict == Review.draft,
         lastChecked: row['last_checked'] as String,
         title: (row['title'] as String).trim(),
         intro: (row['intro'] as String).trim(),
         signs: List.unmodifiable([
-          for (final s in row['signs'] as List) (s as String).trim(),
+          for (final s
+              in (row['signs'] as List?) ??
+                  [for (final g in groups) ...g.signs])
+            (s as String).trim(),
         ]),
+        groups: List.unmodifiable(groups),
+        footer: footer == null || footer.isEmpty ? null : footer,
         action: (row['action'] as String).trim(),
         sources: List.unmodifiable([
           for (final s in row['sources'] as List)
@@ -103,8 +128,43 @@ class UrgentSigns {
       final v = row[field];
       if (v is! String || v.trim().isEmpty) return '$field is empty';
     }
-    final signs = row['signs'];
+    // Amendment 3: optional groups, each with a title and at least one sign;
+    // the flat list (when present too) equals the grouped signs in order.
+    final grouped = row['groups'];
+    final fromGroups = <Object?>[];
+    if (grouped != null) {
+      if (grouped is! List || grouped.isEmpty) return 'groups is empty';
+      for (var g = 0; g < grouped.length; g++) {
+        final group = grouped[g];
+        if (group is! Map) return 'group ${g + 1} is not a record';
+        final title = group['title'];
+        if (title is! String || title.trim().isEmpty) {
+          return 'group ${g + 1} has no title';
+        }
+        final inGroup = group['signs'];
+        if (inGroup is! List || inGroup.isEmpty) {
+          return 'group ${g + 1} has no signs';
+        }
+        fromGroups.addAll(inGroup);
+      }
+    }
+    final footer = row['footer'];
+    if (footer != null && (footer is! String || footer.trim().isEmpty)) {
+      return 'footer is empty';
+    }
+    final signs = row['signs'] ?? (grouped == null ? null : fromGroups);
     if (signs is! List || signs.isEmpty) return 'signs is empty';
+    if (grouped != null) {
+      String norm(Object? s) => s is String ? s.trim() : '\u0000';
+      if (signs.length != fromGroups.length) {
+        return 'signs and groups do not match';
+      }
+      for (var i = 0; i < signs.length; i++) {
+        if (norm(signs[i]) != norm(fromGroups[i])) {
+          return 'signs and groups differ at sign ${i + 1}';
+        }
+      }
+    }
     final seen = <String>{};
     for (var i = 0; i < signs.length; i++) {
       final s = signs[i];
@@ -128,4 +188,11 @@ class UrgentSigns {
     }
     return null;
   }
+}
+
+/// One group of urgent signs under a plain title (Amendment 3).
+class UrgentGroup {
+  const UrgentGroup({required this.title, required this.signs});
+  final String title;
+  final List<String> signs;
 }

@@ -35,8 +35,10 @@ void main() {
 
   test('draft outside a review build: hidden', () {
     expect(review(paperBoatUrgent(status: 'draft')), isNull);
-    expect(UrgentSigns.review(jsonEncode(paperBoatUrgent(status: 'draft'))),
-        isNull);
+    expect(
+      UrgentSigns.review(jsonEncode(paperBoatUrgent(status: 'draft'))),
+      isNull,
+    );
     for (final status in ['needs_fix', 'rejected']) {
       expect(review(paperBoatUrgent(status: status), drafts: true), isNull);
     }
@@ -49,8 +51,10 @@ void main() {
 
   test('an empty list is hidden, approved or draft', () {
     expect(review(paperBoatUrgent(signs: [])), isNull);
-    expect(review(paperBoatUrgent(status: 'draft', signs: []), drafts: true),
-        isNull);
+    expect(
+      review(paperBoatUrgent(status: 'draft', signs: []), drafts: true),
+      isNull,
+    );
   });
 
   final broken = <String, Object?>{
@@ -87,13 +91,105 @@ void main() {
       );
     });
   }
+  group('groups and footer (Amendment 3)', () {
+    Map<String, dynamic> grouped({
+      Object? groups,
+      Object? footer = 'Ask anyway.',
+    }) => {
+      ...paperBoatUrgent(),
+      'groups':
+          groups ??
+          [
+            {
+              'title': 'Sail',
+              'signs': ['The sail has a hole in it'],
+            },
+            {
+              'title': 'Hull',
+              'signs': [
+                'The hull is soaked through',
+                'A duck is sitting on the deck',
+              ],
+            },
+          ],
+      'footer': ?footer,
+    };
+
+    test('read with titles, signs in order, and the footer', () {
+      final u = review(grouped())!;
+      expect(u.groups.map((g) => g.title), ['Sail', 'Hull']);
+      expect(u.groups.last.signs, hasLength(2));
+      expect(u.signs, [for (final g in u.groups) ...g.signs]);
+      expect(u.footer, 'Ask anyway.');
+    });
+
+    test('without groups or footer the flat list works as before', () {
+      final u = review(paperBoatUrgent())!;
+      expect(u.groups, isEmpty);
+      expect(u.footer, isNull);
+      expect(u.signs, hasLength(3));
+    });
+
+    test('groups alone (no flat list) give the flat list', () {
+      final u = review({...grouped()}..remove('signs'))!;
+      expect(u.signs, hasLength(3));
+    });
+
+    final brokenGroups = <String, Map<String, dynamic>>{
+      'a group with no title': grouped(
+        groups: [
+          {
+            'title': ' ',
+            'signs': ['The sail has a hole in it'],
+          },
+        ],
+      ),
+      'a group with no signs': grouped(
+        groups: [
+          {'title': 'Sail', 'signs': <String>[]},
+        ],
+      ),
+      'groups not a list': grouped(groups: 'Sail'),
+      'an empty groups list': {...paperBoatUrgent(), 'groups': <Object>[]},
+      'flat list differs from groups': grouped(
+        groups: [
+          {
+            'title': 'Sail',
+            'signs': [
+              'The hull is soaked through',
+              'The sail has a hole in it',
+              'A duck is sitting on the deck',
+            ],
+          },
+        ],
+      ),
+      'a sign missing from the groups': grouped(
+        groups: [
+          {
+            'title': 'Sail',
+            'signs': ['The sail has a hole in it'],
+          },
+        ],
+      ),
+      'an empty footer': grouped(footer: '  '),
+    };
+    for (final MapEntry(key: name, value: row) in brokenGroups.entries) {
+      test('broken is hidden: $name', () {
+        expect(review(row), isNull);
+        expect(UrgentSigns.ruleIssue(row), isNotNull);
+      });
+    }
+  });
+
   test('text that is not JSON at all is hidden', () {
     expect(UrgentSigns.review('{ not json'), isNull);
     expect(UrgentSigns.review(''), isNull);
   });
 
   test('a sign may hold digits and plain words', () {
-    final u = review(paperBoatUrgent(signs: ['Water above 2 lines on the hull']));
+    final u = review(
+      paperBoatUrgent(signs: ['Water above 2 lines on the hull']),
+    );
     expect(u!.signs.single, contains('2'));
   });
 
@@ -119,7 +215,10 @@ void main() {
     final row = jsonDecode(json) as Map<String, dynamic>;
     expect(row['id'], 'urgent_signs');
     expect(row['title'], 'Get medical help right away');
-    expect(row['intro'], 'Day or night, do not wait, if you have any of these:');
+    expect(
+      row['intro'],
+      'Day or night, do not wait, if you have any of these:',
+    );
     expect(
       row['action'],
       'Call your doctor, midwife or hospital. If you cannot reach them, '
@@ -145,6 +244,10 @@ void main() {
       final shown = UrgentSigns.review(json, drafts: true)!;
       expect(shown.signs, hasLength((row['signs'] as List).length));
       expect(shown.isDraft, row['status'] == 'draft');
+      if (row['groups'] is List) {
+        expect(shown.groups, hasLength((row['groups'] as List).length));
+        expect(shown.footer, isNotNull);
+      }
     }
   });
 }

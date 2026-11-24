@@ -1,7 +1,8 @@
-import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import '../../content/urgent_loader.dart';
+import '../../core/theme/app_text.dart';
 import '../../core/theme/palette.dart';
+import '../../core/theme/paper.dart';
 import '../../domain/models/app_state.dart';
 import '../../domain/models/urgent_signs.dart';
 import '../widgets/draft_tag.dart';
@@ -47,78 +48,24 @@ class UrgentScreen extends StatelessWidget {
 
   Widget _page(BuildContext context, UrgentSigns? list) {
     final palette = AppPalette.of(context);
-    return Scaffold(
-      backgroundColor: palette.skyBottom,
-      appBar: AppBar(
-        backgroundColor: palette.skyTop,
-        foregroundColor: palette.moonlight,
-        surfaceTintColor: Colors.transparent,
-        title: const Text(rowLabel),
-      ),
-      body: DecoratedBox(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [palette.skyTop, palette.skyBottom],
+    return PageOnTable(
+      title: rowLabel,
+      builder: (context) => Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          PaperCard(
+            padding: const EdgeInsets.all(AppSpace.l),
+            child: UrgentSignsBlock(urgent: list, palette: palette),
           ),
-        ),
-        child: SafeArea(
-          top: false,
-          child: LayoutBuilder(
-            builder: (context, bounds) {
-              final side = math.max(16.0, (bounds.maxWidth - 560) / 2);
-              return ListView(
-                padding: EdgeInsets.fromLTRB(side, 16, side, 24),
-                children: [
-                  Material(
-                    color: palette.paper,
-                    borderRadius: BorderRadius.circular(20),
-                    elevation: 1,
-                    shadowColor: palette.skyBottom,
-                    child: Padding(
-                      padding: const EdgeInsets.all(14),
-                      child: UrgentSignsBlock(urgent: list, palette: palette),
-                    ),
-                  ),
-                  if (list != null) ...[
-                    const SizedBox(height: 22),
-                    Semantics(
-                      header: true,
-                      child: Text(
-                        'Sources',
-                        style: TextStyle(
-                          color: palette.moonlight,
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    for (final source in list.sources)
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 6),
-                        child: Text(
-                          '${source.org}: ${source.title}',
-                          style: TextStyle(
-                            color: palette.moonlightSoft,
-                            fontSize: 16,
-                            height: 1.35,
-                          ),
-                        ),
-                      ),
-                    const SizedBox(height: 6),
-                    Text(
-                      'Last checked '
-                      '${GuideScreen.readableDate(list.lastChecked)}',
-                      style: TextStyle(color: palette.moonlight, fontSize: 16),
-                    ),
-                  ],
-                ],
-              );
-            },
-          ),
-        ),
+          if (list != null) ...[
+            const SizedBox(height: AppSpace.xl),
+            SourcesNote(
+              palette: palette,
+              sources: [for (final s in list.sources) '${s.org}: ${s.title}'],
+              lastChecked: list.lastChecked,
+            ),
+          ],
+        ],
       ),
     );
   }
@@ -138,120 +85,196 @@ Widget withUrgentSigns({
       )
     : builder(given);
 
-/// The shared urgent list in full: title, intro, every sign on its own line,
-/// then the action. Never collapsed, never in Bumpy's voice. When [urgent]
-/// is null (hidden by the gate) it shows [UrgentSigns.fallback] instead.
+/// The shared urgent list in full: title, intro, the signs (under their
+/// group titles when the file groups them), then the action and the footer.
+/// Never collapsed, never in Bumpy's voice. When [urgent] is null (hidden by
+/// the gate) it shows [UrgentSigns.fallback] instead.
 ///
-/// Calm but serious: an ink-edged panel on raised paper, plain ink text,
-/// no alarm colour. Readable in both looks (ink on paper is >= 4.5:1).
+/// Calm but serious: an ink-edged piece of raised paper, plain ink text, no
+/// alarm colour. Every sign is its own line with room around it; the action
+/// sentence sits on its own paper strip and is the strongest line. [compact]
+/// (card 5 of a guide) tightens the spacing only; nothing is hidden.
 class UrgentSignsBlock extends StatelessWidget {
   const UrgentSignsBlock({
     super.key,
     required this.urgent,
     required this.palette,
+    this.compact = false,
   });
 
   final UrgentSigns? urgent;
   final AppPalette palette;
+  final bool compact;
 
   @override
   Widget build(BuildContext context) {
     final list = urgent;
-    final body = TextStyle(color: palette.ink, fontSize: 16, height: 1.45);
-    final strong = body.copyWith(fontWeight: FontWeight.w700);
-    return Container(
+    final body = AppText.body.copyWith(color: palette.ink);
+    final strong = AppText.bodyStrong.copyWith(
+      color: palette.ink,
+      height: 24 / 16,
+    );
+    final signGap = compact ? AppSpace.xs : AppSpace.m;
+    Widget sign(int i, String text) => Padding(
+      key: ValueKey('urgent-sign-$i'),
+      padding: EdgeInsets.only(bottom: signGap),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          ExcludeSemantics(
+            child: Padding(
+              padding: const EdgeInsetsDirectional.only(
+                top: AppSpace.s + 1,
+                end: AppSpace.m,
+              ),
+              child: SizedBox.square(
+                dimension: 8,
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: palette.ink,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+              ),
+            ),
+          ),
+          Expanded(child: Text(text, style: body)),
+        ],
+      ),
+    );
+
+    return DecoratedBox(
       key: ValueKey(list == null ? 'urgent-fallback' : 'urgent-signs'),
       decoration: BoxDecoration(
         color: palette.paperRaised,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: AppRadii.control,
         border: Border.all(color: palette.ink, width: 2),
       ),
-      padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
-      child: list == null
-          ? Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                ExcludeSemantics(
-                  child: Padding(
-                    padding: const EdgeInsetsDirectional.only(top: 2, end: 10),
-                    child: Icon(
-                      Icons.health_and_safety_outlined,
-                      color: palette.ink,
-                      size: 22,
-                    ),
-                  ),
-                ),
-                Expanded(child: Text(UrgentSigns.fallback, style: strong)),
-              ],
-            )
-          : Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 6,
-                  crossAxisAlignment: WrapCrossAlignment.center,
-                  children: [
-                    ExcludeSemantics(
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpace.l),
+        child: list == null
+            ? Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  ExcludeSemantics(
+                    child: Padding(
+                      padding: const EdgeInsetsDirectional.only(
+                        top: 2,
+                        end: AppSpace.m,
+                      ),
                       child: Icon(
                         Icons.health_and_safety_outlined,
                         color: palette.ink,
-                        size: 22,
+                        size: 24,
                       ),
-                    ),
-                    Semantics(
-                      header: true,
-                      child: Text(
-                        list.title,
-                        style: TextStyle(
-                          color: palette.ink,
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          height: 1.3,
-                        ),
-                      ),
-                    ),
-                    if (list.isDraft) DraftTag(palette: palette),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  list.intro,
-                  style: body.copyWith(fontWeight: FontWeight.w600),
-                ),
-                const SizedBox(height: 8),
-                for (final (i, sign) in list.signs.indexed)
-                  Padding(
-                    key: ValueKey('urgent-sign-$i'),
-                    padding: const EdgeInsets.only(bottom: 8),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        ExcludeSemantics(
-                          child: Padding(
-                            padding: const EdgeInsetsDirectional.only(
-                              top: 8,
-                              end: 10,
-                            ),
-                            child: SizedBox.square(
-                              dimension: 8,
-                              child: DecoratedBox(
-                                decoration: BoxDecoration(
-                                  color: palette.ink,
-                                  shape: BoxShape.circle,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                        Expanded(child: Text(sign, style: body)),
-                      ],
                     ),
                   ),
-                const SizedBox(height: 4),
-                Text(list.action, style: strong),
-              ],
-            ),
+                  Expanded(child: Text(UrgentSigns.fallback, style: strong)),
+                ],
+              )
+            : Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Wrap(
+                    spacing: AppSpace.s,
+                    runSpacing: AppSpace.xs,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    children: [
+                      ExcludeSemantics(
+                        child: Icon(
+                          Icons.health_and_safety_outlined,
+                          color: palette.ink,
+                          size: 24,
+                        ),
+                      ),
+                      Semantics(
+                        header: true,
+                        child: Text(
+                          list.title,
+                          style: AppText.heading.copyWith(color: palette.ink),
+                        ),
+                      ),
+                      if (list.isDraft) DraftTag(palette: palette),
+                    ],
+                  ),
+                  const SizedBox(height: AppSpace.s),
+                  Text(list.intro, style: strong),
+                  SizedBox(height: compact ? AppSpace.m : AppSpace.l),
+                  if (list.groups.isEmpty)
+                    for (final (i, s) in list.signs.indexed) sign(i, s)
+                  else
+                    ..._grouped(list, sign),
+                  SizedBox(height: compact ? AppSpace.s : AppSpace.m),
+                  _ActionStrip(text: list.action, palette: palette),
+                  if (list.footer != null) ...[
+                    const SizedBox(height: AppSpace.l),
+                    Text(list.footer!, style: body),
+                  ],
+                ],
+              ),
+      ),
     );
   }
+
+  List<Widget> _grouped(
+    UrgentSigns list,
+    Widget Function(int i, String text) sign,
+  ) {
+    var i = 0;
+    return [
+      for (final (g, group) in list.groups.indexed) ...[
+        if (g > 0) SizedBox(height: compact ? AppSpace.s : AppSpace.m),
+        Padding(
+          padding: const EdgeInsets.only(bottom: AppSpace.s),
+          child: Semantics(
+            header: true,
+            child: Text(
+              group.title,
+              style: AppText.bodyStrong.copyWith(color: palette.ink),
+            ),
+          ),
+        ),
+        for (final s in group.signs) sign(i++, s),
+      ],
+    ];
+  }
+}
+
+/// The action sentence on its own paper strip with a phone icon: the
+/// strongest line of the list, in ink, never an alarm colour.
+class _ActionStrip extends StatelessWidget {
+  const _ActionStrip({required this.text, required this.palette});
+  final String text;
+  final AppPalette palette;
+
+  @override
+  Widget build(BuildContext context) => DecoratedBox(
+    key: const ValueKey('urgent-action'),
+    decoration: BoxDecoration(
+      color: palette.paper,
+      borderRadius: AppRadii.control,
+      border: Border.all(color: palette.ink, width: 2),
+      boxShadow: paperShadows(palette, raised: true),
+    ),
+    child: Padding(
+      padding: const EdgeInsets.all(AppSpace.m),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          ExcludeSemantics(
+            child: Padding(
+              padding: const EdgeInsetsDirectional.only(end: AppSpace.m),
+              child: Icon(Icons.call, color: palette.ink, size: 24),
+            ),
+          ),
+          Expanded(
+            child: Text(
+              text,
+              style: AppText.heading.copyWith(color: palette.ink),
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
 }

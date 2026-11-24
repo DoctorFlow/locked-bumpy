@@ -209,8 +209,9 @@ void main() {
         );
         await tester.tap(heading.hitTestable());
         await tester.pumpAndSettle();
+        // The Guides card shows Bumpy in the need's costume in both looks.
         expect(
-          find.byKey(const ValueKey('assets/images/everyday.png')),
+          find.byKey(ValueKey(state.todayNeed.assetPath(AppPalette.halloween))),
           findsOneWidget,
         );
         await tester.tap(find.text('This Week'));
