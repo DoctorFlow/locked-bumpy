@@ -125,7 +125,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(state.isFirstRun, isTrue);
     expect(find.text('Settings'), findsNothing);
-    expect(find.text('Next'), findsOneWidget);
+    expect(find.text('Choose due date'), findsOneWidget);
     expect((await SharedPreferences.getInstance()).getKeys(), isEmpty);
     await tester.pumpWidget(const SizedBox());
   });

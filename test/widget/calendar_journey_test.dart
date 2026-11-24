@@ -30,7 +30,7 @@ void main() {
     day = DateTime(2026, 11, 24);
     await tester.pump(const Duration(minutes: 1));
     await tester.pumpAndSettle();
-    expect(find.text('Week 16'), findsNWidgets(3));
+    expect(find.text('Week 16'), findsNWidgets(2));
     expect(find.text('You are here'), findsOneWidget);
     await tester.tap(find.text('Today'));
     await tester.pumpAndSettle();

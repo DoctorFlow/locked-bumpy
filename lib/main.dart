@@ -96,26 +96,36 @@ class _LittleBumpyAppState extends State<LittleBumpyApp>
         extensions: [palette],
       ),
       home: Scaffold(
-        body: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 440),
-            child: Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [palette.skyTop, palette.skyBottom],
+        body: LayoutBuilder(
+          builder: (context, bounds) {
+            final wideVisit =
+                !state.isFirstRun &&
+                !state.isPaused &&
+                state.currentTab == 0 &&
+                bounds.maxWidth >= 640 &&
+                bounds.maxHeight <= 600;
+            return Center(
+              child: ConstrainedBox(
+                constraints: BoxConstraints(maxWidth: wideVisit ? 860 : 440),
+                child: Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [palette.skyTop, palette.skyBottom],
+                    ),
+                  ),
+                  child: SafeArea(
+                    child: state.isFirstRun
+                        ? FirstRunScreen(state: state)
+                        : state.isPaused
+                        ? PausedScreen(state: state)
+                        : _MainShell(state: state),
+                  ),
                 ),
               ),
-              child: SafeArea(
-                child: state.isFirstRun
-                    ? FirstRunScreen(state: state)
-                    : state.isPaused
-                    ? PausedScreen(state: state)
-                    : _MainShell(state: state),
-              ),
-            ),
-          ),
+            );
+          },
         ),
       ),
     );
@@ -142,6 +152,6 @@ class _MainShell extends StatelessWidget {
   Widget _currentScreen() => switch (state.currentTab) {
     0 => TodayScreen(state: state),
     1 => ThisWeekScreen(state: state),
-    _ => GuidesScreen(skinTone: state.skinTone),
+    _ => GuidesScreen(todayNeed: state.todayNeed, skinTone: state.skinTone),
   };
 }

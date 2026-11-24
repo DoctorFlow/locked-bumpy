@@ -39,7 +39,7 @@ void main() {
       await tester.pumpWidget(_wrap(TodayScreen(state: state), state));
       await tester.pump();
 
-      expect(find.text("Today's 3 Check-Ins"), findsOneWidget);
+      expect(find.text("Today's check-ins"), findsOneWidget);
       expect(
         find.text(
           'This app is not medical advice. '
@@ -109,7 +109,7 @@ void main() {
       expect(find.text('Start Fresh'), findsOneWidget);
       expect(find.text('Erase all data'), findsOneWidget);
       // No check-ins shown while paused.
-      expect(find.text("Today's 3 Check-Ins"), findsNothing);
+      expect(find.text("Today's check-ins"), findsNothing);
     });
   });
 

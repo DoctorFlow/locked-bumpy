@@ -30,12 +30,8 @@ void main() {
       expect(find.text('Hello, Little Bumpy.'), findsOneWidget);
       expect(find.text('Due Date'), findsOneWidget);
       expect(find.text('Last Period'), findsOneWidget);
-      expect(find.text('Tap to pick a date'), findsOneWidget);
-      // Next button disabled until date is picked.
-      final nextBtn = tester.widget<ElevatedButton>(
-        find.widgetWithText(ElevatedButton, 'Next'),
-      );
-      expect(nextBtn.onPressed, isNull);
+      expect(find.text('Choose due date'), findsOneWidget);
+      expect(find.text('Enter the nursery'), findsNothing);
     });
 
     testWidgets('shows gestational week preview after a date is chosen', (
@@ -46,11 +42,12 @@ void main() {
       await tester.pump();
 
       // No preview chip before a date is picked.
-      expect(find.textContaining('week'), findsNothing);
+      expect(find.textContaining('You are at week'), findsNothing);
 
       await tester.tap(find.text('Last Period'));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Tap to pick a date'));
+      await tester.ensureVisible(find.text('Choose period start date'));
+      await tester.tap(find.text('Choose period start date'));
       await tester.pumpAndSettle();
       await tester.tap(find.text('OK'));
       await tester.pumpAndSettle();
@@ -71,14 +68,18 @@ void main() {
       );
     });
 
-    testWidgets('3 step dots render on step 1', (tester) async {
-      final state = await _freshState();
-      await tester.pumpWidget(_wrap(state));
-      await tester.pump();
-
-      // 3 step-indicator containers inside _StepIndicator row.
-      expect(find.byType(AnimatedContainer), findsAtLeastNWidgets(3));
-    });
+    testWidgets(
+      'the welcome screen lets a parent try the nursery lamp before sharing a date',
+      (tester) async {
+        final state = await _freshState();
+        await tester.pumpWidget(_wrap(state));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Try daylight'));
+        await tester.pumpAndSettle();
+        expect(find.text('Try moonlight'), findsOneWidget);
+        expect(state.isFirstRun, isTrue);
+      },
+    );
 
     testWidgets('step 3 shows both look cards', (tester) async {
       final state = await _freshState();

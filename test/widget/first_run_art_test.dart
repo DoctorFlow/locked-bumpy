@@ -19,8 +19,9 @@ void main() {
           w.image is AssetImage &&
           (w.image as AssetImage).assetName == 'assets/images/$path.png',
     );
-    expect(asset('everyday'), findsOneWidget);
-    await tester.tap(find.text('Tap to pick a date'));
+    expect(asset('body-vampire'), findsOneWidget);
+    await tester.ensureVisible(find.text('Choose due date'));
+    await tester.tap(find.text('Choose due date'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('OK'));
     await tester.pumpAndSettle();
@@ -31,7 +32,10 @@ void main() {
       await tester.pumpAndSettle();
     }
 
-    await next();
+    final personalize = find.text('Choose name and appearance first');
+    await tester.ensureVisible(personalize);
+    await tester.tap(personalize);
+    await tester.pumpAndSettle();
     await next();
     expect(asset('everyday'), findsOneWidget);
     expect(asset('body-vampire'), findsOneWidget);

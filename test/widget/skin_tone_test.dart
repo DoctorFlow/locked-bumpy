@@ -69,7 +69,7 @@ void main() {
           matching: find.byType(Image),
         ),
       );
-      expect(costumes.length, 6);
+      expect(costumes.length, 7);
       expect(
         costumes.every(
           (image) =>

@@ -34,7 +34,10 @@ void main() {
         final shell = t.getRect(find.byType(TopBar));
         expect(
           shell.width,
-          size.width.clamp(0.0, 440.0),
+          size.width.clamp(
+            0.0,
+            size.height <= 600 && size.width >= 640 ? 860.0 : 440.0,
+          ),
           reason: 'reading column at $size',
         );
         expect(shell.center.dx, closeTo(size.width / 2, .1));

@@ -5,7 +5,9 @@ import '../../core/theme/palette.dart';
 import '../../domain/models/app_state.dart';
 import '../../domain/models/content_record.dart';
 import '../../domain/models/need.dart';
+import '../sheets/closet_sheet.dart';
 import '../widgets/bumpy_avatar.dart';
+import '../widgets/nursery_scene.dart';
 
 /// Today tab — daily loop under 30 seconds.
 /// Baby-voice lines are loaded from [ContentLoader] (bundled JSON, offline).
@@ -121,152 +123,194 @@ class _TodayScreenState extends State<TodayScreen>
     final need = state.todayNeed;
     final needTicked = state.isChecked(need.name);
     final allDone = state.allChecked;
+    final checkIns = state.dailyCheckIns;
     final babyLine = _babyLine(need, needTicked, allDone, palette);
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          // ── Baby card ───────────────────────────────────────────────────
-          Container(
-            padding: const EdgeInsets.all(18),
-            decoration: BoxDecoration(
-              color: palette.paper,
-              borderRadius: BorderRadius.circular(24),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.25),
-                  offset: const Offset(0, 3),
-                  blurRadius: 0,
-                ),
-              ],
-            ),
-            child: Column(
-              children: [
-                // Costume tag
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: need.color.withValues(alpha: 0.18),
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: need.color, width: 1.5),
-                  ),
-                  child: Text(
-                    state.costumeOverride != null && palette.isHalloween
-                        ? 'TODAY · ${need.needName}'
-                        : need.tag(palette),
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.bold,
-                      color: palette.ink,
-                      letterSpacing: 0.5,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-
-                // Baby avatar
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(16),
-                  child: SizedBox(
-                    height: 212,
-                    width: double.infinity,
-                    child: Stack(
-                      alignment: Alignment.bottomCenter,
-                      children: [
-                        Positioned.fill(
-                          child: Image.asset(
-                            palette.isHalloween
-                                ? 'assets/images/nursery-halloween.png'
-                                : 'assets/images/nursery-everyday.png',
-                            fit: BoxFit.cover,
-                            excludeFromSemantics: true,
-                            errorBuilder: (_, _, _) =>
-                                ColoredBox(color: palette.skyBottom),
+    return LayoutBuilder(
+      builder: (context, bounds) {
+        final sideBySide = bounds.maxWidth >= 600;
+        final nursery = Material(
+          color: palette.paper,
+          borderRadius: BorderRadius.circular(24),
+          clipBehavior: Clip.antiAlias,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              NurseryScene(
+                palette: palette,
+                height: sideBySide ? 156 : 204,
+                cornerAction: palette.isHalloween
+                    ? Tooltip(
+                        message: 'Costume closet',
+                        child: FilledButton.tonalIcon(
+                          onPressed: () => ClosetSheet.open(context, state),
+                          icon: const Icon(Icons.checkroom, size: 18),
+                          label: const Text('Wardrobe'),
+                          style: FilledButton.styleFrom(
+                            minimumSize: const Size(0, 48),
+                            padding: const EdgeInsets.symmetric(horizontal: 10),
+                            backgroundColor: palette.paper,
+                            foregroundColor: palette.ink,
                           ),
                         ),
-                        BumpyAvatar(
-                          need: state.costumeOverride ?? need,
-                          palette: palette,
-                          happy: needTicked,
-                          skinTone: state.skinTone,
-                          hopAnimation: _hopAnimation,
+                      )
+                    : null,
+                avatar: BumpyAvatar(
+                  need: state.costumeOverride ?? need,
+                  palette: palette,
+                  happy: needTicked,
+                  skinTone: state.skinTone,
+                  hopAnimation: _hopAnimation,
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(18, 14, 18, 16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Wrap(
+                      spacing: 12,
+                      runSpacing: 5,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      children: [
+                        Semantics(
+                          header: true,
+                          child: Text(
+                            state.babyDisplayName,
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w700,
+                              color: palette.ink,
+                            ),
+                          ),
+                        ),
+                        Text(
+                          state.costumeOverride != null && palette.isHalloween
+                              ? 'TODAY · ${need.needName}'
+                              : need.tag(palette),
+                          style: TextStyle(
+                            fontSize: 11,
+                            letterSpacing: .5,
+                            fontWeight: FontWeight.w600,
+                            color: palette.inkSoft,
+                          ),
                         ),
                       ],
                     ),
-                  ),
+                    if (babyLine.isNotEmpty) ...[
+                      const SizedBox(height: 5),
+                      Semantics(
+                        liveRegion: true,
+                        child: Text(
+                          babyLine,
+                          style: TextStyle(
+                            fontSize: 21,
+                            height: 1.25,
+                            fontWeight: FontWeight.w600,
+                            color: palette.ink,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
-                const SizedBox(height: 14),
-
-                // Baby speech
-                ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 240),
-                  child: Text(
-                    babyLine,
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                      height: 1.35,
-                      color: palette.ink,
+              ),
+            ],
+          ),
+        );
+        final checkInsPanel = Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Semantics(
+              header: true,
+              child: Text(
+                "Today's check-ins",
+                style: TextStyle(
+                  fontSize: 17,
+                  fontWeight: FontWeight.bold,
+                  color: palette.moonlight,
+                ),
+              ),
+            ),
+            if (state.completedCheckIns.isEmpty) ...[
+              const SizedBox(height: 3),
+              Text(
+                'Tap a row when you’ve done it.',
+                style: TextStyle(color: palette.moonlightSoft, fontSize: 14),
+              ),
+            ],
+            const SizedBox(height: 10),
+            Material(
+              color: palette.paperRaised,
+              borderRadius: BorderRadius.circular(18),
+              clipBehavior: Clip.antiAlias,
+              child: Column(
+                children: [
+                  for (final item in checkIns) ...[
+                    if (item != checkIns.first)
+                      Divider(
+                        height: 1,
+                        indent: 56,
+                        endIndent: 16,
+                        color: palette.inkSoft.withValues(alpha: .22),
+                      ),
+                    _CheckInTile(
+                      key: ValueKey(item),
+                      title: item == need
+                          ? '${need.needName} · Need of the Day'
+                          : item.label,
+                      subtitle: item.foodHint,
+                      need: item,
+                      isTicked: state.isChecked(item.name),
+                      palette: palette,
+                      onTap: () => _onCheckIn(item.name),
                     ),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 20),
-
-          // ── Check-ins header ────────────────────────────────────────────
-          Text(
-            "Today's 3 Check-Ins",
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.bold,
-              color: palette.moonlightSoft,
-            ),
-          ),
-          const SizedBox(height: 10),
-
-          for (final item in state.dailyCheckIns) ...[
-            _CheckInTile(
-              key: ValueKey(item),
-              title: item == need
-                  ? '${need.needName} · Need of the Day'
-                  : item.label,
-              subtitle: item.foodHint,
-              need: item,
-              isTicked: state.isChecked(item.name),
-              palette: palette,
-              onTap: () => _onCheckIn(item.name),
+                  ],
+                ],
+              ),
             ),
             const SizedBox(height: 8),
-          ],
-          const SizedBox(height: 8),
-          Text(
-            state.daysTogetherCount == 1
-                ? '1 day together'
-                : '${state.daysTogetherCount} days together',
-            textAlign: TextAlign.center,
-            style: TextStyle(color: palette.moonlightSoft, fontSize: 14),
-          ),
-          const SizedBox(height: 20),
-          Text(
-            AppConstants.disclaimer,
-            style: TextStyle(
-              fontSize: 11,
-              color: palette.moonlightSoft,
-              height: 1.3,
+            Text(
+              state.daysTogetherCount == 1
+                  ? '1 day together'
+                  : '${state.daysTogetherCount} days together',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: palette.moonlightSoft, fontSize: 14),
             ),
-            textAlign: TextAlign.center,
+            const SizedBox(height: 20),
+            Text(
+              AppConstants.disclaimer,
+              style: TextStyle(
+                fontSize: 11,
+                color: palette.moonlightSoft,
+                height: 1.3,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 12),
+          ],
+        );
+        if (sideBySide) {
+          return Padding(
+            padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(child: SingleChildScrollView(child: nursery)),
+                const SizedBox(width: 16),
+                Expanded(child: SingleChildScrollView(child: checkInsPanel)),
+              ],
+            ),
+          );
+        }
+        return SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [nursery, const SizedBox(height: 20), checkInsPanel],
           ),
-          const SizedBox(height: 12),
-        ],
-      ),
+        );
+      },
     );
   }
 }
@@ -303,17 +347,6 @@ class _CheckInTile extends StatelessWidget {
         child: Container(
           constraints: const BoxConstraints(minHeight: 48),
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          decoration: BoxDecoration(
-            color: palette.paperRaised,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.2),
-                offset: const Offset(0, 2),
-                blurRadius: 0,
-              ),
-            ],
-          ),
           child: Row(
             children: [
               Image.asset(
@@ -337,7 +370,7 @@ class _CheckInTile extends StatelessWidget {
                     ),
                     Text(
                       subtitle,
-                      style: TextStyle(fontSize: 12, color: palette.inkSoft),
+                      style: TextStyle(fontSize: 14, color: palette.inkSoft),
                     ),
                   ],
                 ),
@@ -367,7 +400,11 @@ class _CheckInTile extends StatelessWidget {
                   ),
                 ),
                 child: isTicked
-                    ? Icon(Icons.star, size: 16, color: palette.accentText)
+                    ? Icon(
+                        Icons.check_rounded,
+                        size: 18,
+                        color: palette.accentText,
+                      )
                     : null,
               ),
             ],

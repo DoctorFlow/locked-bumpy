@@ -9,7 +9,12 @@ import '../widgets/bumpy_avatar.dart';
 
 /// The details stay inside the main shell so Pause immediately hides them.
 class GuidesScreen extends StatefulWidget {
-  const GuidesScreen({super.key, this.skinTone = SkinTone.peach});
+  const GuidesScreen({
+    super.key,
+    required this.todayNeed,
+    this.skinTone = SkinTone.peach,
+  });
+  final MaternalNeed todayNeed;
   final SkinTone skinTone;
 
   @override
@@ -30,7 +35,7 @@ class _GuidesScreenState extends State<GuidesScreen> {
           Semantics(
             header: true,
             child: Text(
-              'Physician Guides',
+              'Care guides',
               style: TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.bold,
@@ -39,11 +44,15 @@ class _GuidesScreenState extends State<GuidesScreen> {
             ),
           ),
           const SizedBox(height: 16),
-          for (final need in MaternalNeed.values)
+          for (final need in [
+            widget.todayNeed,
+            ...MaternalNeed.values.where((n) => n != widget.todayNeed),
+          ])
             Padding(
               padding: const EdgeInsets.only(bottom: 8),
               child: _NeedGuide(
                 need: need,
+                isToday: need == widget.todayNeed,
                 palette: palette,
                 article: snapshot.data?[need],
                 skinTone: widget.skinTone,
@@ -63,11 +72,13 @@ class _GuidesScreenState extends State<GuidesScreen> {
 class _NeedGuide extends StatelessWidget {
   const _NeedGuide({
     required this.need,
+    required this.isToday,
     required this.palette,
     required this.article,
     required this.skinTone,
   });
   final MaternalNeed need;
+  final bool isToday;
   final AppPalette palette;
   final GuideArticle? article;
   final SkinTone skinTone;
@@ -101,6 +112,9 @@ class _NeedGuide extends StatelessWidget {
           need.label,
           style: TextStyle(color: palette.ink, fontWeight: FontWeight.w600),
         ),
+        subtitle: isToday
+            ? Text('Today’s need', style: TextStyle(color: palette.inkSoft))
+            : null,
         childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 18),
         expandedCrossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -121,7 +135,14 @@ class _NeedGuide extends StatelessWidget {
                 fontWeight: FontWeight.w600,
               ),
             ),
-          if (copy != null) ...[
+          if (copy == null) ...[
+            const SizedBox(height: 12),
+            Text(
+              'The written guide is awaiting review.',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: palette.inkSoft, height: 1.35),
+            ),
+          ] else ...[
             const SizedBox(height: 12),
             Text(copy.body, style: TextStyle(color: palette.ink, height: 1.4)),
             const SizedBox(height: 12),

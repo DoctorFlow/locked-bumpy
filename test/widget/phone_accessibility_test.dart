@@ -67,11 +67,13 @@ void main() {
         final state = await AppState.load();
         await t.pumpWidget(LittleBumpyApp(state: state));
         await t.pumpAndSettle();
-        await t.tap(find.text('Tap to pick a date'));
+        await t.ensureVisible(find.text('Choose due date'));
+        await t.tap(find.text('Choose due date'));
         await t.pumpAndSettle();
         await t.tap(find.text('OK'));
         await t.pumpAndSettle();
-        await t.tap(find.text('Next').first);
+        await t.ensureVisible(find.text('Choose name and appearance first'));
+        await t.tap(find.text('Choose name and appearance first'));
         await t.pumpAndSettle();
         final decoration = t
             .widget<TextField>(find.byType(TextField))
@@ -116,6 +118,26 @@ void main() {
       },
     );
   }
+  testWidgets(
+    'a rotated phone keeps the main check-in beside the baby response',
+    (t) async {
+      t.view.devicePixelRatio = 1;
+      t.view.physicalSize = const Size(844, 390);
+      addTearDown(t.view.resetDevicePixelRatio);
+      addTearDown(t.view.resetPhysicalSize);
+      SharedPreferences.setMockInitialValues({'due_date_iso': '2027-05-10'});
+      final state = await AppState.load(now: () => DateTime(2026, 11, 23));
+      await t.pumpWidget(LittleBumpyApp(state: state));
+      await t.pumpAndSettle();
+      final need = find.byKey(ValueKey(state.todayNeed));
+      await t.tap(need.hitTestable());
+      await t.pumpAndSettle();
+      final thanks = find.text('Cape on. Thank you!');
+      expect(thanks.hitTestable(), findsOneWidget);
+      expect(t.getTopRight(thanks).dx, lessThan(t.getTopLeft(need).dx));
+      await t.pumpWidget(const SizedBox());
+    },
+  );
   for (final size in [const Size(320, 568), const Size(568, 320)]) {
     testWidgets(
       'large text keeps check-ins and lamp controls usable at $size',
@@ -137,7 +159,11 @@ void main() {
         await tester.pumpWidget(LittleBumpyApp(state: state));
         await tester.pumpAndSettle();
         final buttons = find.byType(IconButton).evaluate();
-        expect(buttons.length, 4);
+        expect(buttons.length, 3);
+        expect(
+          tester.getSize(find.byTooltip('Costume closet')).shortestSide,
+          greaterThanOrEqualTo(48),
+        );
         for (final button in buttons) {
           final target = tester.getSize(find.byWidget(button.widget));
           expect(target.shortestSide, greaterThanOrEqualTo(48));

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../core/theme/palette.dart';
 import '../../domain/models/app_state.dart';
-import '../sheets/closet_sheet.dart';
 import '../screens/settings_screen.dart';
 
 /// App top bar: week chip, lamp toggle, pause button.
@@ -76,12 +75,6 @@ class TopBar extends StatelessWidget implements PreferredSizeWidget {
                       : 'Switch to Halloween',
                 ),
               ),
-              if (state.isHalloween)
-                IconButton(
-                  tooltip: 'Costume closet',
-                  icon: Icon(Icons.checkroom, color: palette.moonlight),
-                  onPressed: () => ClosetSheet.open(context, state),
-                ),
               IconButton(
                 tooltip: 'Settings',
                 icon: Icon(Icons.settings_outlined, color: palette.moonlight),

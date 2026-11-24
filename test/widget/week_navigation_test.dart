@@ -41,21 +41,39 @@ void main() {
     await t.pumpAndSettle();
   }
 
+  testWidgets(
+    'a parent can jump to a distant week and come back to their own',
+    (t) async {
+      await openWeek(t);
+      await t.tap(find.text('Choose week'));
+      await t.pumpAndSettle();
+      final last = find.text('42');
+      await t.ensureVisible(last);
+      await t.tap(last);
+      await t.pumpAndSettle();
+      expect(find.text('Week 42'), findsOneWidget);
+      await t.tap(find.text('Back to this week'));
+      await t.pumpAndSettle();
+      expect(find.text('You are here'), findsOneWidget);
+      await t.pumpWidget(const SizedBox());
+    },
+  );
   testWidgets('swipe reads the adjacent week and one tap comes home', (
     t,
   ) async {
     await openWeek(t);
+    final card = find.text('You are here');
+    expect(card, findsOneWidget);
+    await t.drag(card, const Offset(-450, 0));
+    await t.pumpAndSettle();
+    expect(find.text('Week 17'), findsWidgets);
     final moon = find.image(const AssetImage('assets/images/need-rest.png'));
     expect(moon, findsAtLeastNWidgets(1));
     expect(
       t.widgetList<Image>(moon).every((image) => image.excludeFromSemantics),
       isTrue,
     );
-    final card = find.text('You are here');
-    expect(card, findsOneWidget);
-    await t.drag(card, const Offset(-450, 0));
-    await t.pumpAndSettle();
-    expect(find.text('Week 17'), findsWidgets);
+
     expect(find.text('You are here'), findsNothing);
     await t.tap(find.text('Back to this week'));
     await t.pumpAndSettle();

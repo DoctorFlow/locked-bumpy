@@ -3,6 +3,7 @@ import '../../core/theme/palette.dart';
 import '../../domain/models/app_state.dart';
 import '../../domain/models/need.dart';
 import '../../domain/models/skin_tone.dart';
+import '../widgets/bumpy_avatar.dart';
 import '../widgets/paper_portrait.dart';
 
 class ClosetSheet extends StatefulWidget {
@@ -28,9 +29,12 @@ class ClosetSheet extends StatefulWidget {
 }
 
 class _ClosetSheetState extends State<ClosetSheet> {
+  late MaternalNeed _preview;
+
   @override
   void initState() {
     super.initState();
+    _preview = widget.state.costumeOverride ?? widget.state.todayNeed;
     widget.state.addListener(_onChange);
   }
 
@@ -57,65 +61,131 @@ class _ClosetSheetState extends State<ClosetSheet> {
     if (!_available) return const SizedBox.shrink();
     final state = widget.state;
     final palette = AppPalette.of(context);
-    final selected = state.costumeOverride ?? state.todayNeed;
-    return SafeArea(
-      top: false,
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Semantics(
-                    header: true,
-                    child: Text(
-                      "Tonight’s wardrobe",
-                      style: TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                        color: palette.ink,
-                      ),
-                    ),
-                  ),
-                ),
-                IconButton(
-                  tooltip: 'Close wardrobe',
-                  icon: Icon(Icons.close, color: palette.ink),
-                  onPressed: () => Navigator.of(context).pop(),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            LayoutBuilder(
-              builder: (context, constraints) => Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: [
-                  for (final need in MaternalNeed.values)
-                    SizedBox(
-                      width: (constraints.maxWidth - 8) / 2,
-                      child: _CostumeCard(
-                        need: need,
-                        skinTone: widget.state.skinTone,
-                        palette: palette,
-                        selected: selected == need,
-                        onTap: () {
-                          state.setCostumeOverride(need);
-                          Navigator.of(context).pop();
-                        },
-                      ),
-                    ),
-                ],
+    final name = _costumeName(_preview);
+    final header = Row(
+      children: [
+        Expanded(
+          child: Semantics(
+            header: true,
+            child: Text(
+              'Tonight’s wardrobe',
+              style: TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+                color: palette.ink,
               ),
             ),
-          ],
+          ),
         ),
+        IconButton(
+          tooltip: 'Close wardrobe',
+          icon: Icon(Icons.close, color: palette.ink),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+      ],
+    );
+    final rail = Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        DecoratedBox(
+          decoration: BoxDecoration(
+            color: palette.paperRaised,
+            borderRadius: BorderRadius.circular(18),
+          ),
+          child: Center(
+            child: BumpyAvatar(
+              need: _preview,
+              palette: palette,
+              skinTone: state.skinTone,
+              happy: state.isChecked(state.todayNeed.name),
+            ),
+          ),
+        ),
+        const SizedBox(height: 12),
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final columns =
+                constraints.maxWidth >= 320 &&
+                    MediaQuery.textScalerOf(context).scale(14) <= 21
+                ? 3
+                : 2;
+            return Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                for (final need in MaternalNeed.values)
+                  SizedBox(
+                    width: (constraints.maxWidth - 8 * (columns - 1)) / columns,
+                    child: _CostumeCard(
+                      need: need,
+                      skinTone: state.skinTone,
+                      palette: palette,
+                      selected: _preview == need,
+                      onTap: () => setState(() => _preview = need),
+                    ),
+                  ),
+              ],
+            );
+          },
+        ),
+      ],
+    );
+    final footer = Padding(
+      padding: const EdgeInsets.only(top: 12, bottom: 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            'Today’s check-in stays the same.',
+            textAlign: TextAlign.center,
+            style: TextStyle(color: palette.inkSoft),
+          ),
+          const SizedBox(height: 6),
+          FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: palette.ink,
+              foregroundColor: palette.paper,
+              minimumSize: const Size.fromHeight(48),
+            ),
+            onPressed: () {
+              state.setCostumeOverride(_preview);
+              Navigator.of(context).pop();
+            },
+            child: Text('Wear $name'),
+          ),
+        ],
+      ),
+    );
+    final compact =
+        MediaQuery.sizeOf(context).height < 450 ||
+        MediaQuery.textScalerOf(context).scale(14) > 21;
+    return SafeArea(
+      top: false,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: compact
+            ? SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [header, rail, footer],
+                ),
+              )
+            : Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  header,
+                  Flexible(child: SingleChildScrollView(child: rail)),
+                  footer,
+                ],
+              ),
       ),
     );
   }
 }
+
+String _costumeName(MaternalNeed need) =>
+    need.costume[0] + need.costume.substring(1).toLowerCase();
 
 class _CostumeCard extends StatelessWidget {
   const _CostumeCard({
@@ -133,7 +203,7 @@ class _CostumeCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final name = need.costume[0] + need.costume.substring(1).toLowerCase();
+    final name = _costumeName(need);
     final shape = RoundedRectangleBorder(
       borderRadius: BorderRadius.circular(16),
       side: BorderSide(
@@ -145,7 +215,7 @@ class _CostumeCard extends StatelessWidget {
       key: ValueKey('closet-${need.name}'),
       button: true,
       selected: selected,
-      label: '$name, ${need.label}',
+      label: 'Try $name',
       onTap: onTap,
       excludeSemantics: true,
       child: Material(
@@ -159,7 +229,7 @@ class _CostumeCard extends StatelessWidget {
             children: [
               SizedBox(
                 width: double.infinity,
-                height: 88,
+                height: 65,
                 child: ColoredBox(
                   color: Color.alphaBlend(
                     palette.moonlight.withValues(alpha: .40),
@@ -168,8 +238,8 @@ class _CostumeCard extends StatelessWidget {
                   child: Center(
                     child: Image(
                       image: paperPortrait(need.assetPath(palette), skinTone),
-                      height: 84,
-                      width: 84,
+                      height: 63,
+                      width: 63,
                       gaplessPlayback: true,
                     ),
                   ),
@@ -177,8 +247,13 @@ class _CostumeCard extends StatelessWidget {
               ),
               Padding(
                 padding: const EdgeInsets.fromLTRB(6, 4, 6, 8),
-                child: Column(
+                child: Wrap(
+                  alignment: WrapAlignment.center,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  spacing: 3,
                   children: [
+                    if (selected)
+                      Icon(Icons.check, size: 14, color: palette.ink),
                     Text(
                       name,
                       textAlign: TextAlign.center,
@@ -186,11 +261,6 @@ class _CostumeCard extends StatelessWidget {
                         fontWeight: FontWeight.bold,
                         color: palette.ink,
                       ),
-                    ),
-                    Text(
-                      need.label,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(color: palette.inkSoft),
                     ),
                   ],
                 ),

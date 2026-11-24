@@ -31,6 +31,11 @@ void main() {
     await tester.ensureVisible(witch);
     await tester.tap(witch);
     await tester.pumpAndSettle();
+    expect(state.costumeOverride, isNull);
+    final wear = find.text('Wear Witch');
+    await tester.ensureVisible(wear);
+    await tester.tap(wear);
+    await tester.pumpAndSettle();
     expect(find.byType(BottomSheet), findsNothing);
     expect(
       find.byKey(
@@ -88,6 +93,11 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(witch);
     await tester.pumpAndSettle();
+    expect(state.costumeOverride, isNull);
+    final wear = find.text('Wear Witch');
+    await tester.ensureVisible(wear);
+    await tester.tap(wear);
+    await tester.pumpAndSettle();
     expect(state.costumeOverride, MaternalNeed.vitamin);
     expect(find.byType(BottomSheet), findsNothing);
     expect(tester.takeException(), isNull);
@@ -105,9 +115,15 @@ void main() {
       expect(trigger, findsOneWidget);
       await tester.tap(trigger);
       await tester.pumpAndSettle();
+      final witch = find.byKey(const ValueKey('closet-vitamin'));
+      await tester.ensureVisible(witch);
+      await tester.tap(witch);
+      await tester.pumpAndSettle();
+      expect(find.text('Wear Witch'), findsOneWidget);
       await tester.binding.handlePopRoute();
       await tester.pumpAndSettle();
       expect(find.byType(BottomSheet), findsNothing);
+      expect(state.costumeOverride, isNull);
       await tester.tap(trigger);
       await tester.pumpAndSettle();
       await state.togglePause();

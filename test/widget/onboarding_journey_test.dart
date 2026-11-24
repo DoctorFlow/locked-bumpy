@@ -6,6 +6,48 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+  testWidgets('one date opens the daylight nursery and its first check-in', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({});
+    final now = DateTime(2026, 11, 23);
+    final state = await AppState.load(now: () => now);
+    await tester.pumpWidget(LittleBumpyApp(state: state));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Try a sample check-in'));
+    await tester.pumpAndSettle();
+    expect(find.text('Cape on. Thank you!'), findsOneWidget);
+    expect(state.isFirstRun, isTrue);
+    expect(state.completedCheckIns, isEmpty);
+    for (final label in [
+      'Try daylight',
+      'Choose due date',
+      'OK',
+      'Enter the nursery',
+    ]) {
+      final target = find.text(label);
+      await tester.ensureVisible(target);
+      await tester.tap(target);
+      await tester.pumpAndSettle();
+    }
+    expect(state.isFirstRun, isFalse);
+    expect(
+      find.byKey(const ValueKey('assets/images/everyday.png')),
+      findsOneWidget,
+    );
+    final target = find.byKey(ValueKey(state.todayNeed));
+    await tester.ensureVisible(target);
+    await tester.tap(target);
+    await tester.pumpAndSettle();
+    expect(
+      find.byKey(const ValueKey('assets/images/everyday-happy.png')),
+      findsOneWidget,
+    );
+    final restored = await AppState.load(now: () => now);
+    expect(restored.isHalloween, isFalse);
+    expect(restored.isChecked(state.todayNeed.name), isTrue);
+    await tester.pumpWidget(const SizedBox());
+  });
   testWidgets('onboarding comes to rest immediately with reduced motion', (
     tester,
   ) async {
@@ -21,11 +63,13 @@ void main() {
     )) {
       expect(dot.duration, Duration.zero);
     }
-    await tester.tap(find.text('Tap to pick a date'));
+    await tester.ensureVisible(find.text('Choose due date'));
+    await tester.tap(find.text('Choose due date'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('OK'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Next').first);
+    await tester.ensureVisible(find.text('Choose name and appearance first'));
+    await tester.tap(find.text('Choose name and appearance first'));
     await tester.pump();
     expect(
       tester.widget<PageView>(find.byType(PageView)).controller!.page,
@@ -60,9 +104,9 @@ void main() {
         expect(tester.takeException(), isNull);
       }
 
-      await tap(find.text('Tap to pick a date'));
+      await tap(find.text('Choose due date'));
       await tap(find.text('OK'));
-      await tap(find.text('Next').first);
+      await tap(find.text('Choose name and appearance first'));
       final field = find.byType(TextField);
       await tester.ensureVisible(field);
       await tester.enterText(field, 'Clover');
