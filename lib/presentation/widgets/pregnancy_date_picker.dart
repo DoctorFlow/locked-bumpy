@@ -37,16 +37,21 @@ String dayMonthYear(DateTime d, {bool withYear = true}) {
   return withYear ? '$dayMonth ${d.year}' : dayMonth;
 }
 
+/// How far back the last-period picker opens with no day chosen: 10 weeks.
+const int periodOpeningDaysBack = 70;
+
 /// The month the picker shows first.
 ///
-/// Not this month: a due date is months away. With no day chosen the picker
-/// opens on the month in the middle of the offered range ([first] to
-/// [last]), so no month in the range is more than about five month taps
-/// away and a likely one (a parent at week 6 to week 38) is at most four,
-/// on any day of the year. The month list reaches any month in two taps.
+/// Not this month: a due date is months away. With no day chosen the due
+/// date picker opens on the month in the middle of the offered range
+/// ([first] to [last]), so no month in the range is more than about five
+/// month taps away and a likely one (a parent at week 6 to week 38) is at
+/// most four, on any day of the year. The last-period picker opens on the
+/// month of [today] less [periodOpeningDaysBack] (about week 10): parents who
+/// know only their last period are mostly early, so weeks 6 to 14 are at
+/// most one month tap away. The month list reaches any month in two taps.
 /// A chosen day opens on its own month. The result is always a month inside
-/// [first] to [last]. [today] and [useDueDate] are kept for callers; the
-/// range already carries both.
+/// [first] to [last].
 DateTime pickerOpeningMonth({
   required DateTime today,
   required bool useDueDate,
@@ -62,7 +67,14 @@ DateTime pickerOpeningMonth({
     last.day,
   ).difference(DateTime.utc(first.year, first.month, first.day)).inDays;
   final anchor =
-      selected ?? DateTime(first.year, first.month, first.day + span ~/ 2);
+      selected ??
+      (useDueDate
+          ? DateTime(first.year, first.month, first.day + span ~/ 2)
+          : DateTime(
+              today.year,
+              today.month,
+              today.day - periodOpeningDaysBack,
+            ));
   var month = DateTime(anchor.year, anchor.month);
   final firstMonth = DateTime(first.year, first.month);
   final lastMonth = DateTime(last.year, last.month);

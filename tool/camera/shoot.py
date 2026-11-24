@@ -442,7 +442,7 @@ SCENARIOS = [
         tap("I know when my last period started", "button", find=True), wait(600),
         tap_first(["Choose period start date", "Pick your last period start"], find=True), wait(700),
         shot("date-period-open"),
-    ], shot=None, sizes=DATE_SIZES, note="first-run-2: last-period calendar opens mid-range"),
+    ], shot=None, sizes=DATE_SIZES, note="period-cal: last-period calendar opens about 10 weeks back (Sep 2026)"),
     *[S(f"this-week-end-wk{n}", {"week": n}, [
         tap("This Week", "tab"), wait(600),
         *[st for _ in range(10) for st in (scroll(), wait(150))], wait(400),
