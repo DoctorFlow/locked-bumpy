@@ -253,6 +253,7 @@ class _NurseryCard extends StatefulWidget {
     required this.needTicked,
     required this.babyLine,
     required this.lineIsDraft,
+    this.lineIsHeld = false,
     required this.hopAnimation,
   });
 
@@ -263,6 +264,7 @@ class _NurseryCard extends StatefulWidget {
   final bool needTicked;
   final String babyLine;
   final bool lineIsDraft;
+  final bool lineIsHeld;
   final Animation<double> hopAnimation;
 
   @override
@@ -317,6 +319,7 @@ class _NurseryCardState extends State<_NurseryCard>
       needTicked: widget.needTicked,
       babyLine: widget.babyLine,
       lineIsDraft: widget.lineIsDraft,
+      lineIsHeld: widget.lineIsHeld,
       hopAnimation: _hop,
     );
   }
