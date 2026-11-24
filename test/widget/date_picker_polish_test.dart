@@ -55,6 +55,15 @@ Color _textColor(WidgetTester tester, String label) =>
 TextDecoration? _decoration(WidgetTester tester, String label) =>
     DefaultTextStyle.of(tester.element(find.text(label))).style.decoration;
 
+Rect _okPiece(WidgetTester tester) => tester.getRect(
+  find
+      .descendant(
+        of: find.widgetWithText(TextButton, 'OK'),
+        matching: find.byType(Material),
+      )
+      .first,
+);
+
 void main() {
   for (final halloween in [false, true]) {
     final look = halloween ? 'Halloween' : 'Everyday';
@@ -88,8 +97,13 @@ void main() {
       expect(_decoration(tester, 'OK'), isNot(TextDecoration.underline));
       expect(_textColor(tester, 'Cancel'), palette.ink);
       final ok = tester.getSize(find.widgetWithText(TextButton, 'OK'));
-      expect(ok.width, greaterThanOrEqualTo(96));
+      expect(ok.width, greaterThanOrEqualTo(88));
       expect(ok.height, greaterThanOrEqualTo(48));
+      // The accent piece clears the dialog's rounded bottom corner.
+      final piece = _okPiece(tester);
+      final dialog = tester.getRect(find.byType(Dialog));
+      expect(dialog.bottom - piece.bottom, greaterThanOrEqualTo(4));
+      expect(dialog.right - piece.right, greaterThanOrEqualTo(8));
       expect(_okStyle(tester), isNotNull);
     });
   }

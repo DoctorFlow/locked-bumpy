@@ -286,7 +286,8 @@ class _GuardedCalendarState extends State<_GuardedCalendar> {
     final dimmedOk = TextButton.styleFrom(
       backgroundColor: scheme.surfaceContainerHighest,
       foregroundColor: scheme.onSurface.withValues(alpha: 0.6),
-      minimumSize: const Size(96, 48),
+      minimumSize: const Size(88, 40),
+      tapTargetSize: MaterialTapTargetSize.padded,
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
       textStyle: AppText.button,
     );
@@ -298,7 +299,8 @@ class _GuardedCalendarState extends State<_GuardedCalendar> {
         TextButton.styleFrom(
           backgroundColor: scheme.primary,
           foregroundColor: scheme.onPrimary,
-          minimumSize: const Size(96, 48),
+          minimumSize: const Size(88, 40),
+          tapTargetSize: MaterialTapTargetSize.padded,
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
           textStyle: AppText.button,
         );
