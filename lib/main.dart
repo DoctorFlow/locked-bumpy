@@ -102,7 +102,9 @@ class _LittleBumpyAppState extends State<LittleBumpyApp>
                 !state.isFirstRun &&
                 !state.isPaused &&
                 state.currentTab == 0 &&
-                bounds.maxWidth >= 640 &&
+                (bounds.maxWidth >= 640 ||
+                    (bounds.maxWidth >= 540 &&
+                        MediaQuery.textScalerOf(context).scale(14) <= 21)) &&
                 bounds.maxHeight <= 600;
             return Center(
               child: ConstrainedBox(
@@ -152,6 +154,6 @@ class _MainShell extends StatelessWidget {
   Widget _currentScreen() => switch (state.currentTab) {
     0 => TodayScreen(state: state),
     1 => ThisWeekScreen(state: state),
-    _ => GuidesScreen(todayNeed: state.todayNeed, skinTone: state.skinTone),
+    _ => GuidesScreen(state: state),
   };
 }

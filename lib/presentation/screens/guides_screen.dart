@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../../content/content_loader.dart';
 import '../../core/constants/app_constants.dart';
 import '../../core/theme/palette.dart';
+import '../../domain/models/app_state.dart';
+import '../widgets/visit_topics.dart';
 import '../../domain/models/guide_article.dart';
 import '../../domain/models/need.dart';
 import '../../domain/models/skin_tone.dart';
@@ -9,13 +11,8 @@ import '../widgets/bumpy_avatar.dart';
 
 /// The details stay inside the main shell so Pause immediately hides them.
 class GuidesScreen extends StatefulWidget {
-  const GuidesScreen({
-    super.key,
-    required this.todayNeed,
-    this.skinTone = SkinTone.peach,
-  });
-  final MaternalNeed todayNeed;
-  final SkinTone skinTone;
+  const GuidesScreen({super.key, required this.state});
+  final AppState state;
 
   @override
   State<GuidesScreen> createState() => _GuidesScreenState();
@@ -44,18 +41,20 @@ class _GuidesScreenState extends State<GuidesScreen> {
             ),
           ),
           const SizedBox(height: 16),
+          VisitTopics(state: widget.state),
+          const SizedBox(height: 16),
           for (final need in [
-            widget.todayNeed,
-            ...MaternalNeed.values.where((n) => n != widget.todayNeed),
+            widget.state.todayNeed,
+            ...MaternalNeed.values.where((n) => n != widget.state.todayNeed),
           ])
             Padding(
               padding: const EdgeInsets.only(bottom: 8),
               child: _NeedGuide(
                 need: need,
-                isToday: need == widget.todayNeed,
+                isToday: need == widget.state.todayNeed,
                 palette: palette,
                 article: snapshot.data?[need],
-                skinTone: widget.skinTone,
+                skinTone: widget.state.skinTone,
               ),
             ),
           Text(

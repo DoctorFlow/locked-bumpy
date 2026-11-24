@@ -56,6 +56,21 @@ class PrefsService {
   Future<void> saveIsPaused(bool value) =>
       _prefs.setBool(AppConstants.prefsIsPausedKey, value);
 
+  Set<MaternalNeed> get visitTopics {
+    final saved = _prefs.getStringList(AppConstants.prefsVisitTopicsKey) ?? [];
+    return MaternalNeed.values
+        .where((need) => saved.contains(need.name))
+        .toSet();
+  }
+
+  Future<void> saveVisitTopics(Set<MaternalNeed> topics) async {
+    final saved = await _prefs.setStringList(AppConstants.prefsVisitTopicsKey, [
+      for (final need in MaternalNeed.values)
+        if (topics.contains(need)) need.name,
+    ]);
+    if (!saved) throw StateError('Could not save visit topics');
+  }
+
   // ── Nickname ─────────────────────────────────────────────────────────────
 
   /// Empty string means the mother hasn't set a nickname.
@@ -106,6 +121,7 @@ class PrefsService {
   Future<void> clearAll() async {
     const ownedKeys = [
       AppConstants.prefsDueDateKey,
+      AppConstants.prefsVisitTopicsKey,
       AppConstants.prefsCorrectedDueDateKey,
       AppConstants.prefsSkinToneKey,
       AppConstants.prefsIsHalloweenKey,

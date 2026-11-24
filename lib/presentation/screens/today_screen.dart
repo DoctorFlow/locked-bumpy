@@ -130,7 +130,7 @@ class _TodayScreenState extends State<TodayScreen>
 
     return LayoutBuilder(
       builder: (context, bounds) {
-        final sideBySide = bounds.maxWidth >= 600;
+        final sideBySide = bounds.maxWidth >= 510;
         final nursery = Material(
           color: palette.paper,
           borderRadius: BorderRadius.circular(24),

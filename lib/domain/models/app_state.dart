@@ -14,6 +14,7 @@ class AppState extends ChangeNotifier {
       _originalDueDate = _prefs.originalDueDate,
       _isHalloween = _prefs.isHalloween,
       _skinTone = _prefs.skinTone,
+      _visitTopics = _prefs.visitTopics,
       _isPaused = _prefs.isPaused,
       _nickname = _prefs.nickname {
     _day = _now();
@@ -52,6 +53,20 @@ class AppState extends ChangeNotifier {
     _nickname = value.trim();
     notifyListeners();
     await _prefs.saveNickname(_nickname);
+  }
+
+  Set<MaternalNeed> _visitTopics;
+  int _visitRevision = 0;
+  Set<MaternalNeed> get visitTopics => Set.unmodifiable(_visitTopics);
+
+  Future<void> saveVisitTopics(Set<MaternalNeed> topics) async {
+    if (isPaused || isFirstRun || setEquals(topics, _visitTopics)) return;
+    final selection = Set<MaternalNeed>.of(topics);
+    final revision = ++_visitRevision;
+    await _prefs.saveVisitTopics(selection);
+    if (revision != _visitRevision || isFirstRun) return;
+    _visitTopics = selection;
+    notifyListeners();
   }
 
   // ── Mode ─────────────────────────────────────────────────────────────────
@@ -194,6 +209,8 @@ class AppState extends ChangeNotifier {
   Future<void> eraseAll() async {
     _dueDate = null;
     _originalDueDate = null;
+    _visitRevision++;
+    _visitTopics = {};
     _nickname = '';
     _isHalloween = true;
     _skinTone = SkinTone.peach;

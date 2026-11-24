@@ -11,6 +11,7 @@ class AppConstants {
   // The original estimate anchors Days Together, including on older installs.
   static const String prefsCorrectedDueDateKey = 'corrected_due_date_iso';
   static const String prefsDueDateKey = 'due_date_iso';
+  static const String prefsVisitTopicsKey = 'visit_topics';
   static const String prefsSkinToneKey = 'skin_tone';
   static const String prefsIsHalloweenKey = 'is_halloween';
   static const String prefsIsPausedKey = 'is_paused';

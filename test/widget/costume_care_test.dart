@@ -97,9 +97,16 @@ void main() {
       await tester.pumpAndSettle();
       final tile = find.byKey(PageStorageKey(need));
       await tester.scrollUntilVisible(tile, 120);
-      await tester.tap(
-        find.descendant(of: tile, matching: find.text(need.label)),
+      final heading = find.descendant(
+        of: tile,
+        matching: find.text(need.label),
       );
+      await tester.dragUntilVisible(
+        heading.hitTestable(),
+        find.byType(ListView),
+        const Offset(0, -60),
+      );
+      await tester.tap(heading.hitTestable());
       await tester.pumpAndSettle();
       expect(
         find.byKey(ValueKey(need.assetPath(AppPalette.everyday))),
