@@ -370,13 +370,14 @@ SCENARIOS = [
     first_run_until("first-run-step5", 5),
     # calm-content: the urgent list in the parent's week (GUIDE-CONTRACT
     # Amendment 4). Week 9: signs not yet due sit in a last quiet group;
-    # week 30: the movement sign opens the list. Drafts, so --review.
+    # week 20: between the two; week 30: the movement sign opens the list.
+    # Drafts, so --review.
     *[S(f"urgent-wk{n}", {"week": n}, [
         tap("Guides", "tab"), wait(500),
         tap("When to get help right away", find=True), wait(700),
         shot(f"urgent-wk{n}"),
         *[st for i in range(2, 7) for st in (scroll(), shot(f"urgent-wk{n}-{i}"))],
-    ], shot=None, note="calm-content: urgent list order by week") for n in (9, 30)],
+    ], shot=None, note="calm-content: urgent list order by week") for n in (9, 20, 30)],
     # Today at week 20, scrolled to the fact card. The camera's day is an
     # IRON day, so the folic acid skip itself is proven by the tests.
     S("today-wk20", {"week": 20}, [
