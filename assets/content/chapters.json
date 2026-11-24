@@ -52,7 +52,7 @@
       "suggested_question": "What can I try if I feel sick a lot, and when is it worth calling you?"
     },
     "look_forward": {
-      "text": "Somewhere in these weeks, a few foods may start to feel kind again. Notice the ones that sit gently, and keep them close."
+      "text": "Notice any foods or drinks that sit gently on the harder days, and keep them close. Little finds like that count."
     },
     "curious": {
       "question": "Does sipping water help when I feel sick?",
@@ -72,7 +72,7 @@
     "art_brief": "Bumpy curled up holding one end of a paper tin-can telephone, its string looping out of the picture toward a few folded paper music notes, under a pale paper sky by day and a deep blue sky with paper stars by night.",
     "bumpy_line": "Hello out there! My ears are getting ready. Hum me something, any tune at all.",
     "know": {
-      "text": "Around the end of this stretch, your baby starts to hear. In time they may pick up your heartbeat, the gurgles of your tummy and the voices close by.",
+      "text": "Official guides differ on when hearing begins, from around now to a few weeks later. Once it does, your baby may pick up your heartbeat, the gurgles of your tummy and voices close by.",
       "source_org": "NHS",
       "source_title": "15 weeks pregnant guide - Best Start in Life - NHS",
       "url": "https://www.nhs.uk/best-start-in-life/pregnancy/week-by-week-guide-to-pregnancy/2nd-trimester/week-15/"
@@ -85,7 +85,7 @@
       "text": "Around now, some parents give their bump a nickname, and it can start to feel like a little someone. Bumpy thinks nicknames are a wonderful idea."
     },
     "curious": {
-      "question": "What is my baby's brain busy building right now?",
+      "question": "Does what I eat and drink still matter for my baby's brain?",
       "need": "BRAIN"
     }
   },
@@ -102,7 +102,7 @@
     "art_brief": "Bumpy sitting on a cut-paper swing hanging by two paper ropes from a simple paper tree branch, mid-swing, with a paper sun and clouds by day and a dark sky with paper stars by night.",
     "bumpy_line": "Wheee! I'm swinging into the middle months. Hold on to something cozy and swing along with me.",
     "know": {
-      "text": "Gums are more likely to get sore or bleed during pregnancy. Regular dental care is safe at any stage of pregnancy, so it is fine to keep up your check-ups.",
+      "text": "Gums are more likely to get red and swollen during pregnancy. Regular dental care is safe at any stage of pregnancy, so it is fine to keep up your check-ups.",
       "source_org": "CDC",
       "source_title": "Pregnancy and Oral Health Facts",
       "url": "https://www.cdc.gov/oral-health/data-research/facts-stats/fast-facts-pregnancy-and-oral-health.html"
@@ -132,7 +132,7 @@
     "art_brief": "Bumpy sitting right at the centre fold of an open paper map, beside a tiny paper flag on a dotted path that runs from one edge of the map to the other, under a paper sun by day and a paper moon by night.",
     "bumpy_line": "Look at us, right in the middle of the map! I'm busy wiggling, napping and listening for you.",
     "know": {
-      "text": "Around now, your baby moves around a lot and is settling into waking and sleeping times of their own. Their busy times may not match yours, and that is common.",
+      "text": "Around now, your baby moves around a lot, even if you cannot feel it yet, and is settling into waking and sleeping times of their own. Their busy times may not match yours, and that is common.",
       "source_org": "NHS",
       "source_title": "21 weeks pregnant guide - Best Start in Life - NHS",
       "url": "https://www.nhs.uk/best-start-in-life/pregnancy/week-by-week-guide-to-pregnancy/2nd-trimester/week-21/"
@@ -142,10 +142,10 @@
       "suggested_question": "When might I start feeling my baby move, and who do I call if I'm ever unsure?"
     },
     "look_forward": {
-      "text": "Many parents first feel their baby move somewhere in this stretch, often like a soft flutter or bubble. In a first pregnancy it can come a little later."
+      "text": "Many parents first feel movement between 16 and 24 weeks, often a soft flutter. If you have felt nothing by 24 weeks, tell your doctor or midwife."
     },
     "curious": {
-      "question": "Why does my baby seem wide awake just when I want to sleep?",
+      "question": "What can help me rest and sleep a little better?",
       "need": "REST"
     }
   },
@@ -162,7 +162,7 @@
     "art_brief": "Bumpy peeking out from between two cut-paper curtains at a small round paper window, with a paper sun shining through by day and a paper moon behind soft paper clouds by night.",
     "bumpy_line": "Peekaboo! My eyes are getting ready to open. Blinking is next on my list.",
     "know": {
-      "text": "Around now, your baby's eyes begin to open for the first time, and blinking comes next. There is a lot of busy activity going on in there.",
+      "text": "Towards the end of these weeks or soon after, your baby's eyes begin to open for the first time, and blinking comes next. There is a lot of busy activity going on in there.",
       "source_org": "NHS",
       "source_title": "26 weeks pregnant guide - Best Start in Life - NHS",
       "url": "https://www.nhs.uk/best-start-in-life/pregnancy/week-by-week-guide-to-pregnancy/2nd-trimester/week-26/"
@@ -175,7 +175,7 @@
       "text": "Around now, some parents find a partner or close friend can feel movements from the outside too. It may happen now or later, in its own time."
     },
     "curious": {
-      "question": "Is my baby's brain already making sense of light and sound?",
+      "question": "Which foods matter for my baby's growing brain?",
       "need": "BRAIN"
     }
   },
@@ -192,7 +192,7 @@
     "art_brief": "Bumpy hopping across a row of round cut-paper stepping stones over a wavy paper stream with paper reeds on the bank, under a paper sun by day and a dark sky with tiny paper fireflies by night.",
     "bumpy_line": "Hop, hop! We're stepping into the last part of our story together. I'm glad you're here.",
     "know": {
-      "text": "Around now, many parents are offered a whooping cough vaccine. Your body passes protection across to your baby before birth, which helps protect them early in life.",
+      "text": "These weeks fall within the time a whooping cough vaccine is offered in pregnancy, if you have not had it yet. Your body passes protection to your baby before birth, which helps protect them early in life.",
       "source_org": "CDC",
       "source_title": "Tdap Vaccination for Pregnant Women",
       "url": "https://www.cdc.gov/pertussis/vaccines/tdap-vaccination-during-pregnancy.html"
@@ -220,22 +220,22 @@
     "accent": "#C8607C",
     "illustration": "chapter-32",
     "art_brief": "Bumpy tucked into a round cut-paper bird's nest lined with paper leaves and a tiny folded paper blanket, resting on a paper branch, with a pale sky by day and a paper crescent moon and small glowing paper lantern by night.",
-    "bumpy_line": "Getting snug in here! Tell me about home. Is it noisy, cozy, full of plants? I'm curious.",
+    "bumpy_line": "Getting snug in here! Tell me about the world out there. Is it noisy, quiet, full of birds? I'm curious.",
     "know": {
-      "text": "Your baby keeps moving right up to and during labour. If their usual pattern of movements ever changes, call your midwife, doctor or maternity unit straight away, even at night.",
+      "text": "Babies keep moving right up to birth. If your baby is moving less than usual, has stopped, or their pattern changes, call your doctor or midwife or the hospital straight away, even at night.",
       "source_org": "NHS",
       "source_title": "Your baby's movements",
       "url": "https://www.nhs.uk/pregnancy/keeping-well/your-babys-movements/"
     },
     "ready": {
-      "text": "Save the numbers for your doctor or midwife and your birth unit in your phone, and share them with someone close. Easy to find, any hour.",
+      "text": "Save the numbers for your doctor or midwife and the place you plan to give birth, and share them with someone close if you like. Easy to find, any hour.",
       "suggested_question": "Where do I go, and who do I call, when labour starts or if something feels different?"
     },
     "look_forward": {
       "text": "Many parents start to picture the first hello around now. Daydream about it as much or as little as you like. Bumpy is daydreaming too."
     },
     "curious": {
-      "question": "Are my baby's bones still getting stronger right now?",
+      "question": "My baby is storing calcium now. Where can I get mine?",
       "need": "BONES"
     }
   },
@@ -280,7 +280,7 @@
     "accent": "#A86C9C",
     "illustration": "chapter-40",
     "art_brief": "Bumpy resting in a cut-paper hammock slung between two simple paper trees, with a paper sunrise behind them by day and a paper crescent moon with a few paper stars by night.",
-    "bumpy_line": "I'm taking my own sweet time in here. Let's rest, wait and wonder together a little longer.",
+    "bumpy_line": "Still in here, still listening. I'm keeping you company, one day at a time.",
     "know": {
       "text": "If labour has not started on its own around now, your doctor or midwife will talk through all your options with you. The choice of what happens next is yours.",
       "source_org": "NHS",
