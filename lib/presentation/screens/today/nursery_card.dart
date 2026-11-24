@@ -2,8 +2,8 @@ part of 'today_screen.dart';
 
 // ── Nursery card: Bumpy, the costume-and-need pairing, and Bumpy's line ────
 
-class _NurseryCard extends StatelessWidget {
-  const _NurseryCard({
+class _NurseryCardBody extends StatelessWidget {
+  const _NurseryCardBody({
     required this.state,
     required this.need,
     required this.palette,
@@ -217,6 +217,91 @@ class _NeedPairing extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// The nursery card, plus one hop when the last check-in of the day lands.
+///
+/// The room already hops when today's need is ticked. When the third tick
+/// is saved (not on a rebuild, not when the app opens on a finished day),
+/// Bumpy hops once more with the same shared hop. The two hops are merged,
+/// so a tick that is both never doubles. With motion off nothing moves; the
+/// saved card says the rest.
+class _NurseryCard extends StatefulWidget {
+  const _NurseryCard({
+    required this.state,
+    required this.need,
+    required this.palette,
+    required this.sceneHeight,
+    required this.needTicked,
+    required this.babyLine,
+    required this.lineIsDraft,
+    required this.hopAnimation,
+  });
+
+  final AppState state;
+  final MaternalNeed need;
+  final AppPalette palette;
+  final double sceneHeight;
+  final bool needTicked;
+  final String babyLine;
+  final bool lineIsDraft;
+  final Animation<double> hopAnimation;
+
+  @override
+  State<_NurseryCard> createState() => _NurseryCardState();
+}
+
+class _NurseryCardState extends State<_NurseryCard>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _allDone = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 400),
+  );
+  late final Animation<double> _allDoneHop = bumpyHop().animate(_allDone);
+  late Animation<double> _hop = _merge();
+  late bool _wasAllDone = _isAllDone;
+
+  bool get _isAllDone =>
+      widget.state.allChecked &&
+      widget.state.checkInStatus == CheckInSaveStatus.saved;
+
+  // Both hops go up (negative); the higher one wins.
+  Animation<double> _merge() =>
+      AnimationMin<double>(widget.hopAnimation, _allDoneHop);
+
+  @override
+  void didUpdateWidget(_NurseryCard old) {
+    super.didUpdateWidget(old);
+    if (old.hopAnimation != widget.hopAnimation) _hop = _merge();
+  }
+
+  @override
+  void dispose() {
+    _allDone.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final allDone = _isAllDone;
+    if (allDone && !_wasAllDone && !MediaQuery.disableAnimationsOf(context)) {
+      // After this frame, so the hop never starts in the middle of a build.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _allDone.forward(from: 0);
+      });
+    }
+    _wasAllDone = allDone;
+    return _NurseryCardBody(
+      state: widget.state,
+      need: widget.need,
+      palette: widget.palette,
+      sceneHeight: widget.sceneHeight,
+      needTicked: widget.needTicked,
+      babyLine: widget.babyLine,
+      lineIsDraft: widget.lineIsDraft,
+      hopAnimation: _hop,
     );
   }
 }
