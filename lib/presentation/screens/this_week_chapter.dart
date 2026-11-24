@@ -1100,7 +1100,7 @@ class _CuriousLink extends StatelessWidget {
                     child: Text(
                       question,
                       semanticsLabel:
-                          '$question Opens the ${need.label} guide.',
+                          '$question Opens the ${needWord(need)} guide.',
                       style: AppText.bodyStrong.copyWith(color: palette.ink),
                     ),
                   ),

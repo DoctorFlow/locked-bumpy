@@ -79,13 +79,13 @@
     },
     "ready": {
       "text": "Choose a song, rhyme or story you like and keep it handy to share with your bump. Anyone close to you can join in. No voice is too off-key.",
-      "suggested_question": "What will happen at my next visit, and how can I reach you between visits if I have a question?"
+      "suggested_question": "When might my baby start to hear the songs and voices I share?"
     },
     "look_forward": {
       "text": "Around now, some parents give their bump a nickname, and it can start to feel like a little someone. Bumpy thinks nicknames are a wonderful idea."
     },
     "curious": {
-      "question": "Does what I eat and drink still matter for my baby's brain?",
+      "question": "Why does folic acid matter so much for my baby's brain?",
       "need": "BRAIN"
     }
   },
@@ -115,7 +115,7 @@
       "text": "For many parents, sickness starts to ease and energy lifts a little in the middle months. If yours has not yet, that is common too."
     },
     "curious": {
-      "question": "Why do I hear so much about iron in the middle months?",
+      "question": "I still feel tired a lot. Could low iron be part of it?",
       "need": "IRON"
     }
   },
@@ -142,7 +142,7 @@
       "suggested_question": "When might I start feeling my baby move, and who do I call if I'm ever unsure?"
     },
     "look_forward": {
-      "text": "Many parents first feel movement between 16 and 24 weeks, often a soft flutter. If you have felt nothing by 24 weeks, tell your doctor or midwife."
+      "text": "The middle of the map is a fine spot for a photo of your bump, or of anything that marks this time. Yours to keep or share."
     },
     "curious": {
       "question": "What can help me rest and sleep a little better?",
@@ -172,10 +172,10 @@
       "suggested_question": "What checks or tests are coming up in the next few weeks, and what are they for?"
     },
     "look_forward": {
-      "text": "Around now, some parents find a partner or close friend can feel movements from the outside too. It may happen now or later, in its own time."
+      "text": "A first tiny outfit, new, borrowed or handed down, is a sweet thing to spot or set aside, whenever you feel ready. Bumpy votes for anything soft."
     },
     "curious": {
-      "question": "Which foods matter for my baby's growing brain?",
+      "question": "Is folic acid the only thing that matters for my baby's brain?",
       "need": "BRAIN"
     }
   },
@@ -199,13 +199,13 @@
     },
     "ready": {
       "text": "Start a short list of who you might like with you at the birth, and anything you would like them to know. Change it any time.",
-      "suggested_question": "Which vaccines are offered to me in pregnancy, and when would I have them?"
+      "suggested_question": "Who can be with me at the birth, and can I change my mind closer to the day?"
     },
     "look_forward": {
-      "text": "Around now, some parents notice their baby moving in answer to a voice, a song or a hand on the bump. Bumpy loves a chat."
+      "text": "A short note to your baby, about an ordinary day or a hope, makes a lovely keepsake if you feel like writing one. Bumpy is all ears."
     },
     "curious": {
-      "question": "Is my prenatal vitamin still doing something this far along?",
+      "question": "My vitamin is a gummy one. Is anything missing from it?",
       "need": "VITAMIN"
     }
   },
@@ -265,7 +265,7 @@
       "text": "Many parents start trying out names around now, out loud, in whispers, or not yet at all. Bumpy is listening for favourites."
     },
     "curious": {
-      "question": "I need the loo so often again. Is it still good to keep drinking water?",
+      "question": "With all these trips to the loo, how can I tell if I'm drinking enough?",
       "need": "WATER"
     }
   },
