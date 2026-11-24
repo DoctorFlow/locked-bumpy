@@ -120,7 +120,7 @@ void main() {
   });
 
   for (final p in looks) {
-    testWidgets('${name(p)}: tab labels grow with the text size at 320 px', (
+    testWidgets('${name(p)}: tab labels grow with the text size, on one line, at 320 px', (
       tester,
     ) async {
       tester.view.devicePixelRatio = 1;
@@ -186,12 +186,20 @@ void main() {
         isSemantics(isSelected: true),
       );
 
+      // At 200% the labels grow to 1.3x and stay on one line, inside the tab.
       await pump(2);
       await tester.pumpAndSettle();
-      expect(
-        tester.getSize(find.text('Today')).height,
-        greaterThanOrEqualTo(plain * 2),
-      );
+      for (final label in ['Today', 'This Week', 'Guides']) {
+        final grown = tester.getSize(find.text(label)).height;
+        expect(grown, greaterThan(plain * 1.2), reason: label);
+        expect(grown, lessThan(plain * 1.5), reason: label);
+        final tab = tester.getRect(
+          find.ancestor(of: find.text(label), matching: find.byType(InkWell)),
+        );
+        final drawn = tester.getRect(find.text(label));
+        expect(drawn.left, greaterThanOrEqualTo(tab.left), reason: label);
+        expect(drawn.right, lessThanOrEqualTo(tab.right), reason: label);
+      }
       expect(tester.takeException(), isNull);
       semantics.dispose();
     });

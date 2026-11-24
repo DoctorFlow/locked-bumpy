@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'app_nav_bar.dart';
+import 'draft_tag.dart';
 import 'need_word.dart';
 import 'pause_button.dart';
 
@@ -56,7 +57,8 @@ class VisitTopics extends StatelessWidget {
       sheetAnimationStyle: MediaQuery.disableAnimationsOf(context)
           ? AnimationStyle.noAnimation
           : null,
-      builder: (sheet) => _VisitEditor(state: state, include: include),
+      builder: (sheet) =>
+          SheetTopRoom(child: _VisitEditor(state: state, include: include)),
     );
   }
 

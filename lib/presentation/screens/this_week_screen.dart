@@ -385,7 +385,17 @@ class _ThisWeekScreenState extends State<ThisWeekScreen> {
               ),
               onPressed: _chooseWeek,
               icon: const Icon(Icons.calendar_view_month_rounded, size: 20),
-              label: const Text('Choose week', textAlign: TextAlign.center),
+              // One line: at a large text size the words shrink to fit
+              // between the arrows instead of wrapping.
+              label: const FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  'Choose week',
+                  maxLines: 1,
+                  softWrap: false,
+                  textAlign: TextAlign.center,
+                ),
+              ),
             ),
           ),
           _NavButton(

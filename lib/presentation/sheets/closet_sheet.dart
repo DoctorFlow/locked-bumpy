@@ -8,6 +8,7 @@ import '../../domain/models/app_state.dart';
 import '../../domain/models/need.dart';
 import '../../domain/models/skin_tone.dart';
 import '../widgets/bumpy_avatar.dart';
+import '../widgets/draft_tag.dart';
 import '../widgets/need_word.dart';
 import '../widgets/paper_portrait.dart';
 
@@ -25,7 +26,7 @@ class ClosetSheet extends StatefulWidget {
       sheetAnimationStyle: MediaQuery.disableAnimationsOf(context)
           ? AnimationStyle.noAnimation
           : null,
-      builder: (_) => ClosetSheet(state: state),
+      builder: (_) => SheetTopRoom(child: ClosetSheet(state: state)),
     );
   }
 
