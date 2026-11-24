@@ -667,7 +667,7 @@ class _EditWordsDialogState extends State<_EditWordsDialog> {
             enableSuggestions: false,
             autocorrect: false,
             decoration: const InputDecoration(
-              labelText: 'My question, in my own words',
+              labelText: 'In my own words',
             ),
           ),
         ],

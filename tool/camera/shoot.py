@@ -59,6 +59,32 @@ VISIT_WITH_QUESTIONS = ["iron", "question:Can I travel?",
                         "question@water:How much water is right for me?"]
 
 
+def _q2(text, origin, need=None, week=None, day=None):
+    """A question in the current stored form ("q2:" + JSON), as
+    VisitQuestion.encode() writes it: origin, need, week, day added."""
+    data = {"t": text, "o": origin}
+    if need:
+        data["n"] = need
+    if week:
+        data["w"] = week
+    if day:
+        data["d"] = day
+    return "q2:" + json.dumps(data, ensure_ascii=False, separators=(",", ":"))
+
+
+# Both kinds of question: picked ones saved first, the parent's own after,
+# so the show page has to reorder them (own words first).
+VISIT_MIXED = [
+    "rest",
+    _q2("When will I feel movement?", "week", week=20, day="2026-10-26"),
+    _q2("Can I keep cycling to work?", "own", day="2026-11-02"),
+    _q2("How much water is right for me?", "guide", need="water", day="2026-11-09"),
+    _q2("Could we check my iron?", "today", need="iron", day="2026-11-16"),
+    _q2("Is it normal to feel this tired in the afternoons, even after a full night?",
+        "own", day="2026-11-20"),
+]
+
+
 def due_for_week(week):
     """A due date that puts FIXED_NOW in the middle of pregnancy week N
     (lib/domain/pregnancy.dart: week = (280 + today - due) ~/ 7)."""
@@ -241,6 +267,26 @@ SCENARIOS = [
     ], note="from lane-visit.md"),
     S("visit-invite", {}, [reveal("A question for your doctor or midwife", at=0.45)],
       note="from lane-visit.md: empty list shows one quiet line"),
+    # Visit memory (roles/visit-memory.md): own words and picked questions.
+    S("visit-mixed-today", {"visit_topics": VISIT_MIXED}, [
+        reveal("Show at my visit", at=0.62), wait(300),
+    ], note="newest own words on Today's card"),
+    S("visit-mixed-show", {"visit_topics": VISIT_MIXED}, [
+        tap("Show at my visit", "button", find=True), wait(500), shot("visit-mixed-show"),
+        scroll(), shot("visit-mixed-show-2"), scroll(), shot("visit-mixed-show-3"),
+    ], shot=None, note="own words first, then picked with origin lines, then Copy my list"),
+    S("visit-mixed-edit", {"visit_topics": VISIT_MIXED}, [
+        tap("Show at my visit", "button", find=True), wait(500), tap("Edit", "button"), wait(500),
+        shot("visit-mixed-edit"), scroll(), shot("visit-mixed-edit-2"),
+    ], shot=None, note="editor: own words first, change-the-words pencil"),
+    S("visit-mixed-change", {"visit_topics": VISIT_MIXED}, [
+        tap("Show at my visit", "button", find=True), wait(500), tap("Edit", "button"), wait(500),
+        tap("Change the words: How much water is right for me?", "button", find=True), wait(500),
+    ], note="the change-the-words dialog on a picked question"),
+    S("visit-mixed-copied", {"visit_topics": VISIT_MIXED}, [
+        tap("Show at my visit", "button", find=True), wait(500),
+        tap("Copy my list", "button", find=True), wait(400),
+    ], note="Copy my list and its note"),
     # First run: brand-new install, from roles/lane-firstrun.md (five steps).
     # No look is saved yet, so it runs once; first-run-everyday picks the
     # Everyday card on the look step.
