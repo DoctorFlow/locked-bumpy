@@ -19,6 +19,7 @@ import '../widgets/need_word.dart';
 import '../widgets/nursery_scene.dart';
 import '../widgets/visit_topics.dart';
 import 'guide_screen.dart';
+import 'urgent_screen.dart';
 
 part 'this_week_chapter.dart';
 
@@ -288,15 +289,28 @@ class _ThisWeekScreenState extends State<ThisWeekScreen> {
                 return page(
                   PageStorageKey('chapter-week-$week'),
                   week,
-                  _ChapterPage(
-                    chapter: chapter,
-                    week: week,
-                    card: card,
-                    palette: palette,
-                    state: widget.state,
-                    isCurrentWeek: week == _currentWeek,
-                    onReturn: () => _goTo(_currentWeek),
-                    onVisit: () => VisitTopics.edit(context, widget.state),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      _ChapterPage(
+                        chapter: chapter,
+                        week: week,
+                        card: card,
+                        palette: palette,
+                        state: widget.state,
+                        isCurrentWeek: week == _currentWeek,
+                        onReturn: () => _goTo(_currentWeek),
+                        onVisit: () => VisitTopics.edit(context, widget.state),
+                      ),
+                      const SizedBox(height: AppSpace.l),
+                      // The page ends as Today does: the quiet way to the
+                      // urgent signs, on the page below the chapter card.
+                      UrgentLink(
+                        key: ValueKey('chapter-urgent-link-$week'),
+                        state: widget.state,
+                        palette: palette,
+                      ),
+                    ],
                   ),
                 );
               }
