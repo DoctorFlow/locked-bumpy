@@ -241,12 +241,21 @@ class _ThisWeekScreenState extends State<ThisWeekScreen> {
     }
 
     final mode = palette.isHalloween ? 'halloween' : 'everyday';
+    // At large text or on a short screen a fixed strip would leave the
+    // chapter a slot about a third of the screen tall, so the strip moves to
+    // the top of each page and scrolls away with it.
+    final strip = !_stripScrolls(context);
     // Each week is a page that starts right under the top bar and scrolls on
-    // its own. The week strip sits below the pages, never on top of them, so
-    // the last section always scrolls fully into view above it.
-    Widget page(Key key, Widget child) => CustomScrollView(
+    // its own. The fixed week strip sits below the pages, never on top of
+    // them, so the last section always scrolls fully into view above it.
+    Widget page(Key key, int week, Widget child) => CustomScrollView(
       key: key,
       slivers: [
+        if (!strip)
+          SliverToBoxAdapter(
+            key: const ValueKey('week-strip-in-page'),
+            child: _weekStrip(palette, week),
+          ),
         SliverPadding(
           padding: const EdgeInsets.fromLTRB(
             AppSpace.page,
@@ -277,6 +286,7 @@ class _ThisWeekScreenState extends State<ThisWeekScreen> {
               if (chapter != null) {
                 return page(
                   PageStorageKey('chapter-week-$week'),
+                  week,
                   _ChapterPage(
                     chapter: chapter,
                     week: week,
@@ -291,6 +301,7 @@ class _ThisWeekScreenState extends State<ThisWeekScreen> {
               }
               return page(
                 PageStorageKey('week-$week'),
+                week,
                 _WeekCardView(
                   onVisit: () => VisitTopics.edit(context, widget.state),
                   onReturn: () => _goTo(_currentWeek),
@@ -313,56 +324,62 @@ class _ThisWeekScreenState extends State<ThisWeekScreen> {
             },
           ),
         ),
-        // A quiet strip: no fills, soft moonlight, a hairline above. It is
-        // there when wanted and does not compete with the page.
-        DecoratedBox(
-          decoration: BoxDecoration(
-            border: Border(
-              top: BorderSide(
-                color: palette.moonlightSoft.withValues(alpha: .25),
+        if (strip)
+          DecoratedBox(
+            key: const ValueKey('week-strip-fixed'),
+            decoration: BoxDecoration(
+              border: Border(
+                top: BorderSide(
+                  color: palette.moonlightSoft.withValues(alpha: .25),
+                ),
               ),
             ),
+            child: _weekStrip(palette, _selectedWeek),
           ),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpace.s),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                _NavButton(
-                  icon: Icons.arrow_back_ios_new,
-                  label: 'Previous week',
-                  enabled: _selectedWeek > _minWeek,
-                  palette: palette,
-                  onTap: () => _goTo(_selectedWeek - 1),
-                ),
-                Flexible(
-                  child: TextButton.icon(
-                    style: TextButton.styleFrom(
-                      foregroundColor: palette.moonlightSoft,
-                    ),
-                    onPressed: _chooseWeek,
-                    icon: const Icon(
-                      Icons.calendar_view_month_rounded,
-                      size: 20,
-                    ),
-                    label: const Text(
-                      'Choose week',
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                ),
-                _NavButton(
-                  icon: Icons.arrow_forward_ios,
-                  label: 'Next week',
-                  enabled: _selectedWeek < _maxWeek,
-                  palette: palette,
-                  onTap: () => _goTo(_selectedWeek + 1),
-                ),
-              ],
+      ],
+    );
+  }
+
+  /// True when the week strip scrolls with the page instead of staying
+  /// fixed: text above 130 percent, or a screen under 600 tall.
+  bool _stripScrolls(BuildContext context) =>
+      MediaQuery.textScalerOf(context).scale(16) > 16 * 1.3 ||
+      MediaQuery.sizeOf(context).height < 600;
+
+  /// A quiet strip: no fills, soft moonlight. It is there when wanted and
+  /// does not compete with the page. [week] is the week it moves from.
+  Widget _weekStrip(AppPalette palette, int week) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: AppSpace.s),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          _NavButton(
+            icon: Icons.arrow_back_ios_new,
+            label: 'Previous week',
+            enabled: week > _minWeek,
+            palette: palette,
+            onTap: () => _goTo(week - 1),
+          ),
+          Flexible(
+            child: TextButton.icon(
+              style: TextButton.styleFrom(
+                foregroundColor: palette.moonlightSoft,
+              ),
+              onPressed: _chooseWeek,
+              icon: const Icon(Icons.calendar_view_month_rounded, size: 20),
+              label: const Text('Choose week', textAlign: TextAlign.center),
             ),
           ),
-        ),
-      ],
+          _NavButton(
+            icon: Icons.arrow_forward_ios,
+            label: 'Next week',
+            enabled: week < _maxWeek,
+            palette: palette,
+            onTap: () => _goTo(week + 1),
+          ),
+        ],
+      ),
     );
   }
 }
