@@ -113,7 +113,7 @@ class AppPalette extends ThemeExtension<AppPalette> {
   static const halloween = AppPalette(
     skyTop: Color(0xFF1A1224),
     skyBottom: Color(0xFF120C19),
-    hill: Color(0xFF4D394D),
+    hill: Color(0xFF785476),
     paper: Color(0xFF2A1F38),
     paperRaised: Color(0xFF382A4B),
     ink: Color(0xFFF3E9DA),

@@ -47,10 +47,11 @@ class PackageTest(unittest.TestCase):
                     self.assertFalse((root / "bumpy-offline.js").exists())
                     artifact.write_bytes(current)
 
-    def test_app_art_stays_within_the_four_megabyte_demo_budget(self):
+    def test_app_art_stays_within_the_eight_megabyte_demo_budget(self):
+        # The lead's limit, shared with tool/export_art.py (BUDGET).
         images = Path(__file__).resolve().parents[1] / "assets/images"
         size = sum(p.stat().st_size for p in images.rglob("*") if p.is_file())
-        self.assertLess(size, 4_000_000, f"App art totals {size:,} bytes")
+        self.assertLess(size, 8_000_000, f"App art totals {size:,} bytes")
 
     @staticmethod
     def make_output(root):
