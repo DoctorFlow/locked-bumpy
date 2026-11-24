@@ -128,14 +128,37 @@ class PrefsService {
         .toSet();
   }
 
-  Future<void> saveVisitTopics(Set<MaternalNeed> topics) async {
+  // Legacy lists contain only enum names. The prefix keeps free text distinct
+  // even when the entire question matches a topic name.
+  static const _questionPrefix = 'question:';
+
+  String get visitQuestion {
+    final saved = _prefs.getStringList(AppConstants.prefsVisitTopicsKey) ?? [];
+    for (final value in saved) {
+      if (value.startsWith(_questionPrefix)) {
+        return value.substring(_questionPrefix.length);
+      }
+    }
+    return '';
+  }
+
+  Future<void> saveVisitTopics(
+    Set<MaternalNeed> topics, {
+    String? question,
+  }) async {
     final values = <String>[
       for (final need in MaternalNeed.values)
         if (topics.contains(need)) need.name,
     ];
-    final saved = await _orderedWrite(
-      () => _prefs.setStringList(AppConstants.prefsVisitTopicsKey, values),
-    );
+    final saved = await _orderedWrite(() async {
+      final text = (question ?? visitQuestion).trim();
+      if (text.isNotEmpty) values.add('$_questionPrefix$text');
+      final ok = await _attempt(
+        () => _prefs.setStringList(AppConstants.prefsVisitTopicsKey, values),
+      );
+      if (!ok) await _reloadFromDisk();
+      return ok;
+    });
     if (!saved) throw StateError('Could not save visit topics');
   }
 

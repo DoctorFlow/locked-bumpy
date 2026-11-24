@@ -68,6 +68,10 @@ void main() {
           .value,
       isTrue,
     );
+    await t.enterText(
+      find.byType(TextFormField),
+      'Could we talk about my routine?',
+    );
     await tap(find.byKey(const ValueKey('visit-topic-rest')));
     await tap(find.text('Save visit list'));
     expect(state.visitTopics, {MaternalNeed.water, MaternalNeed.rest});
@@ -76,10 +80,13 @@ void main() {
     await tap(find.byKey(const ValueKey('visit-topic-rest')));
     await tap(find.byTooltip('Close visit list'));
     final restored = await AppState.load();
+    expect(restored.visitQuestion, 'Could we talk about my routine?');
     expect(restored.visitTopics, {MaternalNeed.water, MaternalNeed.rest});
     await tap(find.text('On my visit list'));
+    expect(find.text('Could we talk about my routine?'), findsOneWidget);
     await tap(find.byKey(const ValueKey('visit-topic-water')));
     await tap(find.byTooltip('Pause').hitTestable());
+    expect(find.text('Could we talk about my routine?'), findsNothing);
     expect(find.text('Everything is paused.'), findsOneWidget);
     expect((await AppState.load()).visitTopics, {
       MaternalNeed.water,
@@ -88,6 +95,7 @@ void main() {
     expect(find.text('For my next visit'), findsNothing);
     await state.eraseAll();
     expect((await AppState.load()).visitTopics, isEmpty);
+    expect((await AppState.load()).visitQuestion, isEmpty);
     await t.pumpWidget(const SizedBox());
   });
 }

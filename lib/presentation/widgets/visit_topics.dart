@@ -17,6 +17,7 @@ class VisitTopics extends StatelessWidget {
   }) async {
     final palette = AppPalette.of(context);
     final selected = {...state.visitTopics, ?include};
+    var question = state.visitQuestion;
     var saving = false;
     var saveFailed = false;
     await showModalBottomSheet<void>(
@@ -37,7 +38,7 @@ class VisitTopics extends StatelessWidget {
               saveFailed = false;
             });
             try {
-              await state.saveVisitTopics(selected);
+              await state.saveVisitTopics(selected, question: question);
             } catch (_) {
               if (context.mounted) {
                 update(() {
@@ -55,7 +56,12 @@ class VisitTopics extends StatelessWidget {
           return SafeArea(
             top: false,
             child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(18, 8, 18, 16),
+              padding: EdgeInsets.fromLTRB(
+                18,
+                8,
+                18,
+                16 + MediaQuery.viewInsetsOf(context).bottom,
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
@@ -85,6 +91,20 @@ class VisitTopics extends StatelessWidget {
                   Text(
                     'Choose what you want to ask your care team about.',
                     style: TextStyle(color: palette.inkSoft),
+                  ),
+                  const SizedBox(height: 8),
+                  TextFormField(
+                    initialValue: question,
+                    enabled: !saving,
+                    minLines: 1,
+                    maxLines: 3,
+                    enableSuggestions: false,
+                    autocorrect: false,
+                    decoration: const InputDecoration(
+                      labelText: 'My question (optional)',
+                      border: OutlineInputBorder(),
+                    ),
+                    onChanged: (value) => question = value,
                   ),
                   const SizedBox(height: 8),
                   for (final need in MaternalNeed.values)
@@ -220,7 +240,11 @@ class VisitTopics extends StatelessWidget {
               style: TextButton.styleFrom(foregroundColor: palette.ink),
               onPressed: () => edit(context, state),
               icon: const Icon(Icons.edit_outlined, size: 18),
-              label: Text(topics.isEmpty ? 'Choose topics' : 'Edit visit list'),
+              label: Text(
+                topics.isEmpty && state.visitQuestion.isEmpty
+                    ? 'Choose topics'
+                    : 'Edit visit list',
+              ),
             ),
           ],
         ),

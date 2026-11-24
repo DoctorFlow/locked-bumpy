@@ -29,6 +29,7 @@ class FlakyPrefs implements SharedPreferences {
   Completer<void>? pauseGate;
   Completer<void>? dailyGate;
   bool failDaily = false;
+  bool failVisit = false;
   bool throwDaily = false;
   final pauseWrites = <bool>[];
   final _cacheGone = <String>{};
@@ -75,6 +76,7 @@ class FlakyPrefs implements SharedPreferences {
 
   @override
   Future<bool> setStringList(String key, List<String> value) async {
+    if (key == 'visit_topics' && failVisit) return false;
     if (key == 'daily_needs_v2') {
       final gate = dailyGate;
       if (gate != null) await gate.future;
@@ -310,6 +312,34 @@ void main() {
     await state.toggleCheckIn('water');
     expect(disk.getStringList('daily_needs_v2'), ['2026-11-24', 'water']);
   });
+
+  test(
+    'visit question and topics commit together and can be cleared',
+    () async {
+      await start({
+        ...active,
+        'visit_topics': <String>['water'],
+      });
+      final legacyTopics = state.visitTopics;
+      expect(legacyTopics.single.name, 'water');
+      expect(state.visitQuestion, isEmpty);
+      flaky.failVisit = true;
+      await expectLater(
+        state.saveVisitTopics({}, question: 'water'),
+        throwsStateError,
+      );
+      expect(state.visitTopics, legacyTopics);
+      expect(coldBoot().visitQuestion, isEmpty);
+      flaky.failVisit = false;
+      await state.saveVisitTopics({}, question: 'water');
+      expect(coldBoot().visitTopics, isEmpty);
+      expect(coldBoot().visitQuestion, 'water');
+      await state.saveVisitTopics(legacyTopics);
+      expect(coldBoot().visitQuestion, 'water');
+      await state.saveVisitTopics(legacyTopics, question: ' ');
+      expect(coldBoot().visitQuestion, isEmpty);
+    },
+  );
 
   test('Erase finishes after in-flight check-in and visit writes', () async {
     await start(active);

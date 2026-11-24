@@ -7,6 +7,7 @@ import '../../domain/models/app_state.dart';
 import '../../domain/models/week_card.dart';
 import '../widgets/bumpy_avatar.dart';
 import '../widgets/nursery_scene.dart';
+import '../widgets/visit_topics.dart';
 
 /// This Week tab — browse gestational weeks 4–42 with approved baby-voice cards.
 class ThisWeekScreen extends StatefulWidget {
@@ -225,6 +226,7 @@ class _ThisWeekScreenState extends State<ThisWeekScreen> {
                     SliverFillRemaining(
                       hasScrollBody: false,
                       child: _WeekCardView(
+                        onVisit: () => VisitTopics.edit(context, widget.state),
                         onReturn: () => _goTo(_currentWeek),
                         portrait: week == _currentWeek
                             ? BumpyAvatar(
@@ -288,6 +290,7 @@ class _ThisWeekScreenState extends State<ThisWeekScreen> {
 
 class _WeekCardView extends StatelessWidget {
   const _WeekCardView({
+    required this.onVisit,
     required this.week,
     required this.card,
     required this.palette,
@@ -302,6 +305,7 @@ class _WeekCardView extends StatelessWidget {
   final bool isCurrentWeek;
   final BumpyAvatar? portrait;
   final VoidCallback onReturn;
+  final VoidCallback onVisit;
 
   @override
   Widget build(BuildContext context) {
@@ -392,6 +396,12 @@ class _WeekCardView extends StatelessWidget {
               onPressed: onReturn,
             ),
           ],
+          _WeekInvitation(
+            key: ValueKey(week),
+            week: week,
+            palette: palette,
+            onVisit: onVisit,
+          ),
         ],
       ),
     );
@@ -416,6 +426,117 @@ class _WeekCardView extends StatelessWidget {
                 ),
         ),
       ),
+    );
+  }
+}
+
+class _WeekInvitation extends StatefulWidget {
+  const _WeekInvitation({
+    super.key,
+    required this.week,
+    required this.palette,
+    required this.onVisit,
+  });
+
+  final int week;
+  final AppPalette palette;
+  final VoidCallback onVisit;
+
+  @override
+  State<_WeekInvitation> createState() => _WeekInvitationState();
+}
+
+class _WeekInvitationState extends State<_WeekInvitation> {
+  static const ideas = [
+    'Pick a song you’d love Bumpy to know. Play it for yourself today.',
+    'What’s a story you loved as a child? Read the first page aloud if you feel like it.',
+    'Picture a place you’d love to show Bumpy. What would you point out first?',
+    'Think of a family saying that makes you smile. Try saying it to Bumpy.',
+    'What’s one ordinary thing you can’t wait to do together? Imagine an afternoon doing just that.',
+    'Choose a nickname just for today. It can be as silly as you like.',
+  ];
+  int _offset = 0;
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = widget.palette;
+    final preparation = switch (widget.week) {
+      <= 13 =>
+        'Save your care team’s number in your phone. If you’re unsure who to call between visits, bring that question along.',
+      <= 23 =>
+        'Think back to your last visit. Was there something you wanted to ask on the way home?',
+      <= 31 =>
+        'Picture your next visit. What would you like your care team to explain in your own words?',
+      _ =>
+        'Think through getting to your next visit. Is there anything about timing, travel or support you want to ask about?',
+    };
+    final titleStyle = TextStyle(
+      color: palette.ink,
+      fontWeight: FontWeight.bold,
+      fontSize: 18,
+    );
+    final bodyStyle = TextStyle(
+      color: palette.inkSoft,
+      fontSize: 16,
+      height: 1.4,
+    );
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Divider(height: 28, color: palette.inkSoft.withValues(alpha: .28)),
+        Semantics(
+          header: true,
+          child: Text('One thing to get ready', style: titleStyle),
+        ),
+        const SizedBox(height: 5),
+        Text(preparation, style: bodyStyle),
+        Align(
+          alignment: AlignmentDirectional.centerStart,
+          child: TextButton.icon(
+            onPressed: widget.onVisit,
+            style: TextButton.styleFrom(
+              foregroundColor: palette.accent,
+              minimumSize: const Size(48, 48),
+            ),
+            icon: const Icon(Icons.edit_note_rounded),
+            label: const Text('My question for the visit'),
+          ),
+        ),
+        DecoratedBox(
+          decoration: BoxDecoration(
+            color: palette.paperRaised,
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(14, 13, 14, 4),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Semantics(
+                  header: true,
+                  child: Text(
+                    'Something to look forward to',
+                    style: titleStyle,
+                  ),
+                ),
+                const SizedBox(height: 5),
+                Semantics(
+                  liveRegion: true,
+                  child: Text(
+                    ideas[(widget.week - 4 + _offset) % ideas.length],
+                    style: bodyStyle,
+                  ),
+                ),
+                TextButton(
+                  style: TextButton.styleFrom(foregroundColor: palette.ink),
+                  onPressed: () => setState(() => _offset++),
+                  child: const Text('Try another idea'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

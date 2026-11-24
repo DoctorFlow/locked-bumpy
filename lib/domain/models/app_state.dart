@@ -17,6 +17,7 @@ class AppState extends ChangeNotifier {
       _isHalloween = _prefs.isHalloween,
       _skinTone = _prefs.skinTone,
       _visitTopics = _prefs.visitTopics,
+      _visitQuestion = _prefs.visitQuestion,
       _isPaused = _prefs.isPaused,
       _nickname = _prefs.nickname {
     _day = _now();
@@ -105,15 +106,19 @@ class AppState extends ChangeNotifier {
   }
 
   Set<MaternalNeed> _visitTopics;
-  int _visitRevision = 0;
+  String _visitQuestion;
+  String get visitQuestion => _visitQuestion;
   Set<MaternalNeed> get visitTopics => Set.unmodifiable(_visitTopics);
 
-  Future<void> saveVisitTopics(Set<MaternalNeed> topics) async {
-    if (isPaused || isFirstRun || setEquals(topics, _visitTopics)) return;
+  Future<void> saveVisitTopics(
+    Set<MaternalNeed> topics, {
+    String? question,
+  }) async {
+    if (isPaused || isFirstRun) return;
     final selection = Set<MaternalNeed>.of(topics);
-    final revision = ++_visitRevision;
-    await _prefs.saveVisitTopics(selection);
-    if (revision != _visitRevision || isFirstRun) return;
+    await _prefs.saveVisitTopics(selection, question: question);
+    if (isFirstRun) return;
+    if (question != null) _visitQuestion = question.trim();
     _visitTopics = selection;
     notifyListeners();
   }
@@ -374,7 +379,7 @@ class AppState extends ChangeNotifier {
     _erasePending = false;
     _dueDate = null;
     _originalDueDate = null;
-    _visitRevision++;
+    _visitQuestion = '';
     _checkInRevision++;
     _checkInStatus = CheckInSaveStatus.saved;
     _visitTopics = {};
