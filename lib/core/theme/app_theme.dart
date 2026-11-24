@@ -340,5 +340,15 @@ DatePickerThemeData _datePicker(AppPalette p, Color disabledInk) {
       RoundedRectangleBorder(borderRadius: AppRadii.control),
     ),
     dividerColor: p.rule,
+    // OK is the main action: an accent piece with no underline. Cancel is a
+    // quiet ink link, so it never outshines OK.
+    confirmButtonStyle: TextButton.styleFrom(
+      backgroundColor: p.accent,
+      foregroundColor: p.accentText,
+      minimumSize: const Size(96, 48),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+      textStyle: AppText.button,
+    ),
+    cancelButtonStyle: TextButton.styleFrom(foregroundColor: p.ink),
   );
 }

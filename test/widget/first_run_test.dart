@@ -193,7 +193,9 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.text('15').hitTestable().first);
       await tester.pumpAndSettle();
-      expect(okColor(), cancelColor);
+      // Lit: full strength, and the main action, not a second Cancel.
+      expect(okColor().a, 1.0);
+      expect(okColor(), isNot(cancelColor));
       await tester.tap(find.text('OK'));
       await tester.pumpAndSettle();
       expect(find.byType(DatePickerDialog), findsNothing);
