@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:little_bumpy/core/constants/app_constants.dart';
 import 'package:little_bumpy/domain/models/app_state.dart';
 import 'package:little_bumpy/main.dart';
+import 'package:little_bumpy/presentation/widgets/pregnancy_date_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
@@ -34,12 +35,12 @@ void main() {
       await tester.ensureVisible(edit);
       await tester.tap(edit);
       await tester.pumpAndSettle();
-      expect(find.byType(DatePickerDialog), findsOneWidget);
+      expect(find.byType(PregnancyCalendarDialog), findsOneWidget);
       expect(tester.takeException(), isNull);
       await tester.tap(find.byTooltip('Pause').hitTestable());
       await tester.pumpAndSettle();
       expect(state.isPaused, isTrue);
-      expect(find.byType(DatePickerDialog), findsNothing);
+      expect(find.byType(PregnancyCalendarDialog), findsNothing);
       expect(find.text('Everything is paused.'), findsOneWidget);
     });
   }

@@ -7,6 +7,7 @@ import 'package:little_bumpy/main.dart';
 import 'package:little_bumpy/presentation/screens/first_run_screen.dart';
 import 'package:little_bumpy/presentation/widgets/bumpy_avatar.dart';
 import 'package:little_bumpy/presentation/widgets/need_word.dart';
+import 'package:little_bumpy/presentation/widgets/pregnancy_date_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'pick_date_helper.dart';
@@ -139,19 +140,20 @@ void main() {
       await _tap(tester, find.text('Start'));
       await _tap(tester, find.text('Choose due date'));
 
-      final dialog = tester.widget<DatePickerDialog>(
-        find.byType(DatePickerDialog),
+      final dialog = tester.widget<PregnancyCalendarDialog>(
+        find.byType(PregnancyCalendarDialog),
       );
-      expect(dialog.initialDate, isNull);
+      expect(dialog.initial, isNull);
+      expect(find.text('No day chosen yet'), findsOneWidget);
       // OK with no day stays open and says why, next to the buttons.
       await tester.tap(find.text('OK'));
       await tester.pumpAndSettle();
-      expect(find.byType(DatePickerDialog), findsOneWidget);
+      expect(find.byType(PregnancyCalendarDialog), findsOneWidget);
       expect(find.text('Pick a day first'), findsOneWidget);
       await tester.tap(find.text('Cancel'));
       await tester.pumpAndSettle();
 
-      expect(find.byType(DatePickerDialog), findsNothing);
+      expect(find.byType(PregnancyCalendarDialog), findsNothing);
       expect(find.text('Choose due date'), findsOneWidget);
       expect(find.textContaining('You are at week'), findsNothing);
       final next = find.widgetWithText(ElevatedButton, 'Next');
@@ -164,8 +166,10 @@ void main() {
       await _tap(tester, find.text('Apr 12, 2027'));
       expect(
         tester
-            .widget<DatePickerDialog>(find.byType(DatePickerDialog))
-            .initialDate,
+            .widget<PregnancyCalendarDialog>(
+              find.byType(PregnancyCalendarDialog),
+            )
+            .initial,
         DateTime(2027, 4, 12),
       );
     });
@@ -194,13 +198,14 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.text('15').hitTestable().first);
       await tester.pumpAndSettle();
+      expect(find.text('15 June 2027'), findsOneWidget);
       // Lit: full strength, and the main action, not a second Cancel.
       expect(okColor().a, 1.0);
       expect(okColor(), isNot(cancelColor));
       await tester.tap(find.text('OK'));
       await tester.pumpAndSettle();
-      expect(find.byType(DatePickerDialog), findsNothing);
-      expect(find.text('Dec 15, 2026'), findsOneWidget);
+      expect(find.byType(PregnancyCalendarDialog), findsNothing);
+      expect(find.text('Jun 15, 2027'), findsOneWidget);
       final next = find.widgetWithText(ElevatedButton, 'Next');
       expect(tester.widget<ElevatedButton>(next).onPressed, isNotNull);
     });

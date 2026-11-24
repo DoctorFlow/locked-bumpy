@@ -189,9 +189,10 @@ def first_run_steps(prefix, look_label=None):
         shot(f"{p}-1-welcome"),
         tap("Start", "button"), wait(500), shot(f"{p}-2-date"),
         tap_first(["Choose due date", "Pick your due date"]), wait(600), shot(f"{p}-2-picker"),
-        # The picker opens with no day chosen, on this month. Step to March
-        # 2027 and pick the 15th (the camera's DUE_DATE, week 24), then OK.
-        *[st for _ in range(4) for st in (tap("Next month", "button"), wait(350))],
+        # The picker opens with no day chosen, on May 2027 (the month a
+        # parent 13 weeks along is due in). Step back to March 2027 and pick
+        # the 15th (the camera's DUE_DATE, week 24), then OK.
+        *[st for _ in range(2) for st in (tap("Previous month", "button"), wait(350))],
         tap_first(["15, Monday, March 15, 2027", "15,"]), wait(400), shot(f"{p}-2-day"),
         tap_first(["OK", "Ok"]), wait(600), shot(f"{p}-2-picked"),
         tap_first(["Next"], find=True), wait(500), shot(f"{p}-3-nickname"),
