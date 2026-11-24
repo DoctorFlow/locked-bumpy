@@ -76,26 +76,25 @@ class TopBar extends StatelessWidget implements PreferredSizeWidget {
               Tooltip(
                 message: switchLabel,
                 excludeFromSemantics: true,
-                child: Semantics(
-                  label: '$switchLabel mode',
-                  child: TextButton(
-                    onPressed: state.toggleMode,
-                    style: TextButton.styleFrom(
-                      minimumSize: const Size(48, 48),
-                      foregroundColor: palette.moonlight,
-                      padding: const EdgeInsets.symmetric(horizontal: 5),
-                    ),
-                    child: ExcludeSemantics(
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          lamp,
-                          if (showLampLabel) ...[
-                            const SizedBox(width: 4),
-                            const Text('Switch look'),
-                          ],
+                child: TextButton(
+                  onPressed: state.toggleMode,
+                  style: TextButton.styleFrom(
+                    minimumSize: const Size(48, 48),
+                    foregroundColor: palette.moonlight,
+                    padding: const EdgeInsets.symmetric(horizontal: 5),
+                  ),
+                  child: Semantics(
+                    label: '$switchLabel mode',
+                    excludeSemantics: true,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        lamp,
+                        if (showLampLabel) ...[
+                          const SizedBox(width: 4),
+                          const Text('Switch look'),
                         ],
-                      ),
+                      ],
                     ),
                   ),
                 ),
@@ -105,16 +104,16 @@ class TopBar extends StatelessWidget implements PreferredSizeWidget {
                 icon: Icon(Icons.settings_outlined, color: palette.moonlight),
                 onPressed: () => SettingsScreen.open(context, state),
               ),
-              Semantics(
-                label: 'Pause app',
-                button: true,
+              Tooltip(
+                message: 'Pause',
+                excludeFromSemantics: true,
                 child: IconButton(
                   icon: Icon(
                     Icons.pause_circle_outline,
+                    semanticLabel: 'Pause app',
                     color: palette.moonlightSoft,
                   ),
                   onPressed: state.pause,
-                  tooltip: 'Pause',
                 ),
               ),
             ],
