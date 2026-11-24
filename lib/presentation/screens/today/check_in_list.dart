@@ -48,7 +48,7 @@ class _CheckInsPanel extends StatelessWidget {
           Semantics(
             header: true,
             child: Text(
-              allDone ? 'Saved check-ins' : "Today's check-ins",
+              allDone ? 'Saved check-ins' : 'Today’s check-ins',
               style: AppText.heading.copyWith(color: palette.ink),
             ),
           ),
@@ -159,20 +159,21 @@ class _TodayFooter extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         if (showWeekLink) ...[
-          Align(
-            alignment: AlignmentDirectional.centerStart,
-            child: OutlinedButton.icon(
-              key: const ValueKey('today-week-link'),
-              // Outlined on the page: moonlight label, outline edge.
-              style: OutlinedButton.styleFrom(
-                foregroundColor: palette.moonlight,
-                side: BorderSide(color: palette.outline, width: 1.5),
-              ),
-              onPressed: () => state.setTab(1),
-              icon: const Icon(Icons.auto_stories_outlined, size: 22),
-              label: Text(
-                'Get ready for week ${state.currentWeek ?? AppConstants.minWeek}',
-              ),
+          // Full width, like the cards above it and the summary card's own
+          // "Open this week's card".
+          OutlinedButton.icon(
+            key: const ValueKey('today-week-link'),
+            // Outlined on the page: moonlight label, outline edge.
+            style: OutlinedButton.styleFrom(
+              foregroundColor: palette.moonlight,
+              side: BorderSide(color: palette.outline, width: 1.5),
+              minimumSize: const Size.fromHeight(AppSpace.target),
+            ),
+            onPressed: () => state.setTab(1),
+            icon: const Icon(Icons.auto_stories_outlined, size: 22),
+            label: Text(
+              'Get ready for week ${state.currentWeek ?? AppConstants.minWeek}',
+              textAlign: TextAlign.center,
             ),
           ),
           const SizedBox(height: AppSpace.xl),
