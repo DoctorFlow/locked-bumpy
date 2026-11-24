@@ -126,7 +126,8 @@ class _VisitCard extends StatelessWidget {
           ),
         ),
         if (more) ...[
-          const SizedBox(height: 4),
+          // Clear of the raised piece's shadow.
+          const SizedBox(height: AppSpace.s),
           Text(
             'More on your list',
             style: AppText.body.copyWith(color: palette.inkSoft),
