@@ -115,28 +115,36 @@
         "kind": "why",
         "text": "Folic acid helps prevent serious problems with how a baby's brain and spine form.",
         "source": "cdc-folic-acid",
-        "claims": ["BRAIN-01"]
+        "claims": ["BRAIN-01"],
+        "today_until_week": 12,
+        "week_claims": ["BRAIN-23"]
       },
       {
         "id": "brain-f2",
         "kind": "food",
         "text": "Some breakfast cereals have folic acid added, so the box label is worth a look.",
         "source": "cdc-folic-acid",
-        "claims": ["BRAIN-07"]
+        "claims": ["BRAIN-07"],
+        "today_until_week": 12,
+        "week_claims": ["BRAIN-23"]
       },
       {
         "id": "brain-f3",
         "kind": "pairing",
         "text": "If you did not take folic acid before pregnancy, the advice is to start as soon as you know.",
         "source": "rcog-healthy-eating",
-        "claims": ["BRAIN-05"]
+        "claims": ["BRAIN-05"],
+        "today_until_week": 12,
+        "week_claims": ["BRAIN-23"]
       },
       {
         "id": "brain-f4",
         "kind": "care_team",
         "text": "Some people get a different folic acid plan, so ask your doctor or midwife about yours.",
         "source": "nhs-pregnancy-vitamins",
-        "claims": ["BRAIN-16"]
+        "claims": ["BRAIN-16"],
+        "today_until_week": 12,
+        "week_claims": ["BRAIN-23"]
       },
       {
         "id": "brain-f5",
@@ -527,7 +535,9 @@
         "kind": "why",
         "text": "Folic acid helps lower the chance of serious problems with a baby's brain and spine.",
         "source": "cdc-folic-acid",
-        "claims": ["VITAMIN-01"]
+        "claims": ["VITAMIN-01"],
+        "today_until_week": 12,
+        "week_claims": ["VITAMIN-36"]
       },
       {
         "id": "vitamin-f2",
@@ -555,7 +565,9 @@
         "kind": "good_to_know",
         "text": "Your vitamin label will say if it has folic acid.",
         "source": "cdc-folic-acid",
-        "claims": ["VITAMIN-05"]
+        "claims": ["VITAMIN-05"],
+        "today_until_week": 12,
+        "week_claims": ["VITAMIN-36"]
       },
       {
         "id": "vitamin-f6",
