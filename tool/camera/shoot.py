@@ -214,18 +214,18 @@ SCENARIOS = [
       [tap("Guides", "tab"), tap_first(["Open my visit list", "Edit visit list", "Choose topics"], find=True)]),
 
     # Guides, from roles/lane-guides.md. A guide that passed the review gate
-    # opens a full page from its Guides card; "Good to know" proves the page
-    # opened. While assets/content/guides.json is empty every guide is
-    # hidden: the card just expands, so guide-iron is "not reached" and
-    # guide-iron-hidden shows what a parent sees instead.
+    # opens a full page from its Guides card; the page title "Iron guide"
+    # (guide_screen.dart) proves it opened. In a release build every guide
+    # is still a draft, so the card does not open, guide-iron is "not
+    # reached", and guide-iron-hidden shows what a parent sees instead.
     S("guide-iron", steps=[
-        tap("Guides", "tab"), tap("Iron", "button", find=True), wait(600), expect("Good to know"),
+        tap("Guides", "tab"), tap("Iron", "button", find=True), wait(600), expect("Iron guide"),
         shot("guide-iron"), scroll(), shot("guide-iron-2"), scroll(), shot("guide-iron-3"),
     ], shot=None, note="from lane-guides.md; needs an approved or (with --review) draft Iron guide"),
     S("guide-iron-hidden", steps=[
         tap("Guides", "tab"), wait(500), shot("guide-iron-hidden"),
         scroll(), shot("guide-iron-hidden-2"),
-    ], shot=None, note="guides tab while the Iron guide is hidden (empty guides.json)"),
+    ], shot=None, note="guides tab while the Iron guide is hidden (a draft, release build)"),
     # Visit: steps from roles/lane-visit.md (Today card "For your visit" with
     # the parent's own question and a "Show at my visit" button; show page
     # with Close and Edit).
