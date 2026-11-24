@@ -75,7 +75,21 @@ class _ClosetSheetState extends State<ClosetSheet> {
             header: true,
             child: Text(
               'Tonight’s wardrobe',
-              style: AppText.title.copyWith(color: palette.ink),
+              // Below 350 px wide the title steps down one size so it sits
+              // on one line and never touches the preview card.
+              style: size.width < 350
+                  ? AppText.title.copyWith(
+                      color: palette.ink,
+                      fontSize: 20,
+                      height: 26 / 20,
+                      fontVariations: const [
+                        FontVariation('opsz', 20),
+                        FontVariation('wght', 700),
+                        FontVariation('SOFT', 100),
+                        FontVariation('WONK', 0),
+                      ],
+                    )
+                  : AppText.title.copyWith(color: palette.ink),
             ),
           ),
         ),
@@ -112,24 +126,42 @@ class _ClosetSheetState extends State<ClosetSheet> {
                     MediaQuery.textScalerOf(context).scale(14) <= 21
                 ? 3
                 : 2;
-            return Wrap(
-              spacing: AppSpace.s,
-              runSpacing: AppSpace.s,
+            final width =
+                (constraints.maxWidth - AppSpace.s * (columns - 1)) / columns;
+            final needs = MaternalNeed.values;
+            // Rows of [columns] tiles. Each row is as tall as its tallest
+            // tile and every tile stretches to it, so the grid stays even
+            // when a need word wraps.
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                for (final need in MaternalNeed.values)
-                  SizedBox(
-                    width:
-                        (constraints.maxWidth - AppSpace.s * (columns - 1)) /
-                        columns,
-                    child: _CostumeCard(
-                      thumbnailSize: shortPhone ? 64 : 96,
-                      need: need,
-                      skinTone: state.skinTone,
-                      palette: palette,
-                      selected: _preview == need,
-                      onTap: () => setState(() => _preview = need),
+                for (var start = 0; start < needs.length; start += columns) ...[
+                  if (start > 0) const SizedBox(height: AppSpace.s),
+                  IntrinsicHeight(
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        for (var i = start; i < start + columns; i++) ...[
+                          if (i > start) const SizedBox(width: AppSpace.s),
+                          SizedBox(
+                            width: width,
+                            child: i < needs.length
+                                ? _CostumeCard(
+                                    thumbnailSize: shortPhone ? 64 : 96,
+                                    need: needs[i],
+                                    skinTone: state.skinTone,
+                                    palette: palette,
+                                    selected: _preview == needs[i],
+                                    onTap: () =>
+                                        setState(() => _preview = needs[i]),
+                                  )
+                                : null,
+                          ),
+                        ],
+                      ],
                     ),
                   ),
+                ],
               ],
             );
           },
@@ -168,7 +200,12 @@ class _ClosetSheetState extends State<ClosetSheet> {
             ? SingleChildScrollView(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [header, rail, footer],
+                  children: [
+                    header,
+                    const SizedBox(height: AppSpace.s),
+                    rail,
+                    footer,
+                  ],
                 ),
               )
             : Column(
@@ -176,6 +213,7 @@ class _ClosetSheetState extends State<ClosetSheet> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   header,
+                  const SizedBox(height: AppSpace.s),
                   Flexible(child: SingleChildScrollView(child: rail)),
                   footer,
                 ],
@@ -187,6 +225,10 @@ class _ClosetSheetState extends State<ClosetSheet> {
 
 String _costumeName(MaternalNeed need) =>
     need.costume[0] + need.costume.substring(1).toLowerCase();
+
+/// Sentence-case need word ("Prenatal vitamin"), as on Today and Guides.
+String _needWord(MaternalNeed need) =>
+    need == MaternalNeed.vitamin ? 'Prenatal vitamin' : need.label;
 
 class _CostumeCard extends StatelessWidget {
   const _CostumeCard({
@@ -207,9 +249,10 @@ class _CostumeCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final name = _costumeName(need);
-    // Selected = a 3 px accent edge, a tick badge on the picture and a tick
-    // before the name: never colour alone.
+    // Selected = a 3 px accent edge and a tick badge on the corner: never
+    // colour alone. Passthrough: the card fills its slot, so the ring fits.
     return Stack(
+      fit: StackFit.passthrough,
       clipBehavior: Clip.none,
       children: [
         PaperCard(
@@ -238,24 +281,17 @@ class _CostumeCard extends StatelessWidget {
                     gaplessPlayback: true,
                   ),
                   const SizedBox(height: AppSpace.xs),
-                  Wrap(
-                    alignment: WrapAlignment.center,
-                    crossAxisAlignment: WrapCrossAlignment.center,
-                    spacing: AppSpace.xs,
-                    children: [
-                      if (selected)
-                        Icon(Icons.check, size: 18, color: palette.ink),
-                      Text(
-                        name,
-                        textAlign: TextAlign.center,
-                        style: AppText.bodyStrong.copyWith(color: palette.ink),
-                      ),
-                    ],
+                  Text(
+                    name,
+                    textAlign: TextAlign.center,
+                    style: AppText.bodyStrong.copyWith(color: palette.ink),
                   ),
-                  Wrap(
-                    alignment: WrapAlignment.center,
-                    crossAxisAlignment: WrapCrossAlignment.center,
-                    spacing: AppSpace.xs,
+                  // Icon beside the word; a long word ("Prenatal vitamin")
+                  // wraps beside its icon instead of pushing it to a line
+                  // of its own.
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       // The need's paper icon, drawn as decoration so the
                       // sheet's only Image widgets stay the six portraits.
@@ -270,10 +306,13 @@ class _CostumeCard extends StatelessWidget {
                           ),
                         ),
                       ),
-                      Text(
-                        need.label,
-                        textAlign: TextAlign.center,
-                        style: AppText.small.copyWith(color: palette.inkSoft),
+                      const SizedBox(width: AppSpace.xs),
+                      Flexible(
+                        child: Text(
+                          _needWord(need),
+                          textAlign: TextAlign.center,
+                          style: AppText.small.copyWith(color: palette.inkSoft),
+                        ),
                       ),
                     ],
                   ),

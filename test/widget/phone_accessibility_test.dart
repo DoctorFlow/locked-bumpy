@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:little_bumpy/presentation/widgets/visit_topics.dart'
+    show needWord;
 import 'package:little_bumpy/content/content_loader.dart';
 import 'package:little_bumpy/core/theme/app_text.dart';
 import 'package:little_bumpy/core/theme/palette.dart';
@@ -265,7 +267,7 @@ void main() {
         final guide = find.byKey(PageStorageKey(state.todayNeed));
         final heading = find.descendant(
           of: guide,
-          matching: find.text(state.todayNeed.label),
+          matching: find.text(needWord(state.todayNeed)),
         );
         await tester.dragUntilVisible(
           heading.hitTestable(),

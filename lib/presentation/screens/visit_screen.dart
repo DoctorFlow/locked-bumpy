@@ -6,6 +6,7 @@ import '../../core/theme/paper.dart';
 import '../../domain/models/app_state.dart';
 import '../../domain/models/need.dart';
 import '../widgets/visit_topics.dart';
+import '../widgets/whole_word_text.dart';
 
 /// One clean page to hold up at the visit: the questions in large type, then
 /// the topics as plain words. Only a close control and a quiet Edit.
@@ -89,7 +90,9 @@ class VisitScreen extends StatelessWidget {
                       children: [
                         Semantics(
                           header: true,
-                          child: Text(
+                          // Wraps only between words; steps down in size at
+                          // the largest text rather than break "questions".
+                          child: WholeWordText(
                             'My questions',
                             style: AppText.display.copyWith(color: palette.ink),
                           ),
@@ -147,7 +150,7 @@ class VisitScreen extends StatelessWidget {
                               padding: const EdgeInsets.only(
                                 bottom: AppSpace.s,
                               ),
-                              child: Text(need.label, style: body),
+                              child: Text(needWord(need), style: body),
                             ),
                         ],
                       ],

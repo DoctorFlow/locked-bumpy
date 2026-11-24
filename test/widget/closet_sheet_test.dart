@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:little_bumpy/presentation/widgets/visit_topics.dart'
+    show needWord;
 import 'package:little_bumpy/content/content_loader.dart';
 import 'package:little_bumpy/core/theme/palette.dart';
 import 'package:little_bumpy/domain/models/app_state.dart';
@@ -27,7 +29,7 @@ void main() {
     for (final need in MaternalNeed.values) {
       final card = find.byKey(ValueKey('closet-${need.name}'));
       expect(
-        find.descendant(of: card, matching: find.text(need.label)),
+        find.descendant(of: card, matching: find.text(needWord(need))),
         findsOneWidget,
       );
     }

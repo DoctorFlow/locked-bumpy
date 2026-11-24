@@ -279,12 +279,24 @@ class _NeedCard extends StatelessWidget {
         ].join(' · ')
       : null;
 
+  /// Six of these sit on the page, so each says its need aloud; the spoken
+  /// label still holds the visible words.
   Widget _visitButton() => Align(
     alignment: AlignmentDirectional.centerStart,
-    child: OutlinedButton.icon(
-      onPressed: onVisitList,
-      icon: Icon(savedForVisit ? Icons.bookmark : Icons.bookmark_outline),
-      label: Text(savedForVisit ? 'On my visit list' : 'Add to my visit list'),
+    child: Semantics(
+      button: true,
+      excludeSemantics: true,
+      label: savedForVisit
+          ? 'On my visit list: ${needWord(need)}'
+          : 'Add ${needWord(need)} to my visit list',
+      onTap: onVisitList,
+      child: OutlinedButton.icon(
+        onPressed: onVisitList,
+        icon: Icon(savedForVisit ? Icons.bookmark : Icons.bookmark_outline),
+        label: Text(
+          savedForVisit ? 'On my visit list' : 'Add to my visit list',
+        ),
+      ),
     ),
   );
 
@@ -308,9 +320,15 @@ class _NeedCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  need.label,
-                  style: AppText.heading.copyWith(color: palette.ink),
+                // Its own heading node, so heading navigation reaches each
+                // need inside the card's button.
+                Semantics(
+                  container: true,
+                  header: true,
+                  child: Text(
+                    needWord(need),
+                    style: AppText.heading.copyWith(color: palette.ink),
+                  ),
                 ),
                 const SizedBox(height: AppSpace.xs),
                 CostumeTag(costume: need.costume, palette: palette),
@@ -323,10 +341,11 @@ class _NeedCard extends StatelessWidget {
                 ],
                 if (copy != null) ...[
                   const SizedBox(height: AppSpace.s),
+                  // A health sentence is never cut: the card grows to hold
+                  // the whole summary, caveat included.
                   Text(
                     copy.point,
-                    maxLines: 3,
-                    overflow: TextOverflow.ellipsis,
+                    key: ValueKey('guide-summary-${need.name}'),
                     style: AppText.body.copyWith(color: palette.ink),
                   ),
                 ],
@@ -358,7 +377,8 @@ class _NeedCard extends StatelessWidget {
           else
             Semantics(
               button: true,
-              label: 'Open the ${need.label} guide',
+              label: 'Open the ${needWord(need)} guide',
+              onTapHint: 'Open the guide',
               child: InkWell(onTap: onOpen, child: top),
             ),
           Padding(
@@ -383,7 +403,15 @@ class CostumeTag extends StatelessWidget {
   final AppPalette palette;
 
   @override
-  Widget build(BuildContext context) => DecoratedBox(
+  Widget build(BuildContext context) => Semantics(
+    label:
+        '${costume[0].toUpperCase()}${costume.substring(1).toLowerCase()} '
+        'costume',
+    excludeSemantics: true,
+    child: _tag(),
+  );
+
+  Widget _tag() => DecoratedBox(
     decoration: BoxDecoration(
       color: palette.paperRaised,
       borderRadius: AppRadii.tag,

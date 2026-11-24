@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'app_nav_bar.dart';
 import 'pause_button.dart';
 
 import '../../core/theme/app_text.dart';
@@ -41,100 +42,182 @@ class VisitTopics extends StatelessWidget {
     final topics = state.visitTopics;
     final questions = state.visitQuestions;
     final empty = topics.isEmpty && questions.isEmpty;
-    return PaperCard(
-      raised: true,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(
-          AppSpace.l,
-          AppSpace.l,
-          AppSpace.l,
-          AppSpace.s,
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Semantics(
-              header: true,
-              child: Text(
-                'For my next visit',
-                style: AppText.heading.copyWith(color: palette.ink),
-              ),
+    // The hint under the title: what the list is for, or what the row does.
+    final hint = empty
+        ? 'Keep a list of questions and topics for your doctor or midwife.'
+        : questions.isNotEmpty
+        ? 'Open my visit list'
+        : 'Edit visit list';
+    // The same row as "When to get help right away": one tappable paper row
+    // with a leading tile and a chevron. No underlined link.
+    final row = Semantics(
+      button: true,
+      label: 'For my next visit. $hint',
+      excludeSemantics: true,
+      // The InkWell's own tap is excluded with its text, so the node
+      // carries the tap for screen readers and the web.
+      onTap: () => edit(context, state),
+      child: InkWell(
+        key: const ValueKey('visit-topics-row'),
+        onFocusChange: (focused) {
+          if (!focused ||
+              FocusManager.instance.highlightMode !=
+                  FocusHighlightMode.traditional) {
+            return;
+          }
+          final target = FocusManager.instance.primaryFocus?.context;
+          if (target == null) return;
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (target.mounted &&
+                FocusManager.instance.primaryFocus?.context == target) {
+              Scrollable.ensureVisible(target, alignment: .5);
+            }
+          });
+        },
+        onTap: () => edit(context, state),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: 72),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpace.l,
+              AppSpace.m,
+              AppSpace.s,
+              AppSpace.m,
             ),
-            const SizedBox(height: AppSpace.xs),
-            if (empty)
-              Text(
-                'Keep a list of questions and topics for your doctor or midwife.',
-                style: AppText.body.copyWith(color: palette.inkSoft),
-              ),
-            for (final question in questions)
-              Padding(
-                padding: const EdgeInsets.only(top: AppSpace.xs),
-                child: Text(
-                  question.text,
-                  style: AppText.body.copyWith(color: palette.ink),
+            child: Row(
+              children: [
+                DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: palette.paperRaised,
+                    borderRadius: AppRadii.tag,
+                    border: Border.all(color: palette.edge),
+                  ),
+                  child: SizedBox.square(
+                    dimension: AppSpace.target,
+                    child: Icon(Icons.edit_note, color: palette.ink, size: 28),
+                  ),
                 ),
+                const SizedBox(width: AppSpace.m),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Semantics(
+                        header: true,
+                        child: Text(
+                          'For my next visit',
+                          style: AppText.bodyStrong.copyWith(
+                            color: palette.ink,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: AppSpace.xs),
+                      Text(
+                        hint,
+                        style: AppText.small.copyWith(color: palette.inkSoft),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(Icons.chevron_right, color: palette.ink, size: 28),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+    return PaperCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          row,
+          if (!empty)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpace.l,
+                0,
+                AppSpace.l,
+                AppSpace.l,
               ),
-            for (final need in MaternalNeed.values.where(topics.contains))
-              Padding(
-                padding: const EdgeInsets.only(top: AppSpace.xs),
-                child: Row(
-                  children: [
-                    Image.asset(
-                      need.iconPath,
-                      width: 24,
-                      height: 24,
-                      excludeFromSemantics: true,
-                    ),
-                    const SizedBox(width: AppSpace.s),
-                    Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Divider(height: 1, thickness: 1, color: palette.rule),
+                  for (final question in questions)
+                    Padding(
+                      padding: const EdgeInsets.only(top: AppSpace.s),
                       child: Text(
-                        need.label,
+                        question.text,
                         style: AppText.body.copyWith(color: palette.ink),
                       ),
                     ),
-                  ],
-                ),
-              ),
-            TextButton.icon(
-              onFocusChange: (focused) {
-                if (!focused ||
-                    FocusManager.instance.highlightMode !=
-                        FocusHighlightMode.traditional) {
-                  return;
-                }
-                final target = FocusManager.instance.primaryFocus?.context;
-                if (target == null) return;
-                WidgetsBinding.instance.addPostFrameCallback((_) {
-                  if (target.mounted &&
-                      FocusManager.instance.primaryFocus?.context == target) {
-                    Scrollable.ensureVisible(target, alignment: .5);
-                  }
-                });
-              },
-              style: TextButton.styleFrom(foregroundColor: palette.ink),
-              onPressed: () => edit(context, state),
-              icon: const Icon(Icons.edit_outlined, size: 18),
-              label: Text(
-                questions.isNotEmpty
-                    ? 'Open my visit list'
-                    : topics.isEmpty
-                    ? 'Choose topics'
-                    : 'Edit visit list',
+                  for (final need in MaternalNeed.values.where(topics.contains))
+                    Padding(
+                      padding: const EdgeInsets.only(top: AppSpace.s),
+                      child: Row(
+                        children: [
+                          Image.asset(
+                            need.iconPath,
+                            width: 24,
+                            height: 24,
+                            excludeFromSemantics: true,
+                          ),
+                          const SizedBox(width: AppSpace.s),
+                          Expanded(
+                            child: Text(
+                              needWord(need),
+                              style: AppText.body.copyWith(color: palette.ink),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  const SizedBox(height: AppSpace.m),
+                  Align(
+                    alignment: AlignmentDirectional.centerStart,
+                    child: OutlinedButton.icon(
+                      onPressed: () => VisitScreen.open(context, state),
+                      icon: const Icon(Icons.fullscreen),
+                      label: const Text('Show at my visit'),
+                    ),
+                  ),
+                ],
               ),
             ),
-            if (!empty)
-              TextButton.icon(
-                style: TextButton.styleFrom(foregroundColor: palette.ink),
-                onPressed: () => VisitScreen.open(context, state),
-                icon: const Icon(Icons.fullscreen, size: 18),
-                label: const Text('Show at my visit'),
-              ),
-          ],
-        ),
+        ],
       ),
     );
   }
 }
+
+/// How far above the bottom of the screen the tab bar's top edge sits; 0
+/// when there is no tab bar (first run, Paused).
+double _tabBarClearance(BuildContext context) {
+  final screen = MediaQuery.sizeOf(context).height;
+  double found = 0;
+  void visit(Element element) {
+    if (found > 0) return;
+    if (element.widget is AppNavBar) {
+      final box = element.renderObject;
+      if (box is RenderBox && box.hasSize && box.attached) {
+        // Over a page pushed above the shell this only lifts the note a
+        // little higher than it needs; it never covers the tabs.
+        final top = box.localToGlobal(Offset.zero).dy;
+        found = screen - top;
+      }
+      return;
+    }
+    element.visitChildren(visit);
+  }
+
+  final root = WidgetsBinding.instance.rootElement;
+  root?.visitChildren(visit);
+  return found.clamp(0, screen / 2);
+}
+
+/// Sentence-case need word ("Prenatal vitamin"), as on Today and Guides.
+String needWord(MaternalNeed need) =>
+    need == MaternalNeed.vitamin ? 'Prenatal vitamin' : need.label;
 
 class _VisitEditor extends StatefulWidget {
   const _VisitEditor({required this.state, this.include});
@@ -246,14 +329,25 @@ class _VisitEditorState extends State<_VisitEditor> {
     if (mounted && ModalRoute.of(context)?.isCurrent == true) {
       // Back to where the list was opened from, with a calm word that it
       // landed. A snack bar is a live region, so screen readers say it too.
+      // It floats above the tab bar for 2 seconds, so it never covers or
+      // takes a tap meant for the tabs.
       final messenger = ScaffoldMessenger.maybeOf(context);
+      final clearance = _tabBarClearance(context);
       Navigator.pop(context);
       messenger
         ?..hideCurrentSnackBar()
         ..showSnackBar(
-          const SnackBar(
-            key: ValueKey('visit-saved'),
-            content: Text('Your visit list is saved.'),
+          SnackBar(
+            key: const ValueKey('visit-saved'),
+            behavior: SnackBarBehavior.floating,
+            duration: const Duration(seconds: 2),
+            margin: EdgeInsets.fromLTRB(
+              AppSpace.page,
+              0,
+              AppSpace.page,
+              clearance + AppSpace.s,
+            ),
+            content: const Text('Your visit list is saved.'),
           ),
         );
     }
@@ -335,7 +429,7 @@ class _VisitEditorState extends State<_VisitEditor> {
                       ),
                     ),
                     IconButton(
-                      tooltip: 'Remove this question',
+                      tooltip: 'Remove from visit list: ${question.text}',
                       constraints: const BoxConstraints(
                         minWidth: 48,
                         minHeight: 48,
@@ -367,15 +461,16 @@ class _VisitEditorState extends State<_VisitEditor> {
             ),
             onFieldSubmitted: (_) => _add(),
           ),
+          const SizedBox(height: AppSpace.s),
           Align(
             alignment: AlignmentDirectional.centerEnd,
-            child: TextButton.icon(
-              style: TextButton.styleFrom(foregroundColor: palette.ink),
+            child: OutlinedButton.icon(
               onPressed: _saving ? null : _add,
-              icon: const Icon(Icons.add, size: 18),
+              icon: const Icon(Icons.add),
               label: const Text('Add question'),
             ),
           ),
+          const SizedBox(height: AppSpace.s),
           if (_note != null)
             Semantics(
               liveRegion: true,
@@ -406,7 +501,7 @@ class _VisitEditorState extends State<_VisitEditor> {
                 excludeFromSemantics: true,
               ),
               title: Text(
-                need.label,
+                needWord(need),
                 style: AppText.body.copyWith(color: palette.ink),
               ),
               value: _selected.contains(need),
