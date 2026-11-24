@@ -106,11 +106,24 @@ class _VisitCard extends StatelessWidget {
           : needWord(topics.first);
       final more = questions.length + topics.length > 1;
       children.addAll([
-        const SizedBox(height: 4),
-        Text(
-          first,
-          key: const ValueKey('visit-card-question'),
-          style: AppText.heading.copyWith(color: palette.ink),
+        const SizedBox(height: AppSpace.s),
+        // The parent's own question on a raised piece of paper, in quotes
+        // like the chapter page's questions, so it reads as theirs and not
+        // as a second heading.
+        PaperCard(
+          key: const ValueKey('visit-card-question-piece'),
+          raised: true,
+          padding: const EdgeInsets.all(AppSpace.m),
+          child: Text(
+            // A topic name alone ("Iron") is not a quote.
+            own.isNotEmpty || questions.isNotEmpty ? '“$first”' : first,
+            key: const ValueKey('visit-card-question'),
+            style: AppText.body.copyWith(
+              fontSize: 18,
+              height: 26 / 18,
+              color: palette.ink,
+            ),
+          ),
         ),
         if (more) ...[
           const SizedBox(height: 4),

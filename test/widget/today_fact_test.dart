@@ -99,7 +99,7 @@ void main() {
     expect(
       find.descendant(
         of: find.byKey(const ValueKey('visit-card')),
-        matching: find.text(_question),
+        matching: find.text('“$_question”'),
       ),
       findsOneWidget,
     );

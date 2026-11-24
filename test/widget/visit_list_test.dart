@@ -59,7 +59,7 @@ void main() {
     final card = find.byKey(const ValueKey('visit-card'));
     await t.ensureVisible(card);
     expect(
-      find.descendant(of: card, matching: find.text(_own)),
+      find.descendant(of: card, matching: find.text('“$_own”')),
       findsOneWidget,
     );
     expect(find.text('Show at my visit'), findsOneWidget);
@@ -83,7 +83,7 @@ void main() {
     await t.ensureVisible(card);
     // The newest of the parent's own questions, with no count of the rest.
     expect(
-      find.descendant(of: card, matching: find.text(_second)),
+      find.descendant(of: card, matching: find.text('“$_second”')),
       findsOneWidget,
     );
     expect(
@@ -145,7 +145,7 @@ void main() {
     await tapOn(t, find.byTooltip('Close'));
     expect(find.byType(VisitScreen), findsNothing);
     expect(
-      find.descendant(of: card, matching: find.text(_own)),
+      find.descendant(of: card, matching: find.text('“$_own”')),
       findsOneWidget,
     );
     handle.dispose();

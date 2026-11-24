@@ -151,7 +151,7 @@ void main() {
     await t.ensureVisible(card);
     await t.pumpAndSettle();
     expect(
-      find.descendant(of: card, matching: find.text(_question)),
+      find.descendant(of: card, matching: find.text('“$_question”')),
       findsOneWidget,
     );
     await tapOn(t, find.text('Show at my visit'));
