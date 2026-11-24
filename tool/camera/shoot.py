@@ -324,8 +324,8 @@ SCENARIOS = [
     *[S(f"urgent-wk{n}", {"week": n}, [
         tap("Guides", "tab"), wait(500),
         tap("When to get help right away", find=True), wait(700),
-        shot(f"urgent-wk{n}"), scroll(), shot(f"urgent-wk{n}-2"),
-        scroll(), shot(f"urgent-wk{n}-3"), scroll(), shot(f"urgent-wk{n}-4"),
+        shot(f"urgent-wk{n}"),
+        *[st for i in range(2, 7) for st in (scroll(), shot(f"urgent-wk{n}-{i}"))],
     ], shot=None, note="calm-content: urgent list order by week") for n in (9, 30)],
     # Today at week 20, scrolled to the fact card. The camera's day is an
     # IRON day, so the folic acid skip itself is proven by the tests.
