@@ -2,8 +2,7 @@ part of 'today_screen.dart';
 
 // ── One small fact from today's need, with its source and two quiet actions ─
 //
-// Kept short on purpose: on a 375 x 812 phone the top of the visit card below
-// stays in view. The fact and the question are reading text (16 px or more);
+// Kept short on purpose. The fact and the question are reading text (16 px or more);
 // only the two one-line captions ("Source: …", "To ask …") are `small`.
 
 class _FactCard extends StatelessWidget {
@@ -94,27 +93,20 @@ class _FactCard extends StatelessWidget {
               style: AppText.bodyStrong.copyWith(color: palette.ink),
             ),
           ],
-          const SizedBox(height: AppSpace.xs),
-          // Pulled out by the buttons' own side padding, so their words line
-          // up with the text above.
-          Transform.translate(
-            offset: const Offset(-AppSpace.s, 0),
-            child: Wrap(
-              children: [
-                // Once added it is a plain note: the visit card below is the
-                // one way into the list on Today.
-                if (question != null && onList)
-                  ConstrainedBox(
-                    key: const ValueKey('fact-on-list'),
-                    constraints: const BoxConstraints(
-                      minHeight: AppSpace.target,
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: AppSpace.s,
+          const SizedBox(height: AppSpace.s),
+          // Once added it is a plain note: the visit card below is the one
+          // way into the list on Today. The live region wraps both forms, so
+          // "On your visit list" is announced when it replaces the button.
+          if (question != null)
+            Semantics(
+              liveRegion: true,
+              child: onList
+                  ? ConstrainedBox(
+                      key: const ValueKey('fact-on-list'),
+                      constraints: const BoxConstraints(
+                        minHeight: AppSpace.target,
                       ),
                       child: Row(
-                        mainAxisSize: MainAxisSize.min,
                         children: [
                           Icon(
                             Icons.check_rounded,
@@ -132,22 +124,25 @@ class _FactCard extends StatelessWidget {
                           ),
                         ],
                       ),
-                    ),
-                  )
-                else if (question != null)
-                  Semantics(
-                    liveRegion: true,
-                    child: TextButton.icon(
+                    )
+                  // One action, one form: the same full-width button as on
+                  // the chapter page.
+                  : FilledButton.tonalIcon(
                       key: const ValueKey('fact-add-question'),
-                      style: quiet,
+                      style: FilledButton.styleFrom(
+                        minimumSize: const Size.fromHeight(AppSpace.target),
+                        backgroundColor: palette.paperRaised,
+                        foregroundColor: palette.ink,
+                      ),
                       onPressed: adding ? null : () => onAddQuestion(question),
-                      icon: const Icon(Icons.add_rounded, size: 22),
-                      label: Text(adding ? 'Adding…' : 'Add to my visit list'),
+                      icon: const Icon(Icons.playlist_add, size: 22),
+                      label: Text(
+                        adding ? 'Adding…' : 'Add to my visit list',
+                        textAlign: TextAlign.center,
+                      ),
                     ),
-                  ),
-              ],
             ),
-          ),
+          const SizedBox(height: AppSpace.s),
           if (addFailed)
             Semantics(
               liveRegion: true,

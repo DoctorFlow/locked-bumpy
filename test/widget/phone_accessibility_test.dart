@@ -127,6 +127,46 @@ void main() {
       },
     );
   }
+  for (final halloween in [false, true]) {
+    testWidgets(
+      'on a 375 x 812 phone Bumpy and the first check-in share the first '
+      'screen in ${halloween ? 'Halloween' : 'Everyday'}',
+      (t) async {
+        t.view.devicePixelRatio = 1;
+        t.view.physicalSize = const Size(375, 812);
+        addTearDown(t.view.resetDevicePixelRatio);
+        addTearDown(t.view.resetPhysicalSize);
+        SharedPreferences.setMockInitialValues({
+          'due_date_iso': '2027-05-10',
+          'is_halloween': halloween,
+        });
+        final state = await AppState.load(now: () => DateTime(2026, 11, 23));
+        await t.pumpWidget(LittleBumpyApp(state: state));
+        await t.pumpAndSettle();
+        final navTop = t.getTopLeft(find.byType(AppNavBar)).dy;
+        final need = find.byKey(ValueKey(state.todayNeed));
+        // No scrolling: the row is whole above the tab bar.
+        expect(need.hitTestable(), findsOneWidget);
+        expect(t.getBottomLeft(need).dy, lessThanOrEqualTo(navTop));
+        // The check-ins come straight after Bumpy, before the fact.
+        final checkIns = find.byKey(const ValueKey('today-check-ins'));
+        final pairing = find.byKey(const ValueKey('need-pairing'));
+        expect(t.getTopLeft(pairing).dy, lessThan(t.getTopLeft(checkIns).dy));
+        final fact = find.byKey(const ValueKey('today-fact'));
+        if (fact.evaluate().isNotEmpty) {
+          expect(t.getTopLeft(checkIns).dy, lessThan(t.getTopLeft(fact).dy));
+        }
+        await t.tap(need.hitTestable());
+        await t.pumpAndSettle();
+        // Bumpy's answer is in view where the tick happened.
+        final thanks = find.textContaining('Thank you');
+        expect(thanks.hitTestable(), findsOneWidget);
+        expect(t.getTopLeft(thanks).dy, greaterThanOrEqualTo(0));
+        expect(t.takeException(), isNull);
+        await t.pumpWidget(const SizedBox());
+      },
+    );
+  }
   testWidgets(
     'a rotated phone keeps the main check-in beside the baby response',
     (t) async {
@@ -173,7 +213,15 @@ void main() {
           find.widgetWithIcon(IconButton, Icons.pause_circle_outline),
         ];
         expect(
-          tester.getSize(find.byTooltip('Costume closet')).shortestSide,
+          // A room under 340 px (the 320 phone) shows the icon-only
+          // wardrobe button; the turned phone's wider room keeps the chip.
+          tester
+              .getSize(
+                find.byTooltip(
+                  size.width < 400 ? 'Wardrobe' : 'Costume closet',
+                ),
+              )
+              .shortestSide,
           greaterThanOrEqualTo(48),
         );
         for (final control in controls) {
@@ -185,8 +233,22 @@ void main() {
           );
         }
         final tile = find.byKey(ValueKey(state.todayNeed));
+        // Upright, the new order holds at 200 percent: Bumpy, then the
+        // check-ins, then the rest. (A turned phone sets them side by side.)
+        if (size.width < size.height) {
+          expect(
+            tester.getTopLeft(find.byKey(const ValueKey('need-pairing'))).dy,
+            lessThan(
+              tester
+                  .getTopLeft(find.byKey(const ValueKey('today-check-ins')))
+                  .dy,
+            ),
+          );
+        }
         await tester.ensureVisible(tile);
-        await tester.tap(tile);
+        // At 200 percent the row is taller than the strip a turned phone
+        // shows, so tap the part in view, as a parent would.
+        await tester.tapAt(tester.getTopLeft(tile) + const Offset(24, 24));
         await tester.pumpAndSettle();
         expect(
           find.descendant(of: tile, matching: find.text('Done')),

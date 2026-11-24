@@ -16,12 +16,21 @@ class NurseryScene extends StatefulWidget {
     required this.palette,
     required this.avatar,
     this.cornerAction,
+    this.compactCornerAction,
     this.height = 204,
   });
   final AppPalette palette;
   final BumpyAvatar avatar;
   final Widget? cornerAction;
+
+  /// The same action as [cornerAction] as a 48 x 48 icon-only button, shown
+  /// instead of it in a room narrower than [compactBelow], so the labelled
+  /// chip never covers Bumpy's head.
+  final Widget? compactCornerAction;
   final double height;
+
+  /// Rooms narrower than this show [compactCornerAction].
+  static const double compactBelow = 340;
 
   /// One backdrop per look, sized for the widest card on a 3x phone.
   static String backdropFor(AppPalette palette) => palette.isHalloween
@@ -60,11 +69,28 @@ class _NurserySceneState extends State<NurseryScene> {
 
   @override
   Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, bounds) => _buildRoom(
+        context,
+        compact:
+            widget.compactCornerAction != null &&
+            bounds.maxWidth < NurseryScene.compactBelow,
+      ),
+    );
+  }
+
+  Widget _buildRoom(BuildContext context, {required bool compact}) {
     final palette = widget.palette;
     final height = widget.height;
-    final cornerAction = widget.cornerAction;
+    // The icon-only button does not grow with the text size, so it always
+    // sits in the room's corner.
+    final cornerAction = compact
+        ? widget.compactCornerAction
+        : widget.cornerAction;
     final separateAction =
-        cornerAction != null && MediaQuery.textScalerOf(context).scale(14) > 21;
+        !compact &&
+        cornerAction != null &&
+        MediaQuery.textScalerOf(context).scale(14) > 21;
     final sprite = NurseryScene.spriteHeightFor(height);
     final room = SizedBox(
       height: height,

@@ -51,7 +51,7 @@ void main() {
     );
     expect(state.todayNeed, MaternalNeed.iron);
     expect(state.completedCheckIns, {'iron'});
-    expect(find.text('IRON · Need of the Day'), findsOneWidget);
+    expect(find.text('Iron · today’s need'), findsOneWidget);
     // The need stays named under any costume (Today's pairing tag).
     expect(find.text('Today · Iron'), findsOneWidget);
     expect(find.text('Dressed as a witch for fun'), findsOneWidget);
@@ -92,7 +92,8 @@ void main() {
     final state = await AppState.load(now: () => DateTime(2026, 11, 23));
     await tester.pumpWidget(LittleBumpyApp(state: state));
     await tester.pumpAndSettle();
-    await tester.tap(find.byTooltip('Costume closet'));
+    // At 320 px the room shows the icon-only wardrobe button.
+    await tester.tap(find.byTooltip('Wardrobe'));
     await tester.pumpAndSettle();
     final witch = find.byKey(const ValueKey('closet-vitamin'));
     await tester.ensureVisible(witch);

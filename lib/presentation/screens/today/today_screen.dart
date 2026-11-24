@@ -26,9 +26,10 @@ part 'visit_card.dart';
 
 /// Today tab: a one-minute daily visit.
 ///
-/// In one glance: who Bumpy is today and why (the costume is the need), one
-/// small sourced fact from that need's guide, and what waits for the visit.
-/// The three check-ins sit below as optional ticks.
+/// In one glance: who Bumpy is today and why (the costume is the need), and
+/// right under Bumpy the three optional ticks, so Bumpy's answer to a tick is
+/// in view. Then one small sourced fact from that need's guide, what waits
+/// for the visit, and the footer.
 class TodayScreen extends StatefulWidget {
   const TodayScreen({super.key, required this.state});
 
@@ -222,10 +223,14 @@ class _TodayScreenState extends State<TodayScreen>
           need: need,
           palette: palette,
           // A short turned phone gets a smaller room, so Bumpy's line stays
-          // in view beside the ticks. Upright, 176 leaves the top of the visit
-          // card in view on a 375 x 812 phone when a fact is shown.
+          // in view beside the ticks. Upright, 176 leaves the first check-in
+          // row in view under Bumpy on a 375 x 812 phone.
           sceneHeight: !sideBySide
-              ? 176
+              // A short upright phone (320 x 568) gets a lower room, so the
+              // check-in card starts in view under Bumpy's line.
+              ? bounds.maxHeight < 480
+                    ? 132
+                    : 176
               : bounds.maxHeight < 420
               ? 112
               : 156,
@@ -270,6 +275,11 @@ class _TodayScreenState extends State<TodayScreen>
           onEndReview: () => setState(() => _reviewingDay = null),
           onCheckIn: _onCheckIn,
         );
+        final footer = _TodayFooter(
+          state: state,
+          palette: palette,
+          showWeekLink: !(allDone && !reviewing),
+        );
         if (sideBySide) {
           return Padding(
             padding: const EdgeInsets.fromLTRB(
@@ -301,7 +311,14 @@ class _TodayScreenState extends State<TodayScreen>
                 Expanded(
                   child: SingleChildScrollView(
                     padding: const EdgeInsets.only(bottom: 16),
-                    child: checkInsPanel,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        checkInsPanel,
+                        const SizedBox(height: 16),
+                        footer,
+                      ],
+                    ),
                   ),
                 ),
               ],
@@ -313,12 +330,16 @@ class _TodayScreenState extends State<TodayScreen>
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              // The daily ritual sits right under Bumpy, so a tick and
+              // Bumpy's answer share the first screen.
               nursery,
+              const SizedBox(height: 16),
+              checkInsPanel,
               const SizedBox(height: 16),
               if (fact != null) ...[fact, const SizedBox(height: 16)],
               visit,
               const SizedBox(height: 24),
-              checkInsPanel,
+              footer,
             ],
           ),
         );
