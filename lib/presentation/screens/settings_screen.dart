@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import '../../core/constants/app_constants.dart';
 import '../../core/theme/palette.dart';
@@ -116,15 +117,6 @@ class SettingsScreen extends StatelessWidget {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
-                                'Little Bumpy',
-                                style: title?.copyWith(fontSize: 24),
-                              ),
-                              Text(
-                                AppConstants.appVersion,
-                                style: TextStyle(color: palette.inkSoft),
-                              ),
-                              const SizedBox(height: 24),
                               _EditableDetail(
                                 label: 'Due date',
                                 value: state.dueDate == null
@@ -188,7 +180,9 @@ class SettingsScreen extends StatelessWidget {
                               Text('Privacy', style: title),
                               const SizedBox(height: 4),
                               Text(
-                                AppConstants.privacyStatement,
+                                kIsWeb
+                                    ? 'Your data stays in this browser on this device. No accounts. No tracking. No ads.'
+                                    : AppConstants.privacyStatement,
                                 style: TextStyle(color: palette.inkSoft),
                               ),
                               const SizedBox(height: 20),
@@ -197,6 +191,18 @@ class SettingsScreen extends StatelessWidget {
                               Text(
                                 AppConstants.disclaimer,
                                 style: TextStyle(color: palette.inkSoft),
+                              ),
+                              const SizedBox(height: 20),
+                              Wrap(
+                                spacing: 8,
+                                crossAxisAlignment: WrapCrossAlignment.center,
+                                children: [
+                                  Text('Little Bumpy', style: title),
+                                  Text(
+                                    AppConstants.appVersion,
+                                    style: TextStyle(color: palette.inkSoft),
+                                  ),
+                                ],
                               ),
                             ],
                           ),

@@ -17,7 +17,9 @@ class VisitTopics extends StatelessWidget {
   }) async {
     final palette = AppPalette.of(context);
     final selected = {...state.visitTopics, ?include};
-    final result = await showModalBottomSheet<Set<MaternalNeed>>(
+    var saving = false;
+    var saveFailed = false;
+    await showModalBottomSheet<void>(
       context: context,
       useSafeArea: true,
       isScrollControlled: true,
@@ -28,6 +30,28 @@ class VisitTopics extends StatelessWidget {
           : null,
       builder: (sheet) => StatefulBuilder(
         builder: (context, update) {
+          Future<void> save() async {
+            if (saving || state.isPaused || state.isFirstRun) return;
+            update(() {
+              saving = true;
+              saveFailed = false;
+            });
+            try {
+              await state.saveVisitTopics(selected);
+            } catch (_) {
+              if (context.mounted) {
+                update(() {
+                  saving = false;
+                  saveFailed = true;
+                });
+              }
+              return;
+            }
+            if (sheet.mounted && ModalRoute.of(sheet)?.isCurrent == true) {
+              Navigator.pop(sheet);
+            }
+          }
+
           return SafeArea(
             top: false,
             child: SingleChildScrollView(
@@ -80,23 +104,42 @@ class VisitTopics extends StatelessWidget {
                         style: TextStyle(color: palette.ink),
                       ),
                       value: selected.contains(need),
-                      onChanged: (value) => update(() {
-                        if (value == true) {
-                          selected.add(need);
-                        } else {
-                          selected.remove(need);
-                        }
-                      }),
+                      onChanged: saving
+                          ? null
+                          : (value) => update(() {
+                              if (value == true) {
+                                selected.add(need);
+                              } else {
+                                selected.remove(need);
+                              }
+                            }),
                     ),
                   const SizedBox(height: 10),
+                  if (saveFailed)
+                    Semantics(
+                      liveRegion: true,
+                      child: Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: Text(
+                          'Your visit list couldn’t be saved on this device.',
+                          style: TextStyle(color: palette.ink),
+                        ),
+                      ),
+                    ),
                   FilledButton(
                     style: FilledButton.styleFrom(
                       backgroundColor: palette.ink,
                       foregroundColor: palette.paper,
                       minimumSize: const Size.fromHeight(48),
                     ),
-                    onPressed: () => Navigator.pop(sheet, selected),
-                    child: const Text('Save visit list'),
+                    onPressed: saving ? null : save,
+                    child: Text(
+                      saving
+                          ? 'Saving…'
+                          : saveFailed
+                          ? 'Retry save'
+                          : 'Save visit list',
+                    ),
                   ),
                 ],
               ),
@@ -105,23 +148,6 @@ class VisitTopics extends StatelessWidget {
         },
       ),
     );
-    if (result == null ||
-        !context.mounted ||
-        state.isPaused ||
-        state.isFirstRun) {
-      return;
-    }
-    try {
-      await state.saveVisitTopics(result);
-    } catch (_) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Your list could not be saved. Please try again.'),
-          ),
-        );
-      }
-    }
   }
 
   @override
