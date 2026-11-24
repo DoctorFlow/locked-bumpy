@@ -318,7 +318,7 @@ class _NeedCard extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          NeedPortrait(need: need, skinTone: skinTone),
+          NeedPortrait(need: need, skinTone: skinTone, size: 72),
           const SizedBox(width: AppSpace.l),
           Expanded(
             child: Column(
@@ -343,34 +343,46 @@ class _NeedCard extends StatelessWidget {
                     style: AppText.small.copyWith(color: palette.inkSoft),
                   ),
                 ],
-                if (copy != null) ...[
-                  const SizedBox(height: AppSpace.s),
-                  // A health sentence is never cut: the card grows to hold
-                  // the whole summary, caveat included.
-                  Text(
-                    copy.point,
-                    key: ValueKey('guide-summary-${need.name}'),
-                    style: AppText.body.copyWith(color: palette.ink),
-                  ),
-                ],
-                if (copy?.isDraft == true)
-                  Padding(
-                    padding: const EdgeInsets.only(top: AppSpace.xs),
-                    child: DraftTag(palette: palette),
-                  ),
               ],
             ),
           ),
+          // Level with the need word, not floating halfway down the card.
           if (copy != null)
-            Padding(
-              padding: const EdgeInsets.only(top: AppSpace.xl),
-              child: Icon(Icons.chevron_right, color: palette.ink, size: 28),
-            )
+            Icon(Icons.chevron_right, color: palette.ink, size: 28)
           else
             const SizedBox(width: AppSpace.s),
         ],
       ),
     );
+    // The point runs the full width of the card under the portrait row, so
+    // it reads as a paragraph, not a narrow column beside the picture.
+    final summary = copy == null
+        ? null
+        : Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpace.l,
+              0,
+              AppSpace.l,
+              AppSpace.m,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // A health sentence is never cut: the card grows to hold
+                // the whole summary, caveat included.
+                Text(
+                  copy.point,
+                  key: ValueKey('guide-summary-${need.name}'),
+                  style: AppText.body.copyWith(color: palette.ink),
+                ),
+                if (copy.isDraft)
+                  Padding(
+                    padding: const EdgeInsets.only(top: AppSpace.s),
+                    child: DraftTag(palette: palette),
+                  ),
+              ],
+            ),
+          );
     return PaperCard(
       key: PageStorageKey(need),
       child: Column(
@@ -383,7 +395,13 @@ class _NeedCard extends StatelessWidget {
               button: true,
               label: 'Open the ${needWord(need)} guide',
               onTapHint: 'Open the guide',
-              child: InkWell(onTap: onOpen, child: top),
+              child: InkWell(
+                onTap: onOpen,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [top, if (summary != null) summary],
+                ),
+              ),
             ),
           Padding(
             padding: const EdgeInsets.fromLTRB(
