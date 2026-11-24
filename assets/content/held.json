@@ -1,0 +1,17 @@
+[
+  {
+    "file": "week_cards.json",
+    "id": "week-8",
+    "reason": "specs/PRODUCT.md (section 2, section 6 item 2, question 5) names the week 8 card as stating a wrong fact under the physician's approval: fingers are not formed at 8 weeks, and \"All ten of them\" reads as a promise. Held for the physician's re-check (review sheet item W08)."
+  },
+  {
+    "file": "week_cards.json",
+    "id": "week-9",
+    "reason": "specs/PRODUCT.md (section 2, section 6 item 2, question 5) names the week 9 card as stating a wrong fact under the physician's approval: \"I am no longer an embryo\" at week 9, when the embryo stage lasts to about 10 weeks of pregnancy. Held for the physician's re-check (review sheet item W09)."
+  },
+  {
+    "file": "week_cards.json",
+    "id": "week-35",
+    "reason": "specs/PRODUCT.md (section 2, section 6 item 2, question 5) names the week 35 card as stating a wrong fact under the physician's approval: \"All the big things are done\", when the brain, lungs and liver are still maturing (the app's own weeks 36 to 40 chapter says so). Held for the physician's re-check (review sheet item W35)."
+  }
+]

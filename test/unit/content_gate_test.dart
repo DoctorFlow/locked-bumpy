@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:little_bumpy/content/content_loader.dart';
 import 'package:little_bumpy/domain/models/content_record.dart';
+import 'package:little_bumpy/domain/models/held_list.dart';
 import 'package:little_bumpy/domain/models/need.dart';
 import 'package:little_bumpy/domain/models/need_rotation.dart';
 
@@ -190,6 +191,8 @@ void main() {
           'approved_date': '',
         },
       ]);
+      // No holds here: the mock below answers for this one pack only.
+      ContentLoader.debugSetHeld(HeldList.empty);
       final messenger =
           TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
       messenger.setMockMessageHandler('flutter/assets', (message) async {
@@ -207,6 +210,7 @@ void main() {
       addTearDown(() {
         messenger.setMockMessageHandler('flutter/assets', null);
         rootBundle.evict(path);
+        ContentLoader.debugSetHeld(null);
         ContentLoader.clearCache();
       });
       final visible = await ContentLoader.load(path);

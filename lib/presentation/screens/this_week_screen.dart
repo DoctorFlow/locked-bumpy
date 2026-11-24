@@ -477,8 +477,9 @@ class _WeekCardView extends StatelessWidget {
                     ),
                     if (isCurrentWeek)
                       _HereTag(fill: palette.accent, ink: palette.accentText),
-                    // Only a review build ever shows a draft card.
-                    if (card?.isDraft ?? false) DraftTag(palette: palette),
+                    // Only a review build ever shows a draft or held card.
+                    if (card?.isDraft ?? false)
+                      DraftTag.of(palette: palette, held: card!.isHeld),
                   ],
                 ),
               ),

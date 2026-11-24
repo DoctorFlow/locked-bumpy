@@ -3,18 +3,39 @@ import '../../core/theme/palette.dart';
 
 /// A small, quiet pill beside text that is visible only because this is a
 /// review build. A release build never shows a draft, so never this tag.
+///
+/// [DraftTag.held] marks a stamped record that `assets/content/held.json`
+/// holds back for the physician's re-check; it is gated exactly like a draft.
 class DraftTag extends StatelessWidget {
-  const DraftTag({super.key, this.palette});
+  const DraftTag({super.key, this.palette})
+    : label = 'Draft',
+      semanticsLabel = 'Draft, not reviewed';
+
+  const DraftTag.held({super.key, this.palette})
+    : label = 'Held',
+      semanticsLabel = 'Held for a re-check';
+
+  /// The tag for a record: Held when [held], otherwise Draft.
+  factory DraftTag.of({Key? key, AppPalette? palette, required bool held}) =>
+      held
+      ? DraftTag.held(key: key, palette: palette)
+      : DraftTag(key: key, palette: palette);
 
   /// Defaults to the look in the theme.
   final AppPalette? palette;
+
+  /// The word on the pill.
+  final String label;
+
+  /// What a screen reader says.
+  final String semanticsLabel;
 
   @override
   Widget build(BuildContext context) {
     final p = palette ?? AppPalette.of(context);
     return Semantics(
       container: true,
-      label: 'Draft, not reviewed',
+      label: semanticsLabel,
       excludeSemantics: true,
       child: DecoratedBox(
         decoration: BoxDecoration(
@@ -30,7 +51,7 @@ class DraftTag extends StatelessWidget {
               Icon(Icons.edit_note_rounded, size: 16, color: p.inkSoft),
               const SizedBox(width: 4),
               Text(
-                'Draft',
+                label,
                 style: TextStyle(
                   color: p.inkSoft,
                   fontSize: 14,

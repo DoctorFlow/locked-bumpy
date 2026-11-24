@@ -1,17 +1,17 @@
 # Little Bumpy
 
-Little Bumpy is a free, private pregnancy companion app narrated entirely by the unborn baby, built for the **Kiroween 2026 (Costume Contest)** hackathon.
+Little Bumpy is a free, private pregnancy companion app, built for the **Kiroween 2026 (Costume Contest)** hackathon. The unborn baby, Bumpy, speaks the daily lines; settings, guides and safety lines are in a plain app voice.
 
-In Halloween mode, each costume represents an essential maternal health need: the little vampire wants iron, the mummy asks for water, the skeleton loves calcium, and the witch reminds mom of her doctor-prescribed prenatal vitamin.
+In the Halloween look, Bumpy wears a costume each day that stands for one everyday need: the vampire is iron, the zombie is brain, the skeleton is bones, the mummy is water, the ghost is rest, and the witch is the prenatal vitamin your doctor or midwife chose.
 
 ---
 
 ## Key Features
-- **Narrated by Baby:** The baby speaks directly in first person ("you").
-- **Two Modes, Complete Parity:** Switch between Everyday ("lamp on") and Halloween ("lamp off") with instant theme parity.
-- **Kind & Pressure-Free:** No guilt streaks, no penalty for missed days. Only "Days Together", which strictly increases.
-- **Safe & Private:** 100% on-device. Zero network requests, zero tracking, zero runtime AI, and zero ads.
-- **Single-Tap Pause:** Instantly silences the app with compassionate app voice if mom needs a break.
+- **Bumpy talks to you:** Bumpy speaks in the first person, straight to the parent.
+- **Two looks:** Halloween, with Bumpy in the day's costume, and Everyday, with Bumpy in a lavender onesie. Switch any time with the lamp.
+- **No pressure:** No streaks and no reminders.
+- **Private:** No account, no ads, no tracking and no runtime AI. The app has no code that sends what you enter anywhere; it is stored on the device.
+- **One-tap Pause:** Pause covers the app with a quiet screen until you choose Resume.
 
 ---
 

@@ -11,6 +11,7 @@ class WeekCard {
     required this.status,
     required this.approvedBy,
     required this.approvedDate,
+    this.isHeld = false,
   });
 
   /// Gestational week number (4–42).
@@ -32,6 +33,29 @@ class WeekCard {
   final String approvedBy;
   final String approvedDate;
 
+  /// True when `assets/content/held.json` holds this card back for the
+  /// physician's re-check: the gate then treats it as a draft, whatever its
+  /// stamp says. Set by the loader, never read from the card itself.
+  final bool isHeld;
+
+  /// The card's id in `held.json` and the review sheet: `week-<n>`, or
+  /// `week-<n>-<mode>` for a card made for one look only.
+  String get id => mode == 'both' ? 'week-$week' : 'week-$week-$mode';
+
+  /// This card with [held] as its hold. The stamp is left as it is.
+  WeekCard withHold(bool held) => held == isHeld
+      ? this
+      : WeekCard(
+          week: week,
+          mode: mode,
+          babyLine: babyLine,
+          sizeObject: sizeObject,
+          status: status,
+          approvedBy: approvedBy,
+          approvedDate: approvedDate,
+          isHeld: held,
+        );
+
   factory WeekCard.fromJson(Map<String, dynamic> j) => WeekCard(
     week: j['week'] as int,
     mode: j['mode'] as String,
@@ -49,12 +73,13 @@ class WeekCard {
         .toList();
   }
 
-  /// True for a card that passed the gate only as a review-build draft.
-  bool get isDraft => status != 'approved';
+  /// True for a card that passed the gate only as a review-build draft
+  /// (a held card included).
+  bool get isDraft => status != 'approved' || isHeld;
 
   /// The content gate's verdict for this card.
   Review review({bool? drafts}) => ContentGate.review(
-    status: status,
+    status: isHeld ? 'draft' : status,
     reviewer: approvedBy,
     date: approvedDate,
     rulesPass:
@@ -65,7 +90,9 @@ class WeekCard {
   );
 
   /// Returns the first shown card for [week] matching [mode]; in a review
-  /// build, a draft card only when no approved card exists for that week.
+  /// build, a draft (or held) card only when no approved card exists for
+  /// that week. A normal build returns null for a week whose only card is
+  /// held, the same as a week with no approved card.
   /// Cards with `mode == 'both'` match any palette mode.
   static WeekCard? findFor({
     required List<WeekCard> cards,

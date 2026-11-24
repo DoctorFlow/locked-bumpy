@@ -20,6 +20,7 @@ class ContentRecord {
     required this.status,
     required this.approvedBy,
     required this.approvedDate,
+    this.isHeld = false,
   });
 
   /// Unique identifier, e.g. `'iron_greeting_hw_01'`.
@@ -46,8 +47,33 @@ class ContentRecord {
   final String approvedBy;
   final String approvedDate;
 
-  /// True for a record that passed the gate only as a review-build draft.
-  bool get isDraft => status != 'approved';
+  /// True when `assets/content/held.json` holds this record back for the
+  /// physician's re-check: the gate then treats it as a draft, whatever its
+  /// stamp says. Set by the loader, never read from the record itself.
+  final bool isHeld;
+
+  /// True for a record that passed the gate only as a review-build draft
+  /// (a held record included).
+  bool get isDraft => status != 'approved' || isHeld;
+
+  /// The status the gate judges: `draft` while the record is held.
+  String get gateStatus => isHeld ? 'draft' : status;
+
+  /// This record with [held] as its hold. The stamp is left as it is.
+  ContentRecord withHold(bool held) => held == isHeld
+      ? this
+      : ContentRecord(
+          id: id,
+          category: category,
+          need: need,
+          mode: mode,
+          tone: tone,
+          text: text,
+          status: status,
+          approvedBy: approvedBy,
+          approvedDate: approvedDate,
+          isHeld: held,
+        );
 
   factory ContentRecord.fromJson(Map<String, dynamic> j) => ContentRecord(
     id: j['id'] as String,
@@ -180,7 +206,7 @@ class ContentGate {
 
   /// [review] for one Today line.
   static Review reviewRecord(ContentRecord record, {bool? drafts}) => review(
-    status: record.status,
+    status: record.gateStatus,
     reviewer: record.approvedBy,
     date: record.approvedDate,
     rulesPass: record.text.trim().isNotEmpty && bannedTerm(record.text) == null,
@@ -198,6 +224,7 @@ class ContentGate {
       reviewRecord(record, drafts: false) == Review.shown;
 
   static String? _reviewIssue(ContentRecord record) {
+    if (record.isHeld) return 'held for a re-check (held.json)';
     if (record.status != 'approved') {
       return 'status is "${record.status}", expected "approved"';
     }
