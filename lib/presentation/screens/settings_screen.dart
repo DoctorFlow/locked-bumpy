@@ -5,6 +5,7 @@ import '../../core/theme/palette.dart';
 import '../../domain/models/app_state.dart';
 import '../widgets/data_confirmation.dart';
 import '../widgets/pregnancy_date_picker.dart';
+import '../widgets/pause_button.dart';
 import '../widgets/skin_tone_picker.dart';
 
 class SettingsScreen extends StatelessWidget {
@@ -28,7 +29,15 @@ class SettingsScreen extends StatelessWidget {
       context: context,
       builder: (dialog) => AlertDialog(
         scrollable: true,
-        title: const Text('Baby nickname'),
+        title: Row(
+          children: [
+            const Expanded(child: Text('Baby nickname')),
+            PauseButton(
+              onPressed: state.pause,
+              color: Theme.of(dialog).colorScheme.onSurface,
+            ),
+          ],
+        ),
         content: TextFormField(
           initialValue: value,
           autofocus: true,
@@ -132,6 +141,7 @@ class SettingsScreen extends StatelessWidget {
                                     context,
                                     today: state.today,
                                     useDueDate: true,
+                                    onPause: state.pause,
                                     selected: state.dueDate,
                                   );
                                   if (picked != null &&

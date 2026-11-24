@@ -99,6 +99,7 @@ class _FirstRunScreenState extends State<FirstRunScreen> {
       context,
       today: widget.state.today,
       useDueDate: _useDueDate,
+      onPause: widget.state.pause,
       selected: _pickedDate,
     );
     if (picked != null && mounted) {

@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'pause_button.dart';
 
 Future<DateTime?> pickPregnancyDate(
   BuildContext context, {
   required DateTime today,
   required bool useDueDate,
+  required VoidCallback onPause,
   DateTime? selected,
 }) {
   DateTime offset(int days) =>
@@ -17,12 +19,50 @@ Future<DateTime?> pickPregnancyDate(
       : candidate.isAfter(last)
       ? last
       : candidate;
-  return showDatePicker(
+  return showDialog<DateTime>(
     context: context,
-    currentDate: today,
-    initialDate: initial,
-    firstDate: first,
-    lastDate: last,
-    helpText: useDueDate ? 'Pick your due date' : 'Pick your last period start',
+    builder: (dialog) {
+      final size = MediaQuery.sizeOf(dialog);
+      final short = size.width > size.height && size.height < 480;
+      final calendar = DatePickerDialog(
+        currentDate: today,
+        initialDate: initial,
+        firstDate: first,
+        lastDate: last,
+        helpText: useDueDate
+            ? 'Pick your due date'
+            : 'Pick your last period start',
+        insetPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      );
+      final pause = Material(
+        color: Theme.of(dialog).colorScheme.surface,
+        shape: const CircleBorder(),
+        child: PauseButton(
+          onPressed: onPause,
+          color: Theme.of(dialog).colorScheme.onSurface,
+        ),
+      );
+      return Center(
+        child: ConstrainedBox(
+          constraints: BoxConstraints(maxWidth: short ? 640 : 420),
+          child: short
+              ? Row(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Flexible(child: calendar),
+                    pause,
+                  ],
+                )
+              : Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Align(alignment: Alignment.centerRight, child: pause),
+                    Flexible(child: calendar),
+                  ],
+                ),
+        ),
+      );
+    },
   );
 }

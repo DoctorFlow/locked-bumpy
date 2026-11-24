@@ -23,6 +23,47 @@ void main() {
     return state;
   }
 
+  for (final size in [const Size(320, 568), const Size(568, 320)]) {
+    testWidgets('Pause hides the date editor at $size', (tester) async {
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = size;
+      addTearDown(tester.view.resetDevicePixelRatio);
+      addTearDown(tester.view.resetPhysicalSize);
+      final state = await open(tester);
+      final edit = find.byTooltip('Change due date');
+      await tester.ensureVisible(edit);
+      await tester.tap(edit);
+      await tester.pumpAndSettle();
+      expect(find.byType(DatePickerDialog), findsOneWidget);
+      expect(tester.takeException(), isNull);
+      await tester.tap(find.byTooltip('Pause').hitTestable());
+      await tester.pumpAndSettle();
+      expect(state.isPaused, isTrue);
+      expect(find.byType(DatePickerDialog), findsNothing);
+      expect(find.text('Everything is paused.'), findsOneWidget);
+    });
+  }
+
+  testWidgets('Pause discards an unsaved nickname from the editor', (
+    tester,
+  ) async {
+    final state = await open(tester);
+    final edit = find.byTooltip('Edit nickname');
+    await tester.ensureVisible(edit);
+    await tester.tap(edit);
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextFormField), 'Unsaved');
+    final pause = find.descendant(
+      of: find.byType(AlertDialog),
+      matching: find.byTooltip('Pause'),
+    );
+    await tester.tap(pause);
+    await tester.pumpAndSettle();
+    expect(state.isPaused, isTrue);
+    expect(find.text('Unsaved'), findsNothing);
+    expect((await AppState.load()).nickname, isNot('Unsaved'));
+  });
+
   testWidgets('Settings has both looks, privacy, version and back to Guides', (
     tester,
   ) async {
