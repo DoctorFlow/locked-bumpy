@@ -24,7 +24,7 @@ Future<Uint8List> pixels(
   try {
     final image = await frame.future;
     try {
-      expect((image.width, image.height), (512, 512));
+      expect((image.width, image.height), (768, 768));
       if (!overBlack) return Uint8List.sublistView((await image.toByteData())!);
       final recorder = ui.PictureRecorder();
       final canvas = ui.Canvas(recorder);
@@ -55,12 +55,12 @@ void main() {
   test(
     'translucent Mummy paper matches the studio over a black backdrop',
     () async {
-      // Outer edge of the hand. Its master alpha is 118/255 at this location.
-      const index = (384 * 512 + 120) * 4;
+      // Outer edge of the hand. Its master alpha is 60/255 at this location.
+      const index = (576 * 768 + 180) * 4;
       for (final (tone, expected) in [
-        (SkinTone.peach, [116, 82, 54]),
-        (SkinTone.fair, [112, 93, 78]),
-        (SkinTone.deepest, [62, 35, 25]),
+        (SkinTone.peach, [57, 40, 27]),
+        (SkinTone.fair, [55, 45, 38]),
+        (SkinTone.deepest, [30, 18, 13]),
       ]) {
         final art = await pixels(
           paperPortrait('assets/images/body-mummy.png', tone),
