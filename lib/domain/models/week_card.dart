@@ -49,24 +49,44 @@ class WeekCard {
         .toList();
   }
 
-  /// Returns the first approved card for [week] matching [mode].
+  /// True for a card that passed the gate only as a review-build draft.
+  bool get isDraft => status != 'approved';
+
+  /// The content gate's verdict for this card.
+  Review review({bool drafts = ContentGate.draftsByDefault}) =>
+      ContentGate.review(
+        status: status,
+        reviewer: approvedBy,
+        date: approvedDate,
+        rulesPass:
+            babyLine.trim().isNotEmpty &&
+            ContentGate.bannedTerm(babyLine) == null &&
+            ContentGate.bannedTerm(sizeObject ?? '') == null,
+        drafts: drafts,
+      );
+
+  /// Returns the first shown card for [week] matching [mode]; in a review
+  /// build, a draft card only when no approved card exists for that week.
   /// Cards with `mode == 'both'` match any palette mode.
   static WeekCard? findFor({
     required List<WeekCard> cards,
     required int week,
     required String mode,
+    bool drafts = ContentGate.draftsByDefault,
   }) {
+    WeekCard? draft;
     for (final c in cards) {
       if (c.week != week) continue;
-      if (c.status != 'approved') continue;
       if (c.mode != 'both' && c.mode != mode) continue;
-      if (ContentGate.hasDatedReview(c.approvedBy, c.approvedDate) &&
-          c.babyLine.trim().isNotEmpty &&
-          ContentGate.bannedTerm(c.babyLine) == null &&
-          ContentGate.bannedTerm(c.sizeObject ?? '') == null) {
-        return c;
+      switch (c.review(drafts: drafts)) {
+        case Review.shown:
+          return c;
+        case Review.draft:
+          draft ??= c;
+        case Review.hidden:
+          break;
       }
     }
-    return null;
+    return draft;
   }
 }

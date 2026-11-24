@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'core/build_flags.dart';
 import 'core/theme/app_theme.dart';
 import 'core/theme/palette.dart';
 import 'domain/models/app_state.dart';
@@ -9,6 +10,7 @@ import 'presentation/screens/paused_screen.dart';
 import 'presentation/screens/this_week_screen.dart';
 import 'presentation/screens/today_screen.dart';
 import 'presentation/widgets/app_nav_bar.dart';
+import 'presentation/widgets/draft_tag.dart';
 import 'presentation/widgets/top_bar.dart';
 
 void main() async {
@@ -93,6 +95,9 @@ class _LittleBumpyAppState extends State<LittleBumpyApp>
           ? Duration.zero
           : const Duration(milliseconds: 300),
       debugShowCheckedModeBanner: false,
+      builder: kReviewBuild
+          ? (context, child) => ReviewBanner(child: child)
+          : null,
       theme: buildTheme(palette),
       home: Scaffold(
         body: LayoutBuilder(
