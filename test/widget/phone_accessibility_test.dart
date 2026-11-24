@@ -158,15 +158,22 @@ void main() {
         final state = await AppState.load(now: () => DateTime(2026, 11, 28));
         await tester.pumpWidget(LittleBumpyApp(state: state));
         await tester.pumpAndSettle();
-        final buttons = find.byType(IconButton).evaluate();
-        expect(buttons.length, 3);
+        final controls = [
+          find.byTooltip('Switch to Everyday'),
+          find.widgetWithIcon(IconButton, Icons.settings_outlined),
+          find.widgetWithIcon(IconButton, Icons.pause_circle_outline),
+        ];
         expect(
           tester.getSize(find.byTooltip('Costume closet')).shortestSide,
           greaterThanOrEqualTo(48),
         );
-        for (final button in buttons) {
-          final target = tester.getSize(find.byWidget(button.widget));
-          expect(target.shortestSide, greaterThanOrEqualTo(48));
+        for (final control in controls) {
+          final target = tester.getSize(control);
+          expect(
+            target.shortestSide,
+            greaterThanOrEqualTo(48),
+            reason: control.toString(),
+          );
         }
         final tile = find.byKey(ValueKey(state.todayNeed));
         await tester.ensureVisible(tile);

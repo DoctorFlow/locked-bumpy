@@ -3,7 +3,7 @@ import '../../core/theme/palette.dart';
 import '../../domain/models/app_state.dart';
 import '../screens/settings_screen.dart';
 
-/// App top bar: week chip, lamp toggle, pause button.
+/// Week navigation and the nursery controls stay within reach on each tab.
 class TopBar extends StatelessWidget implements PreferredSizeWidget {
   const TopBar({super.key, required this.state});
 
@@ -17,62 +17,87 @@ class TopBar extends StatelessWidget implements PreferredSizeWidget {
     final palette = AppPalette.of(context);
     final currentWeek = state.currentWeek;
     final week = currentWeek == null ? '—' : 'Week $currentWeek';
+    final switchLabel = state.isHalloween
+        ? 'Switch to Everyday'
+        : 'Switch to Halloween';
+    final available = MediaQuery.sizeOf(context).width;
+    final type = MediaQuery.textScalerOf(context).scale(14);
+    final showLampLabel = available >= 350 && type <= 18;
+    final weekChip = Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: palette.paperRaised.withValues(alpha: .25),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: palette.moonlight.withValues(alpha: .3)),
+      ),
+      child: Text(
+        week,
+        style: TextStyle(
+          fontSize: 13,
+          fontWeight: FontWeight.bold,
+          color: palette.moonlight,
+        ),
+      ),
+    );
+    final lamp = Image.asset(
+      'assets/images/nursery-lamp.png',
+      width: showLampLabel ? 24 : 36,
+      height: showLampLabel ? 24 : 36,
+      excludeFromSemantics: true,
+      color: palette.isHalloween ? palette.moonlightSoft : null,
+      colorBlendMode: BlendMode.srcIn,
+      errorBuilder: (_, _, _) =>
+          Icon(Icons.lightbulb_outline, color: palette.moon),
+    );
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          // Gestational week chip
           Flexible(
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(
-                color: palette.paperRaised.withValues(alpha: 0.25),
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(
-                  color: palette.moonlight.withValues(alpha: 0.3),
-                ),
-              ),
-              child: Text(
-                week,
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.bold,
-                  color: palette.moonlight,
-                ),
-              ),
-            ),
-          ),
-
-          Row(
-            children: [
-              // Lamp toggle — switches Everyday ↔ Halloween
-              Semantics(
-                label: state.isHalloween
-                    ? 'Switch to Everyday mode'
-                    : 'Switch to Halloween mode',
-                button: true,
-                child: IconButton(
-                  iconSize: 36,
-                  icon: Image.asset(
-                    'assets/images/nursery-lamp.png',
-                    width: 36,
-                    height: 36,
-                    excludeFromSemantics: true,
-                    color: palette.isHalloween ? palette.moonlightSoft : null,
-                    colorBlendMode: BlendMode.srcIn,
-                    errorBuilder: (_, _, _) => Icon(
-                      state.isHalloween
-                          ? Icons.lightbulb_outline
-                          : Icons.lightbulb,
-                      color: palette.moon,
+            child: state.currentTab == 1
+                ? weekChip
+                : Tooltip(
+                    message: 'Read this week’s card',
+                    child: TextButton(
+                      style: TextButton.styleFrom(
+                        padding: EdgeInsets.zero,
+                        minimumSize: const Size(48, 48),
+                        foregroundColor: palette.moonlight,
+                      ),
+                      onPressed: () => state.setTab(1),
+                      child: weekChip,
                     ),
                   ),
-                  onPressed: state.toggleMode,
-                  tooltip: state.isHalloween
-                      ? 'Switch to Everyday'
-                      : 'Switch to Halloween',
+          ),
+          Row(
+            children: [
+              Tooltip(
+                message: switchLabel,
+                excludeFromSemantics: true,
+                child: Semantics(
+                  label: '$switchLabel mode',
+                  child: TextButton(
+                    onPressed: state.toggleMode,
+                    style: TextButton.styleFrom(
+                      minimumSize: const Size(48, 48),
+                      foregroundColor: palette.moonlight,
+                      padding: const EdgeInsets.symmetric(horizontal: 5),
+                    ),
+                    child: ExcludeSemantics(
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          lamp,
+                          if (showLampLabel) ...[
+                            const SizedBox(width: 4),
+                            const Text('Switch look'),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ),
                 ),
               ),
               IconButton(
@@ -80,7 +105,6 @@ class TopBar extends StatelessWidget implements PreferredSizeWidget {
                 icon: Icon(Icons.settings_outlined, color: palette.moonlight),
                 onPressed: () => SettingsScreen.open(context, state),
               ),
-              // Pause
               Semantics(
                 label: 'Pause app',
                 button: true,
