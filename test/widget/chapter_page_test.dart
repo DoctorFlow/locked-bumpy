@@ -124,6 +124,28 @@ void main() {
     expect(find.text('Write my own question'), findsOneWidget);
   });
 
+  testWidgets('"Add to my visit list" is the full-width outlined button '
+      'used on Guides', (t) async {
+    await openThisWeek(t);
+    final add = find.text('Add to my visit list');
+    await t.ensureVisible(add);
+    await t.pumpAndSettle();
+    final button = find.ancestor(of: add, matching: find.byType(OutlinedButton));
+    expect(button, findsOneWidget);
+    expect(
+      find.ancestor(of: add, matching: find.byType(FilledButton)),
+      findsNothing,
+    );
+    expect(
+      find.descendant(of: button, matching: find.byIcon(Icons.playlist_add)),
+      findsOneWidget,
+    );
+    final piece = find.byKey(const ValueKey('chapter-question-piece'));
+    // Full width inside the piece's 16 px padding.
+    expect(t.getSize(button).width, t.getSize(piece).width - 2 * 16);
+    expect(t.getSize(button).height, greaterThanOrEqualTo(48));
+  });
+
   testWidgets('the curious question opens that need\'s guide page', (t) async {
     ContentLoader.debugSetGuides({
       MaternalNeed.rest: Guide.reviewAll(
@@ -224,7 +246,7 @@ void main() {
         expect(t.takeException(), isNull);
         final button = find.ancestor(
           of: find.text('Add to my visit list'),
-          matching: find.byType(FilledButton),
+          matching: find.byType(OutlinedButton),
         );
         expect(t.getSize(button).height, greaterThanOrEqualTo(48));
       },

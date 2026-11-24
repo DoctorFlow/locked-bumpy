@@ -285,22 +285,17 @@ class _NeedCard extends StatelessWidget {
 
   /// Six of these sit on the page, so each says its need aloud; the spoken
   /// label still holds the visible words.
-  Widget _visitButton() => Align(
-    alignment: AlignmentDirectional.centerStart,
-    child: Semantics(
-      button: true,
-      excludeSemantics: true,
-      label: savedForVisit
-          ? 'On my visit list: ${needWord(need)}'
-          : 'Add ${needWord(need)} to my visit list',
-      onTap: onVisitList,
-      child: OutlinedButton.icon(
-        onPressed: onVisitList,
-        icon: Icon(savedForVisit ? Icons.bookmark : Icons.bookmark_outline),
-        label: Text(
-          savedForVisit ? 'On my visit list' : 'Add to my visit list',
-        ),
-      ),
+  Widget _visitButton() => Semantics(
+    button: true,
+    excludeSemantics: true,
+    label: savedForVisit
+        ? 'On my visit list: ${needWord(need)}'
+        : 'Add ${needWord(need)} to my visit list',
+    onTap: onVisitList,
+    child: VisitListButton(
+      label: savedForVisit ? 'On my visit list' : 'Add to my visit list',
+      saved: savedForVisit,
+      onPressed: onVisitList,
     ),
   );
 
@@ -416,6 +411,37 @@ class _NeedCard extends StatelessWidget {
       ),
     );
   }
+}
+
+/// "Add to my visit list" in its one form on Guides, the guide page and the
+/// chapter page: a full-width outlined button, 48 tall, with the list-plus
+/// icon (a tick on the list once saved). Words stay with the caller.
+class VisitListButton extends StatelessWidget {
+  const VisitListButton({
+    super.key,
+    required this.label,
+    required this.onPressed,
+    this.saved = false,
+    this.semanticsLabel,
+  });
+  final String label;
+  final VoidCallback? onPressed;
+  final bool saved;
+  final String? semanticsLabel;
+
+  @override
+  Widget build(BuildContext context) => OutlinedButton.icon(
+    style: OutlinedButton.styleFrom(
+      minimumSize: const Size.fromHeight(AppSpace.target),
+    ),
+    onPressed: onPressed,
+    icon: Icon(saved ? Icons.playlist_add_check : Icons.playlist_add, size: 22),
+    label: Text(
+      label,
+      textAlign: TextAlign.center,
+      semanticsLabel: semanticsLabel,
+    ),
+  );
 }
 
 /// The costume word as a small paper tag (capitals live only in `label`).

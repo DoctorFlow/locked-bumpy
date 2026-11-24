@@ -1021,14 +1021,20 @@ class _AddQuestionState extends State<_AddQuestion> {
                     ],
                   ),
                 )
-              : FilledButton.icon(
+              // The one form of this action on Guides, the guide page and
+              // here (`VisitListButton` in guides_screen.dart; this part
+              // file cannot import it): full width, outlined, list-plus.
+              : OutlinedButton.icon(
+                  key: const ValueKey('chapter-add-question'),
                   onPressed: _saving ? null : _add,
-                  style: FilledButton.styleFrom(
-                    backgroundColor: widget.fill,
-                    foregroundColor: widget.onFill,
+                  style: OutlinedButton.styleFrom(
+                    minimumSize: const Size.fromHeight(AppSpace.target),
                   ),
-                  icon: const Icon(Icons.playlist_add_rounded),
-                  label: const Text('Add to my visit list'),
+                  icon: const Icon(Icons.playlist_add, size: 22),
+                  label: const Text(
+                    'Add to my visit list',
+                    textAlign: TextAlign.center,
+                  ),
                 ),
         ),
         if (_notSaved)

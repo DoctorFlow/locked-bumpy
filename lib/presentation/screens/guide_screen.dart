@@ -13,7 +13,7 @@ import '../widgets/bumpy_avatar.dart';
 import '../widgets/draft_tag.dart';
 import '../widgets/need_word.dart';
 import '../widgets/visit_topics.dart';
-import 'guides_screen.dart' show CostumeTag;
+import 'guides_screen.dart' show CostumeTag, VisitListButton;
 import 'urgent_screen.dart';
 
 /// One need's guide as a full page: five numbered paper cards, then sources
@@ -108,21 +108,12 @@ class GuideScreen extends StatelessWidget {
           style: _body(palette),
         ),
         const SizedBox(height: AppSpace.l),
-        Align(
-          alignment: AlignmentDirectional.centerStart,
-          child: OutlinedButton.icon(
-            onPressed: () => VisitTopics.edit(context, state, include: need),
-            icon: Icon(
-              state.visitTopics.contains(need)
-                  ? Icons.bookmark
-                  : Icons.bookmark_outline,
-            ),
-            label: Text(
-              state.visitTopics.contains(need)
-                  ? 'On my visit list'
-                  : 'Add to my visit list',
-            ),
-          ),
+        VisitListButton(
+          onPressed: () => VisitTopics.edit(context, state, include: need),
+          saved: state.visitTopics.contains(need),
+          label: state.visitTopics.contains(need)
+              ? 'On my visit list'
+              : 'Add to my visit list',
         ),
       ],
     ),
@@ -758,16 +749,10 @@ class _QuestionRowState extends State<_QuestionRow> {
           else
             Padding(
               padding: const EdgeInsets.only(bottom: AppSpace.xs),
-              child: Align(
-                alignment: AlignmentDirectional.centerStart,
-                child: OutlinedButton.icon(
-                  onPressed: _busy ? null : () => _change(add: true),
-                  icon: const Icon(Icons.bookmark_add_outlined),
-                  label: Text(
-                    'Add to visit list',
-                    semanticsLabel: 'Add to visit list: ${widget.question}',
-                  ),
-                ),
+              child: VisitListButton(
+                onPressed: _busy ? null : () => _change(add: true),
+                label: 'Add to visit list',
+                semanticsLabel: 'Add to visit list: ${widget.question}',
               ),
             ),
           if (_failed)
