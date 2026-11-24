@@ -134,8 +134,89 @@ void main() {
       await t.pumpAndSettle();
       expect(find.text('“Can my partner come in with me?”'), findsOneWidget);
       expect(find.textContaining('An old question'), findsNothing);
-      expect(find.text('Add to my visit list'), findsNothing);
     });
+
+    testWidgets('own words saved: the list and the suggestion both show', (
+      t,
+    ) async {
+      await open(
+        t,
+        visit: [
+          q2('Can my partner come in with me?', 'own', day: '2026-11-24'),
+        ],
+      );
+      final piece = find.byKey(const ValueKey('chapter-on-list'));
+      await t.ensureVisible(piece);
+      await t.pumpAndSettle();
+      expect(find.text('On your list:'), findsOneWidget);
+      expect(find.text('“Can my partner come in with me?”'), findsOneWidget);
+      expect(
+        find.byKey(const ValueKey('chapter-question-piece')),
+        findsOneWidget,
+      );
+      expect(find.text('“$suggested”'), findsOneWidget);
+      final add = find.byKey(const ValueKey('chapter-add-question'));
+      expect(add, findsOneWidget);
+      expect(find.text('Add to my visit list'), findsOneWidget);
+      expect(t.getSize(add).height, greaterThanOrEqualTo(48));
+      expect(find.text('Write my own question'), findsOneWidget);
+
+      // Adding it puts it on the list with the own words; the offer goes.
+      await t.ensureVisible(add);
+      await t.pumpAndSettle();
+      await t.tap(add);
+      await t.pumpAndSettle();
+      expect(find.text('On your list:'), findsOneWidget);
+      expect(find.text('“$suggested”'), findsOneWidget);
+      expect(find.text('“Can my partner come in with me?”'), findsOneWidget);
+      expect(find.text('Add to my visit list'), findsNothing);
+      expect(find.byKey(const ValueKey('chapter-question-piece')), findsNothing);
+    });
+
+    testWidgets('both saved: the list shows both and no Add button', (
+      t,
+    ) async {
+      await open(
+        t,
+        visit: [
+          q2('Can my partner come in with me?', 'own', day: '2026-11-24'),
+          q2(suggested, 'week', week: 16, day: '2026-11-24'),
+        ],
+      );
+      final piece = find.byKey(const ValueKey('chapter-on-list'));
+      await t.ensureVisible(piece);
+      await t.pumpAndSettle();
+      expect(find.text('On your list:'), findsOneWidget);
+      expect(find.text('“$suggested”'), findsOneWidget);
+      expect(find.text('“Can my partner come in with me?”'), findsOneWidget);
+      expect(find.text('Add to my visit list'), findsNothing);
+      expect(find.byKey(const ValueKey('chapter-question-piece')), findsNothing);
+    });
+
+    for (final halloween in [false, true]) {
+      testWidgets(
+        'own words and the suggestion fit at 320 px, 200% text '
+        '(${halloween ? 'Halloween' : 'Everyday'})',
+        (t) async {
+          await open(
+            t,
+            size: const Size(320, 640),
+            textScale: 2,
+            halloween: halloween,
+            visit: [
+              q2('Can my partner come in with me?', 'own', day: '2026-11-24'),
+            ],
+          );
+          final add = find.byKey(const ValueKey('chapter-add-question'));
+          await t.ensureVisible(add);
+          await t.pumpAndSettle();
+          expect(find.text('On your list:'), findsOneWidget);
+          expect(add, findsOneWidget);
+          expect(t.getSize(add).height, greaterThanOrEqualTo(48));
+          expect(t.takeException(), isNull);
+        },
+      );
+    }
 
     testWidgets('nothing from this chapter: the question is offered', (
       t,
