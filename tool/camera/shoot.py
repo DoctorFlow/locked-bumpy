@@ -58,10 +58,6 @@ SHEET_SIZE = (375, 812, 3)
 VISIT_WITH_QUESTIONS = ["iron", "question:Can I travel?",
                         "question@water:How much water is right for me?"]
 
-# Labels the first-run primary button has used. The first one found is tapped.
-FIRST_RUN_PRIMARY = ["Get started", "Start", "Continue", "Next", "Let's go", "Let’s go",
-                     "Enter the nursery", "Done", "Finish"]
-
 
 def due_for_week(week):
     """A due date that puts FIXED_NOW in the middle of pregnancy week N
@@ -144,11 +140,24 @@ def week_scenario(n):
     ], shot=None)
 
 
-def first_run_steps(count=6):
-    steps = [shot("first-run-1")]
-    for i in range(2, count + 1):
-        steps += [tap_first(FIRST_RUN_PRIMARY, find=True), wait(500), shot(f"first-run-{i}")]
-    return steps
+def first_run_steps(prefix, look_label=None):
+    """From roles/lane-firstrun.md: welcome (Start), date (Choose due date,
+    OK in the picker, Next), nickname (Next), look (Next), six needs
+    (Enter the nursery). look_label picks a look card on step 4."""
+    p = prefix
+    return [
+        shot(f"{p}-1-welcome"),
+        tap("Start", "button"), wait(500), shot(f"{p}-2-date"),
+        tap_first(["Choose due date", "Pick your due date"]), wait(600), shot(f"{p}-2-picker"),
+        tap_first(["OK", "Ok"]), wait(600), shot(f"{p}-2-picked"),
+        tap_first(["Next"], find=True), wait(500), shot(f"{p}-3-nickname"),
+        tap_first(["Next"], find=True), wait(500),
+        *([tap(look_label, find=True), wait(400)] if look_label else []),
+        shot(f"{p}-4-look"),
+        tap_first(["Next"], find=True), wait(500), shot(f"{p}-5-needs"),
+        scroll(), shot(f"{p}-5-needs-more"),
+        tap_first(["Enter the nursery"], find=True), wait(1500), shot(f"{p}-6-nursery"),
+    ]
 
 
 SCENARIOS = [
@@ -203,8 +212,13 @@ SCENARIOS = [
         tap("This Week", "tab"), wait(500), shot("chapter"),
         scroll(), shot("chapter-2"), scroll(), shot("chapter-3"), scroll(), shot("chapter-4"),
     ], shot=None, note="from lane-chapter.md; needs --review"),
-    S("first-run", {"fresh_install": True}, first_run_steps(), shot=None, looks=["halloween"],
-      planned="lane-firstrun.md", note="a brand-new install has no saved look; shot once"),
+    # First run: brand-new install, from roles/lane-firstrun.md (five steps).
+    # No look is saved yet, so it runs once; first-run-everyday picks the
+    # Everyday card on the look step.
+    S("first-run", {"fresh_install": True}, first_run_steps("first-run"), shot=None,
+      looks=["halloween"], note="a brand-new install has no saved look; shot once"),
+    S("first-run-everyday", {"fresh_install": True}, first_run_steps("first-run-ev", "Everyday"),
+      shot=None, looks=["halloween"], note="a brand-new install has no saved look; shot once"),
 ]
 
 # Three key moments for sheet__journey.png: first existing shot name of each.
