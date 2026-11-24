@@ -259,6 +259,20 @@ SCENARIOS = [
         scroll(), shot("chapter-wk20-mine-2"), scroll(), shot("chapter-wk20-mine-3"),
     ], shot=None, sizes=[(320, 568, 2), (375, 812, 3)],
       note="yours: nickname and saved question shown back"),
+    # Wave 12 (roles/wave-12.md): own words saved, the chapter's suggestion
+    # still offered below "On your list:"; then both saved, no Add button.
+    # The shot holds the get-ready frame down to "Write my own question".
+    *[S(f"keep-suggestion-wk{w}-{case}", {"week": w, "visit_topics": [
+        _q2("Can my partner come in with me?", "own", day=TODAY)] + (
+        [_q2(q, "week", week=w, day=TODAY)] if case == "both" else [])}, [
+        tap("This Week", "tab"), wait(600),
+        reveal("Write my own question", at=0.88), wait(300),
+    ], note="wave-12: own words saved" + (" and the suggestion added"
+                                           if case == "both" else ""))
+      for w, q in [
+          (9, "What can I try if I feel sick a lot, and when is it worth calling you?"),
+          (20, "When might I start feeling my baby move, and who do I call if I'm ever unsure?")]
+      for case in ["own", "both"]],
     S("chapter-wk9-big", {"week": 9}, [
         tap("This Week", "tab"), wait(600), shot("chapter-wk9-big"),
         scroll(), shot("chapter-wk9-big-2"), scroll(), shot("chapter-wk9-big-3"),
