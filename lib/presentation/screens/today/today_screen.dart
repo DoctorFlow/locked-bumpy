@@ -105,22 +105,7 @@ class _TodayScreenState extends State<TodayScreen>
       vsync: this,
       duration: const Duration(milliseconds: 400),
     );
-    _hopAnimation = TweenSequence<double>([
-      TweenSequenceItem(
-        tween: Tween<double>(
-          begin: 0,
-          end: -18,
-        ).chain(CurveTween(curve: Curves.easeOut)),
-        weight: 50,
-      ),
-      TweenSequenceItem(
-        tween: Tween<double>(
-          begin: -18,
-          end: 0,
-        ).chain(CurveTween(curve: Curves.bounceOut)),
-        weight: 50,
-      ),
-    ]).animate(_hopController);
+    _hopAnimation = bumpyHop().animate(_hopController);
 
     _loadRecords();
     _loadGuides();

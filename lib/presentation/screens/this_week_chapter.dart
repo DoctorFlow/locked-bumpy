@@ -634,24 +634,10 @@ class _BumpySaysState extends State<_BumpySays>
     duration: _BumpySays.opening,
   );
 
-  // The same curve as the Today room's hop (today_screen.dart). That tween
-  // lives in Today's private state, so it is repeated here, not shared.
-  late final Animation<double> _hop = TweenSequence<double>([
-    TweenSequenceItem(
-      tween: Tween<double>(
-        begin: 0,
-        end: -_BumpySays.hopHeight,
-      ).chain(CurveTween(curve: Curves.easeOut)),
-      weight: 50,
-    ),
-    TweenSequenceItem(
-      tween: Tween<double>(
-        begin: -_BumpySays.hopHeight,
-        end: 0,
-      ).chain(CurveTween(curve: Curves.bounceOut)),
-      weight: 50,
-    ),
-  ]).animate(_opening);
+  // The same hop as the Today room (bumpy_avatar.dart).
+  late final Animation<double> _hop = bumpyHop(
+    height: _BumpySays.hopHeight,
+  ).animate(_opening);
 
   late final Animation<double> _bubble = CurvedAnimation(
     parent: _opening,

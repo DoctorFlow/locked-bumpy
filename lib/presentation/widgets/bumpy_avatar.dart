@@ -4,6 +4,25 @@ import '../../domain/models/need.dart';
 import '../../domain/models/skin_tone.dart';
 import 'paper_portrait.dart';
 
+/// Bumpy's one hop: up [height] px with an ease-out, then down with a
+/// bounce, half the time each. Today's room and the chapter page both use it.
+Animatable<double> bumpyHop({double height = 18}) => TweenSequence<double>([
+  TweenSequenceItem(
+    tween: Tween<double>(
+      begin: 0,
+      end: -height,
+    ).chain(CurveTween(curve: Curves.easeOut)),
+    weight: 50,
+  ),
+  TweenSequenceItem(
+    tween: Tween<double>(
+      begin: -height,
+      end: 0,
+    ).chain(CurveTween(curve: Curves.bounceOut)),
+    weight: 50,
+  ),
+]);
+
 /// Full-body paper cut on the same square registration in both nursery looks.
 class BumpyAvatar extends StatefulWidget {
   const BumpyAvatar({
