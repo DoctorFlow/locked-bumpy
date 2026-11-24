@@ -4,6 +4,7 @@ import '../pregnancy.dart';
 import 'need.dart';
 import 'need_rotation.dart';
 import 'skin_tone.dart';
+import 'visit_question.dart';
 
 enum CheckInSaveStatus { saved, saving, failed }
 
@@ -17,7 +18,7 @@ class AppState extends ChangeNotifier {
       _isHalloween = _prefs.isHalloween,
       _skinTone = _prefs.skinTone,
       _visitTopics = _prefs.visitTopics,
-      _visitQuestion = _prefs.visitQuestion,
+      _visitQuestions = _prefs.visitQuestions,
       _isPaused = _prefs.isPaused,
       _nickname = _prefs.nickname {
     _day = _now();
@@ -106,9 +107,53 @@ class AppState extends ChangeNotifier {
   }
 
   Set<MaternalNeed> _visitTopics;
-  String _visitQuestion;
-  String get visitQuestion => _visitQuestion;
+  List<VisitQuestion> _visitQuestions;
   Set<MaternalNeed> get visitTopics => Set.unmodifiable(_visitTopics);
+
+  /// Questions for the visit in full words, in the order they were added.
+  List<VisitQuestion> get visitQuestions => List.unmodifiable(_visitQuestions);
+
+  /// The parent's own typed question: the first one not tied to a guide.
+  String get visitQuestion {
+    for (final question in _visitQuestions) {
+      if (question.need == null) return question.text;
+    }
+    return '';
+  }
+
+  bool hasVisitQuestion(String text) {
+    final clean = text.trim();
+    return _visitQuestions.any((question) => question.text == clean);
+  }
+
+  /// Returns false when the save failed. Adding the same words twice keeps one.
+  Future<bool> addVisitQuestion(String text, {MaternalNeed? need}) async {
+    if (isPaused || isFirstRun) return false;
+    final clean = text.trim();
+    if (clean.isEmpty) return false;
+    if (hasVisitQuestion(clean)) return true;
+    final next = [..._visitQuestions, VisitQuestion(clean, need: need)];
+    if (!await _prefs.saveVisitQuestions(next)) return false;
+    if (isFirstRun) return false;
+    _visitQuestions = next;
+    notifyListeners();
+    return true;
+  }
+
+  Future<bool> removeVisitQuestion(String text) async {
+    if (isPaused || isFirstRun) return false;
+    final clean = text.trim();
+    if (!hasVisitQuestion(clean)) return true;
+    final next = [
+      for (final question in _visitQuestions)
+        if (question.text != clean) question,
+    ];
+    if (!await _prefs.saveVisitQuestions(next)) return false;
+    if (isFirstRun) return false;
+    _visitQuestions = next;
+    notifyListeners();
+    return true;
+  }
 
   Future<void> saveVisitTopics(
     Set<MaternalNeed> topics, {
@@ -118,7 +163,7 @@ class AppState extends ChangeNotifier {
     final selection = Set<MaternalNeed>.of(topics);
     await _prefs.saveVisitTopics(selection, question: question);
     if (isFirstRun) return;
-    if (question != null) _visitQuestion = question.trim();
+    _visitQuestions = _prefs.visitQuestions;
     _visitTopics = selection;
     notifyListeners();
   }
@@ -379,7 +424,7 @@ class AppState extends ChangeNotifier {
     _erasePending = false;
     _dueDate = null;
     _originalDueDate = null;
-    _visitQuestion = '';
+    _visitQuestions = [];
     _checkInRevision++;
     _checkInStatus = CheckInSaveStatus.saved;
     _visitTopics = {};

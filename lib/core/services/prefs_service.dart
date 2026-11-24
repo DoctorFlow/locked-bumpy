@@ -4,6 +4,7 @@ import '../constants/app_constants.dart';
 import '../../domain/models/need.dart';
 import '../../domain/models/skin_tone.dart';
 import '../../domain/models/need_rotation.dart';
+import '../../domain/models/visit_question.dart';
 
 /// Thin wrapper around [SharedPreferences].
 /// All data stays on-device — zero network calls, zero serialisation to any
@@ -128,16 +129,19 @@ class PrefsService {
         .toSet();
   }
 
-  // Legacy lists contain only enum names. The prefix keeps free text distinct
-  // even when the entire question matches a topic name.
-  static const _questionPrefix = 'question:';
-
-  String get visitQuestion {
+  /// Questions in full words, in the order they were added. They share one
+  /// stored list with the topic names; see [VisitQuestion.encode].
+  List<VisitQuestion> get visitQuestions {
     final saved = _prefs.getStringList(AppConstants.prefsVisitTopicsKey) ?? [];
-    for (final value in saved) {
-      if (value.startsWith(_questionPrefix)) {
-        return value.substring(_questionPrefix.length);
-      }
+    return [
+      for (final value in saved) ?VisitQuestion.tryParse(value),
+    ];
+  }
+
+  /// The parent's own typed question: the first one not tied to a guide.
+  String get visitQuestion {
+    for (final question in visitQuestions) {
+      if (question.need == null) return question.text;
     }
     return '';
   }
@@ -146,20 +150,41 @@ class PrefsService {
     Set<MaternalNeed> topics, {
     String? question,
   }) async {
+    final saved = await _orderedWrite(() {
+      final questions = visitQuestions;
+      if (question != null) {
+        final text = question.trim();
+        final own = questions.indexWhere((q) => q.need == null);
+        if (own >= 0 && text.isEmpty) {
+          questions.removeAt(own);
+        } else if (own >= 0) {
+          questions[own] = VisitQuestion(text);
+        } else if (text.isNotEmpty) {
+          questions.insert(0, VisitQuestion(text));
+        }
+      }
+      return _writeVisitList(topics, questions);
+    });
+    if (!saved) throw StateError('Could not save visit topics');
+  }
+
+  Future<bool> saveVisitQuestions(List<VisitQuestion> questions) =>
+      _orderedWrite(() => _writeVisitList(visitTopics, questions));
+
+  Future<bool> _writeVisitList(
+    Set<MaternalNeed> topics,
+    List<VisitQuestion> questions,
+  ) async {
     final values = <String>[
       for (final need in MaternalNeed.values)
         if (topics.contains(need)) need.name,
+      for (final question in questions) question.encode(),
     ];
-    final saved = await _orderedWrite(() async {
-      final text = (question ?? visitQuestion).trim();
-      if (text.isNotEmpty) values.add('$_questionPrefix$text');
-      final ok = await _attempt(
-        () => _prefs.setStringList(AppConstants.prefsVisitTopicsKey, values),
-      );
-      if (!ok) await _reloadFromDisk();
-      return ok;
-    });
-    if (!saved) throw StateError('Could not save visit topics');
+    final ok = await _attempt(
+      () => _prefs.setStringList(AppConstants.prefsVisitTopicsKey, values),
+    );
+    if (!ok) await _reloadFromDisk();
+    return ok;
   }
 
   // ── Nickname ─────────────────────────────────────────────────────────────
