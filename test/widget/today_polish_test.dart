@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:little_bumpy/core/theme/palette.dart';
+import 'package:little_bumpy/core/theme/paper.dart';
 import 'package:little_bumpy/domain/models/app_state.dart';
 import 'package:little_bumpy/domain/models/content_record.dart';
 import 'package:little_bumpy/presentation/widgets/bumpy_avatar.dart';
@@ -227,4 +228,41 @@ void main() {
       await t.pumpWidget(const SizedBox());
     });
   }
+
+  group('For your visit', () {
+    Future<void> open(WidgetTester t, List<String> topics) async {
+      await phone(t, 375, 1400);
+      final state = await start(extra: {'visit_topics': topics});
+      await t.pumpWidget(wrap(state));
+      await t.pumpAndSettle();
+    }
+
+    testWidgets('the question is a quoted raised piece, not a second heading', (
+      t,
+    ) async {
+      await open(t, ['question:Can I travel?']);
+      final piece = find.byKey(const ValueKey('visit-card-question-piece'));
+      expect(piece, findsOne);
+      expect(t.widget<PaperCard>(piece).raised, isTrue);
+      final text = t.widget<Text>(
+        find.byKey(const ValueKey('visit-card-question')),
+      );
+      expect(text.data, '“Can I travel?”');
+      expect(text.style!.fontSize, 18);
+      expect(text.style!.fontWeight, isNot(FontWeight.w700));
+      // 8 between the card title and the piece.
+      final title = t.getRect(find.text('For your visit'));
+      expect(t.getRect(piece).top - title.bottom, closeTo(8, 0.5));
+      await t.pumpWidget(const SizedBox());
+    });
+
+    testWidgets('a saved topic alone is not put in quotes', (t) async {
+      await open(t, ['iron']);
+      expect(
+        t.widget<Text>(find.byKey(const ValueKey('visit-card-question'))).data,
+        'Iron',
+      );
+      await t.pumpWidget(const SizedBox());
+    });
+  });
 }
