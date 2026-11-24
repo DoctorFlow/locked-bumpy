@@ -111,6 +111,9 @@ class _UrgentRow extends StatelessWidget {
           button: true,
           label: UrgentScreen.rowLabel,
           excludeSemantics: true,
+          // The node takes the tap on web and with a screen reader; without
+          // its own onTap the row would do nothing there.
+          onTap: onOpen,
           child: InkWell(
             onTap: onOpen,
             child: ConstrainedBox(

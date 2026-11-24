@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:little_bumpy/content/content_loader.dart';
 import 'package:little_bumpy/content/urgent_loader.dart';
@@ -326,6 +327,27 @@ void main() {
     expect(find.text(UrgentSigns.fallback), findsOneWidget);
     expect(find.text('Sources'), findsNothing);
     await t.pumpWidget(const SizedBox());
+  });
+
+  testWidgets('a screen reader tap on the Guides row opens the list', (
+    t,
+  ) async {
+    tallView(t);
+    // A real asset read here would leave rootBundle's cache waiting.
+    UrgentLoader.debugSet(urgentList());
+    final handle = t.ensureSemantics();
+    final state = await boot();
+    await t.pumpWidget(LittleBumpyApp(state: state));
+    await t.pumpAndSettle();
+    await t.tap(find.text('Guides'));
+    await t.pumpAndSettle();
+    final node = t.getSemantics(find.bySemanticsLabel(UrgentScreen.rowLabel));
+    expect(node.getSemanticsData().hasAction(SemanticsAction.tap), isTrue);
+    t.semantics.tap(find.semantics.byLabel(UrgentScreen.rowLabel));
+    await t.pumpAndSettle();
+    expect(find.byKey(const ValueKey('urgent-row')), findsNothing);
+    await t.pumpWidget(const SizedBox());
+    handle.dispose();
   });
 
   testWidgets('the page marks a review-build draft list', (t) async {
