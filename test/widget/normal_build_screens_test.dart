@@ -40,10 +40,10 @@ void main() {
     final raw = File(AppLines.assetPath).readAsStringSync();
     final review = AppLines.review(raw, drafts: true);
     // Not vacuous: the review build has both draft lines.
-    expect(review.keys, containsAll(<String>[
-      AppLines.pausedSupport,
-      AppLines.urgentLaterTitle,
-    ]));
+    expect(
+      review.keys,
+      containsAll(<String>[AppLines.pausedSupport, AppLines.urgentLaterTitle]),
+    );
     for (final line in AppLines.review(raw, drafts: false).values) {
       expect(line.isDraft, isFalse, reason: line.id);
     }
@@ -110,15 +110,16 @@ void main() {
       'no stray heading, every sign shown once', (t) async {
     // The list as a review build reads it, with the title as a normal build
     // reads it (hidden), so the order falls back to Amendment 4.
-    final list = UrgentSigns.review(
-      File('assets/content/urgent_signs.json').readAsStringSync(),
-      drafts: true,
-    )!.withLaterTitle(
-      AppLines.review(
-        File(AppLines.assetPath).readAsStringSync(),
-        drafts: false,
-      )[AppLines.urgentLaterTitle],
-    );
+    final list =
+        UrgentSigns.review(
+          File('assets/content/urgent_signs.json').readAsStringSync(),
+          drafts: true,
+        )!.withLaterTitle(
+          AppLines.review(
+            File(AppLines.assetPath).readAsStringSync(),
+            drafts: false,
+          )[AppLines.urgentLaterTitle],
+        );
     SharedPreferences.setMockInitialValues({'due_date_iso': '2027-06-26'});
     final state = await AppState.load(now: () => DateTime(2026, 11, 24));
     expect(state.currentWeek, 9);

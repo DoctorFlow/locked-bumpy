@@ -67,6 +67,7 @@ class _ChapterPage extends StatelessWidget {
     required this.palette,
     required this.state,
     required this.isCurrentWeek,
+    required this.currentWeek,
     required this.onReturn,
     required this.onVisit,
   });
@@ -77,6 +78,9 @@ class _ChapterPage extends StatelessWidget {
   final AppPalette palette;
   final AppState state;
   final bool isCurrentWeek;
+
+  /// The parent's own week today, which may sit outside this chapter.
+  final int currentWeek;
   final VoidCallback onReturn;
   final VoidCallback onVisit;
 
@@ -84,6 +88,11 @@ class _ChapterPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final (band, onBand) = _accentPair(chapter.accent);
     final body = AppText.body.copyWith(color: palette.ink);
+    final onList = chapterQuestionsOnList(
+      chapter,
+      state.visitQuestions,
+      dueDate: state.dueDate,
+    );
     final bumpy = BumpyAvatar(
       need: state.costumeOverride ?? state.todayNeed,
       palette: palette,
@@ -100,37 +109,33 @@ class _ChapterPage extends StatelessWidget {
             bumpy: bumpy,
             band: band,
             onBand: onBand,
+            shownWeek: week,
+            currentWeek: currentWeek,
           ),
           Padding(
             padding: const EdgeInsets.fromLTRB(
               AppSpace.l,
-              AppSpace.xl,
+              AppSpace.l,
               AppSpace.l,
               AppSpace.l,
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // Opening: where the parent is, then Bumpy speaks.
-                _ChapterWeekCard(
-                  week: week,
-                  card: card,
-                  palette: palette,
-                  band: band,
-                  onBand: onBand,
-                  isCurrentWeek: isCurrentWeek,
-                  onReturn: onReturn,
-                ),
-                const SizedBox(height: AppSpace.l),
+                // Opening: Bumpy speaks straight under the picture, so the
+                // first screen holds the picture, the line and the start of
+                // one thing to know (the strip in the band says where).
                 _BumpySays(
                   line: chapter.bumpyLine,
+                  nickname: state.nickname,
                   palette: palette,
                   bumpy: bumpy,
                 ),
-                const SizedBox(height: AppSpace.xl),
+                const SizedBox(height: AppSpace.l),
                 // Know: plain text on the card, the calmest section.
                 _SectionTitle(
                   'One thing to know',
+                  icon: Icons.lightbulb_outline_rounded,
                   marker: band,
                   palette: palette,
                 ),
@@ -148,35 +153,58 @@ class _ChapterPage extends StatelessWidget {
                   key: const ValueKey('chapter-know-source'),
                   style: AppText.small.copyWith(color: palette.inkSoft),
                 ),
+                const SizedBox(height: AppSpace.xl),
+                // The card for this exact week: what makes week 21 its own.
+                _ChapterWeekCard(
+                  week: week,
+                  card: card,
+                  palette: palette,
+                  band: band,
+                  onBand: onBand,
+                  isCurrentWeek: isCurrentWeek,
+                  onReturn: onReturn,
+                ),
                 const SizedBox(height: AppSpace.xxl),
                 // Get ready: the suggested question is its own piece with
                 // its one action; writing your own sits outside it.
-                _SectionTitle(
-                  'One thing to get ready',
-                  marker: band,
+                _ReadyFrame(
                   palette: palette,
-                ),
-                const SizedBox(height: AppSpace.s),
-                Text(chapter.readyText, style: body),
-                const SizedBox(height: AppSpace.l),
-                if (chapter.suggestedQuestion.isNotEmpty) ...[
-                  PaperCard(
-                    key: const ValueKey('chapter-question-piece'),
-                    raised: true,
-                    padding: const EdgeInsets.all(AppSpace.l),
-                    child: _AddQuestion(
-                      question: chapter.suggestedQuestion,
-                      week: week,
-                      state: state,
-                      palette: palette,
-                    ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      _SectionTitle(
+                        'One thing to get ready',
+                        icon: Icons.checklist_rounded,
+                        marker: band,
+                        palette: palette,
+                      ),
+                      const SizedBox(height: AppSpace.s),
+                      Text(chapter.readyText, style: body),
+                      const SizedBox(height: AppSpace.l),
+                      if (onList.isNotEmpty) ...[
+                        _OnYourList(questions: onList, palette: palette),
+                        const SizedBox(height: AppSpace.m),
+                      ] else if (chapter.suggestedQuestion.isNotEmpty) ...[
+                        PaperCard(
+                          key: const ValueKey('chapter-question-piece'),
+                          raised: true,
+                          padding: const EdgeInsets.all(AppSpace.l),
+                          child: _AddQuestion(
+                            question: chapter.suggestedQuestion,
+                            week: week,
+                            state: state,
+                            palette: palette,
+                          ),
+                        ),
+                        const SizedBox(height: AppSpace.m),
+                      ],
+                      OutlinedButton.icon(
+                        onPressed: onVisit,
+                        icon: const Icon(Icons.edit_note_rounded),
+                        label: const Text('Write my own question'),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: AppSpace.m),
-                ],
-                OutlinedButton.icon(
-                  onPressed: onVisit,
-                  icon: const Icon(Icons.edit_note_rounded),
-                  label: const Text('Write my own question'),
                 ),
                 const SizedBox(height: AppSpace.xxl),
                 // Look forward: a piece washed in the chapter colour, with
@@ -192,6 +220,7 @@ class _ChapterPage extends StatelessWidget {
                         bumpy: bumpy,
                         child: _SectionTitle(
                           'Something to look forward to',
+                          icon: Icons.wb_sunny_rounded,
                           marker: band,
                           palette: palette,
                         ),
@@ -270,6 +299,8 @@ class _ChapterHeader extends StatelessWidget {
     required this.bumpy,
     required this.band,
     required this.onBand,
+    required this.shownWeek,
+    required this.currentWeek,
   });
 
   final Chapter chapter;
@@ -277,6 +308,8 @@ class _ChapterHeader extends StatelessWidget {
   final Widget bumpy;
   final Color band;
   final Color onBand;
+  final int shownWeek;
+  final int currentWeek;
 
   @override
   Widget build(BuildContext context) {
@@ -347,29 +380,123 @@ class _ChapterHeader extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: AppSpace.s),
-                // A small paper tag, readable on any chapter colour.
-                DecoratedBox(
-                  key: const ValueKey('chapter-weeks-tag'),
-                  decoration: BoxDecoration(
-                    color: palette.paper,
-                    borderRadius: AppRadii.tag,
-                    boxShadow: paperShadows(palette, raised: true),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppSpace.m,
-                      vertical: AppSpace.s,
+                // A small paper tag, readable on any chapter colour, then
+                // the chapter's weeks as a strip with the parent's own week
+                // marked: a place on the page, never a count.
+                Wrap(
+                  spacing: AppSpace.m,
+                  runSpacing: AppSpace.s,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                    _weeksTag(),
+                    _WeekStrip(
+                      fromWeek: chapter.fromWeek,
+                      toWeek: chapter.toWeek,
+                      shownWeek: shownWeek,
+                      currentWeek: currentWeek,
+                      palette: palette,
                     ),
-                    child: Text(
-                      'Weeks ${chapter.fromWeek} to ${chapter.toWeek}',
-                      style: AppText.label.copyWith(color: palette.ink),
-                    ),
-                  ),
+                  ],
                 ),
               ],
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _weeksTag() => DecoratedBox(
+    key: const ValueKey('chapter-weeks-tag'),
+    decoration: BoxDecoration(
+      color: palette.paper,
+      borderRadius: AppRadii.tag,
+      boxShadow: paperShadows(palette, raised: true),
+    ),
+    child: Padding(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpace.m,
+        vertical: AppSpace.s,
+      ),
+      child: Text(
+        'Weeks ${chapter.fromWeek} to ${chapter.toWeek}',
+        style: AppText.label.copyWith(color: palette.ink),
+      ),
+    ),
+  );
+}
+
+/// The chapter's weeks as small paper squares. The parent's own week (when
+/// it falls in this chapter) is dark paper with a pin; the week on screen,
+/// when it is another one, has a dark edge. Read aloud as one line.
+class _WeekStrip extends StatelessWidget {
+  const _WeekStrip({
+    required this.fromWeek,
+    required this.toWeek,
+    required this.shownWeek,
+    required this.currentWeek,
+    required this.palette,
+  });
+
+  final int fromWeek;
+  final int toWeek;
+  final int shownWeek;
+  final int currentWeek;
+  final AppPalette palette;
+
+  @override
+  Widget build(BuildContext context) {
+    final here = currentWeek >= fromWeek && currentWeek <= toWeek;
+    final spoken = here
+        ? 'Your week now: week $currentWeek'
+        : 'Showing week $shownWeek';
+    return Semantics(
+      key: const ValueKey('chapter-week-strip'),
+      label: spoken,
+      excludeSemantics: true,
+      child: Wrap(
+        spacing: AppSpace.xs,
+        runSpacing: AppSpace.xs,
+        children: [
+          for (var w = fromWeek; w <= toWeek; w++)
+            _square(w, mine: w == currentWeek, shown: w == shownWeek),
+        ],
+      ),
+    );
+  }
+
+  Widget _square(int w, {required bool mine, required bool shown}) {
+    final fill = mine ? palette.ink : palette.paper;
+    final ink = mine ? palette.paper : palette.ink;
+    return DecoratedBox(
+      key: ValueKey(mine ? 'chapter-strip-mine-$w' : 'chapter-strip-$w'),
+      decoration: BoxDecoration(
+        color: fill,
+        borderRadius: AppRadii.tag,
+        border: Border.all(
+          color: shown && !mine ? palette.ink : Colors.transparent,
+          width: 2,
+        ),
+      ),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(minWidth: 36, minHeight: 32),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpace.s,
+            vertical: AppSpace.xs,
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              if (mine) ...[
+                Icon(Icons.place_rounded, size: 14, color: ink),
+                const SizedBox(width: 2),
+              ],
+              Text('$w', style: AppText.label.copyWith(color: ink)),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -505,17 +632,45 @@ class _DeckledEdge extends CustomClipper<Path> {
 
 /// A small cut-paper diamond in the chapter's colour before each heading.
 class _SectionTitle extends StatelessWidget {
-  const _SectionTitle(this.text, {required this.marker, required this.palette});
+  const _SectionTitle(
+    this.text, {
+    required this.icon,
+    required this.marker,
+    required this.palette,
+  });
 
   final String text;
+  final IconData icon;
   final Color marker;
   final AppPalette palette;
 
   @override
   Widget build(BuildContext context) {
+    final (fill, onFill) = _accentPair(marker);
     return Row(
       children: [
-        _PaperDiamond(color: marker, palette: palette),
+        // Each part has its own small sign in the chapter colour, so the
+        // three are told apart at a glance. Decorative.
+        ExcludeSemantics(
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              color: fill,
+              borderRadius: AppRadii.tag,
+              boxShadow: [
+                BoxShadow(
+                  color: palette.shadow.withValues(
+                    alpha: palette.isHalloween ? 1 : .45,
+                  ),
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(6),
+              child: Icon(icon, size: 20, color: onFill),
+            ),
+          ),
+        ),
         const SizedBox(width: AppSpace.m),
         Expanded(
           child: Semantics(
@@ -527,42 +682,6 @@ class _SectionTitle extends StatelessWidget {
           ),
         ),
       ],
-    );
-  }
-}
-
-/// A 12 px paper diamond with a hard shadow. Decorative.
-class _PaperDiamond extends StatelessWidget {
-  const _PaperDiamond({required this.color, required this.palette});
-
-  final Color color;
-  final AppPalette palette;
-
-  @override
-  Widget build(BuildContext context) {
-    return Transform.rotate(
-      angle: math.pi / 4,
-      child: Container(
-        width: 12,
-        height: 12,
-        decoration: BoxDecoration(
-          color: color,
-          borderRadius: const BorderRadius.only(
-            topLeft: Radius.circular(3),
-            topRight: Radius.circular(1),
-            bottomRight: Radius.circular(3),
-            bottomLeft: Radius.circular(1),
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: palette.shadow.withValues(
-                alpha: palette.isHalloween ? 1 : .45,
-              ),
-              offset: const Offset(1, 1),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }
@@ -590,7 +709,7 @@ class _TintedPiece extends StatelessWidget {
         color: Color.lerp(
           palette.paperRaised,
           tint,
-          palette.isHalloween ? .12 : .16,
+          palette.isHalloween ? .2 : .3,
         ),
         borderRadius: AppRadii.control,
         border: Border.all(color: palette.edge),
@@ -611,11 +730,15 @@ class _TintedPiece extends StatelessWidget {
 class _BumpySays extends StatefulWidget {
   const _BumpySays({
     required this.line,
+    required this.nickname,
     required this.palette,
     required this.bumpy,
   });
 
   final String line;
+
+  /// The name the parent gave the baby; empty when none was given.
+  final String nickname;
   final AppPalette palette;
   final Widget bumpy;
 
@@ -676,7 +799,7 @@ class _BumpySaysState extends State<_BumpySays>
     final pixelRatio = MediaQuery.devicePixelRatioOf(context);
     return Semantics(
       container: true,
-      label: 'Bumpy says',
+      label: widget.nickname.isEmpty ? 'Bumpy says' : '${widget.nickname} says',
       child: LayoutBuilder(
         builder: (context, box) {
           final stacked = _stackBumpy(context, box.maxWidth);
@@ -706,10 +829,28 @@ class _BumpySaysState extends State<_BumpySays>
           final bubble = _SpeechBubble(
             palette: palette,
             tailUp: stacked,
-            child: Text(
-              widget.line,
-              style: AppText.bumpyStory.copyWith(color: palette.ink),
-            ),
+            child: widget.nickname.isEmpty
+                ? Text(
+                    widget.line,
+                    style: AppText.bumpyStory.copyWith(color: palette.ink),
+                  )
+                : Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // The parent's own name for the baby, signed on the
+                      // bubble like a name on a note.
+                      Text(
+                        widget.nickname,
+                        key: const ValueKey('chapter-bumpy-name'),
+                        style: AppText.label.copyWith(color: palette.inkSoft),
+                      ),
+                      const SizedBox(height: AppSpace.xs),
+                      Text(
+                        widget.line,
+                        style: AppText.bumpyStory.copyWith(color: palette.ink),
+                      ),
+                    ],
+                  ),
           );
           final arriving = still
               ? bubble
@@ -1136,4 +1277,102 @@ class _CuriousLink extends StatelessWidget {
 String chapterSourceLine(String org, String title) {
   final page = title.split(' - ').first.trim();
   return page.isEmpty ? 'Source: $org' : 'Source: $org, $page';
+}
+
+/// The questions already on the visit list that belong to [chapter]: its
+/// own suggested question, any question picked on one of its weeks, and the
+/// parent's own words added while they were in its weeks. The parent's own
+/// words first; at most three, the latest of each kind kept.
+List<VisitQuestion> chapterQuestionsOnList(
+  Chapter chapter,
+  List<VisitQuestion> list, {
+  DateTime? dueDate,
+}) {
+  final suggested = chapter.suggestedQuestion.trim();
+  bool belongs(VisitQuestion q) {
+    if (suggested.isNotEmpty && q.text == suggested) return true;
+    if (q.origin == VisitOrigin.week && q.week != null) {
+      return chapter.contains(q.week!);
+    }
+    final added = q.added;
+    if (q.isOwnWords && added != null && dueDate != null) {
+      return chapter.contains(
+        PregnancyCalculator.weekFromDueDate(
+          dueDate: dueDate,
+          currentDate: added,
+        ),
+      );
+    }
+    return false;
+  }
+
+  final mine = VisitQuestion.ownFirst(list.where(belongs));
+  return mine.length <= 3 ? mine : mine.sublist(mine.length - 3);
+}
+
+/// "On your list": the chapter's get-ready part shows back what the parent
+/// already saved, in place of offering the same question again.
+class _OnYourList extends StatelessWidget {
+  const _OnYourList({required this.questions, required this.palette});
+
+  final List<VisitQuestion> questions;
+  final AppPalette palette;
+
+  @override
+  Widget build(BuildContext context) {
+    return PaperCard(
+      key: const ValueKey('chapter-on-list'),
+      raised: true,
+      padding: const EdgeInsets.all(AppSpace.l),
+      child: Semantics(
+        liveRegion: true,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.check_circle_rounded, color: palette.ink, size: 24),
+                const SizedBox(width: AppSpace.s),
+                Expanded(
+                  child: Text(
+                    'On your list:',
+                    style: AppText.bodyStrong.copyWith(color: palette.ink),
+                  ),
+                ),
+              ],
+            ),
+            for (final q in questions) ...[
+              const SizedBox(height: AppSpace.s),
+              Text(
+                '“${q.text}”',
+                style: AppText.body.copyWith(color: palette.ink),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// The get-ready part: an outline cut around it, no fill, so it reads as the
+/// practical part between the plain "know" text and the warm look-forward
+/// piece. A border only, not another paper level.
+class _ReadyFrame extends StatelessWidget {
+  const _ReadyFrame({required this.palette, required this.child});
+
+  final AppPalette palette;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      key: const ValueKey('chapter-ready-frame'),
+      decoration: BoxDecoration(
+        borderRadius: AppRadii.control,
+        border: Border.all(color: palette.outline, width: 1.5),
+      ),
+      child: Padding(padding: const EdgeInsets.all(AppSpace.l), child: child),
+    );
+  }
 }

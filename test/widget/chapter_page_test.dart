@@ -87,10 +87,10 @@ void main() {
     final order = [
       'Paper kites',
       'Weeks 16 to 19',
-      'Week 16',
       'I folded a tiny paper kite today.',
       'One thing to know',
       'Source: Test Kite Club, Kite basics',
+      'Week 16',
       'One thing to get ready',
       'Something to look forward to',
     ];
@@ -122,7 +122,8 @@ void main() {
     await t.pumpAndSettle();
     expect(state.hasVisitQuestion(question), isTrue);
     expect(state.visitQuestions.single.origin, VisitOrigin.week);
-    expect(find.text('On your visit list'), findsOneWidget);
+    expect(find.text('On your list:'), findsOneWidget);
+    expect(find.text('“$question”'), findsOneWidget);
     expect(find.text('Add to my visit list'), findsNothing);
     expect(find.text('Write my own question'), findsOneWidget);
   });
@@ -334,17 +335,14 @@ void main() {
       .ancestor(of: find.text(title), matching: find.byType(ColoredBox))
       .first;
 
-  testWidgets('the week card sits right under the cover, 24 above Bumpy', (
+  testWidgets('Bumpy speaks right under the cover, 16 below the band', (
     t,
   ) async {
     await openThisWeek(t);
-    final week = find.ancestor(
-      of: find.text('Week 16'),
-      matching: find.byType(PaperCard),
-    );
+    final face = find.byKey(const ValueKey('chapter-bumpy-face'));
     expect(
-      t.getTopLeft(week.first).dy - t.getBottomLeft(bandOf('Paper kites')).dy,
-      AppSpace.xl,
+      t.getTopLeft(face).dy - t.getBottomLeft(bandOf('Paper kites')).dy,
+      AppSpace.l,
     );
   });
 

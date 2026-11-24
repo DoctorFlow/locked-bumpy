@@ -13,6 +13,7 @@ import '../../domain/models/chapter.dart';
 import '../../domain/models/content_record.dart';
 import '../../domain/models/need.dart';
 import '../../domain/models/week_card.dart';
+import '../../domain/pregnancy.dart';
 import '../widgets/bumpy_avatar.dart';
 import '../widgets/draft_tag.dart';
 import '../widgets/need_word.dart';
@@ -299,6 +300,7 @@ class _ThisWeekScreenState extends State<ThisWeekScreen> {
                         palette: palette,
                         state: widget.state,
                         isCurrentWeek: week == _currentWeek,
+                        currentWeek: _currentWeek,
                         onReturn: () => _goTo(_currentWeek),
                         onVisit: () => VisitTopics.edit(context, widget.state),
                       ),
@@ -581,6 +583,7 @@ class _WeekInvitationState extends State<_WeekInvitation> {
         const SizedBox(height: AppSpace.xl),
         _SectionTitle(
           'One thing to get ready',
+          icon: Icons.checklist_rounded,
           marker: palette.accent,
           palette: palette,
         ),
@@ -601,6 +604,7 @@ class _WeekInvitationState extends State<_WeekInvitation> {
             children: [
               _SectionTitle(
                 'Something to look forward to',
+                icon: Icons.wb_sunny_rounded,
                 marker: palette.accent,
                 palette: palette,
               ),

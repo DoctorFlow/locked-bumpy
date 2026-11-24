@@ -179,8 +179,12 @@ class SettingsScreen extends StatelessWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
+                            // "around", as the date step says it back for
+                            // every way in: the app keeps no record of which
+                            // way gave the date, and a due date is an
+                            // estimate whichever way it came.
                             _EditableDetail(
-                              label: 'Due date',
+                              label: 'Due around',
                               value: state.dueDate == null
                                   ? ''
                                   : MaterialLocalizations.of(

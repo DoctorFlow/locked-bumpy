@@ -97,7 +97,7 @@ class _StepWelcome extends StatelessWidget {
         ),
         const SizedBox(height: AppSpace.s),
         Text(
-          'I dress up as six everyday needs, share a chapter each week, '
+          'I dress up as six everyday needs, share our weeks in chapters, '
           'and keep your questions for your doctor or midwife.',
           textAlign: TextAlign.center,
           style: AppText.bumpyStory.copyWith(color: palette.moonlight),
