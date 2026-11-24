@@ -48,7 +48,7 @@ class _CheckInsPanel extends StatelessWidget {
           Semantics(
             header: true,
             child: Text(
-              allDone ? 'Saved check-ins' : "Today's check-ins",
+              allDone ? 'Saved check-ins' : 'Today’s check-ins',
               style: AppText.heading.copyWith(color: palette.ink),
             ),
           ),
@@ -159,20 +159,21 @@ class _TodayFooter extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         if (showWeekLink) ...[
-          Align(
-            alignment: AlignmentDirectional.centerStart,
-            child: OutlinedButton.icon(
-              key: const ValueKey('today-week-link'),
-              // Outlined on the page: moonlight label, outline edge.
-              style: OutlinedButton.styleFrom(
-                foregroundColor: palette.moonlight,
-                side: BorderSide(color: palette.outline, width: 1.5),
-              ),
-              onPressed: () => state.setTab(1),
-              icon: const Icon(Icons.auto_stories_outlined, size: 22),
-              label: Text(
-                'Get ready for week ${state.currentWeek ?? AppConstants.minWeek}',
-              ),
+          // Full width, like the cards above it and the summary card's own
+          // "Open this week's card".
+          OutlinedButton.icon(
+            key: const ValueKey('today-week-link'),
+            // Outlined on the page: moonlight label, outline edge.
+            style: OutlinedButton.styleFrom(
+              foregroundColor: palette.moonlight,
+              side: BorderSide(color: palette.outline, width: 1.5),
+              minimumSize: const Size.fromHeight(AppSpace.target),
+            ),
+            onPressed: () => state.setTab(1),
+            icon: const Icon(Icons.auto_stories_outlined, size: 22),
+            label: Text(
+              'Get ready for week ${state.currentWeek ?? AppConstants.minWeek}',
+              textAlign: TextAlign.center,
             ),
           ),
           const SizedBox(height: AppSpace.xl),
@@ -206,39 +207,59 @@ class _SavedCheckIns extends StatelessWidget {
   final VoidCallback onReview;
   final VoidCallback onWeek;
 
+  /// Bumpy's thank-you once all three are ticked. A draft line, in the
+  /// owner's review list (factory `roles/polish-a.md`), so like every draft
+  /// it shows only in a review build, with its Draft tag, until approved.
+  // Two short lines at every width, so no word is left alone at 320.
+  static const thanks = 'Thank you!\nThat made me smile.';
+
   @override
   Widget build(BuildContext context) {
     // A card on the page, the same level as the check-in card it replaces.
+    // A small warm moment: three paper discs, each with its tick, and Bumpy
+    // says thank you. Nothing here counts or compares days. It reads the
+    // same with motion off; the room's hop only adds to it.
     return PaperCard(
       key: const ValueKey('today-check-ins-saved'),
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+        padding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Wrap(
-              spacing: 8,
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                for (final need in needs)
-                  Image.asset(
-                    need.iconPath,
-                    height: 28,
-                    width: 28,
-                    excludeFromSemantics: true,
-                  ),
+                for (final need in needs) ...[
+                  if (need != needs.first) const SizedBox(width: AppSpace.m),
+                  _TickedDisc(need: need, palette: palette),
+                ],
               ],
             ),
-            const SizedBox(height: 8),
+            if (ContentGate.showsDrafts) ...[
+              const SizedBox(height: AppSpace.m),
+              Text(
+                thanks,
+                key: const ValueKey('today-check-ins-thanks'),
+                textAlign: TextAlign.center,
+                // Bumpy is talking, so Bumpy's own serif.
+                style: AppText.bumpyStory.copyWith(color: palette.ink),
+              ),
+              const SizedBox(height: AppSpace.xs),
+              Center(child: DraftTag(palette: palette)),
+            ],
+            const SizedBox(height: AppSpace.m),
             Semantics(
               header: true,
               child: Text(
                 'Today’s check-ins are saved',
+                textAlign: TextAlign.center,
                 style: _cardTitle.copyWith(color: palette.ink),
               ),
             ),
             const SizedBox(height: 4),
             Text(
               needs.map(needWord).join(' · '),
+              textAlign: TextAlign.center,
               style: AppText.body.copyWith(color: palette.inkSoft),
             ),
             const SizedBox(height: 12),
@@ -259,6 +280,60 @@ class _SavedCheckIns extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// One saved check-in as a round paper disc: the need's icon in the middle
+/// and a small accent tick badge at the bottom right.
+class _TickedDisc extends StatelessWidget {
+  const _TickedDisc({required this.need, required this.palette});
+
+  final MaternalNeed need;
+  final AppPalette palette;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      key: ValueKey('saved-disc-${need.name}'),
+      width: 48,
+      height: 48,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Positioned.fill(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                color: palette.paperRaised,
+                shape: BoxShape.circle,
+                border: Border.all(color: palette.edge),
+                boxShadow: paperShadows(palette, raised: true),
+              ),
+              child: Center(
+                child: Image.asset(
+                  need.iconPath,
+                  width: 28,
+                  height: 28,
+                  excludeFromSemantics: true,
+                ),
+              ),
+            ),
+          ),
+          Positioned(
+            right: -2,
+            bottom: -2,
+            child: Container(
+              width: 18,
+              height: 18,
+              decoration: BoxDecoration(
+                color: palette.accent,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(Icons.check, size: 12, color: palette.accentText),
+            ),
+          ),
+        ],
       ),
     );
   }

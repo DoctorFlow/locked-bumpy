@@ -2,8 +2,8 @@ part of 'today_screen.dart';
 
 // ── Nursery card: Bumpy, the costume-and-need pairing, and Bumpy's line ────
 
-class _NurseryCard extends StatelessWidget {
-  const _NurseryCard({
+class _NurseryCardBody extends StatelessWidget {
+  const _NurseryCardBody({
     required this.state,
     required this.need,
     required this.palette,
@@ -37,33 +37,45 @@ class _NurseryCard extends StatelessWidget {
             palette: palette,
             height: sceneHeight,
             cornerAction: palette.isHalloween
-                ? Tooltip(
-                    message: 'Costume closet',
-                    child: FilledButton.tonalIcon(
-                      onPressed: () => ClosetSheet.open(context, state),
-                      icon: const Icon(Icons.checkroom, size: 18),
-                      label: const Text('Wardrobe'),
-                      style: FilledButton.styleFrom(
-                        minimumSize: const Size(0, 48),
-                        padding: const EdgeInsets.symmetric(horizontal: 12),
-                        backgroundColor: palette.paper,
-                        foregroundColor: palette.ink,
+                ? _PaperTagShadow(
+                    palette: palette,
+                    child: Tooltip(
+                      message: 'Costume closet',
+                      child: FilledButton.tonalIcon(
+                        onPressed: () => ClosetSheet.open(context, state),
+                        icon: const Icon(Icons.checkroom, size: 18),
+                        label: const Text('Wardrobe'),
+                        style: FilledButton.styleFrom(
+                          minimumSize: const Size(0, 48),
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          backgroundColor: palette.paperRaised,
+                          foregroundColor: palette.ink,
+                          side: BorderSide(color: palette.edge),
+                        ),
                       ),
                     ),
                   )
                 : null,
             compactCornerAction: palette.isHalloween
-                ? IconButton.filledTonal(
-                    key: const ValueKey('wardrobe-compact'),
-                    tooltip: 'Wardrobe',
-                    onPressed: () => ClosetSheet.open(context, state),
-                    style: IconButton.styleFrom(
-                      fixedSize: const Size.square(48),
-                      minimumSize: const Size.square(48),
-                      backgroundColor: palette.paper,
-                      foregroundColor: palette.ink,
+                ? _PaperTagShadow(
+                    palette: palette,
+                    child: IconButton.filledTonal(
+                      key: const ValueKey('wardrobe-compact'),
+                      tooltip: 'Wardrobe',
+                      onPressed: () => ClosetSheet.open(context, state),
+                      style: IconButton.styleFrom(
+                        fixedSize: const Size.square(48),
+                        minimumSize: const Size.square(48),
+                        backgroundColor: palette.paperRaised,
+                        foregroundColor: palette.ink,
+                        side: BorderSide(color: palette.edge),
+                        // The same cut corners as its shadow: a paper tag.
+                        shape: const RoundedRectangleBorder(
+                          borderRadius: AppRadii.control,
+                        ),
+                      ),
+                      icon: const Icon(Icons.checkroom, size: 24),
                     ),
-                    icon: const Icon(Icons.checkroom, size: 24),
                   )
                 : null,
             avatar: BumpyAvatar(
@@ -223,4 +235,108 @@ class _NeedPairing extends StatelessWidget {
       ),
     );
   }
+}
+
+/// The nursery card, plus one hop when the last check-in of the day lands.
+///
+/// The room already hops when today's need is ticked. When the third tick
+/// is saved (not on a rebuild, not when the app opens on a finished day),
+/// Bumpy hops once more with the same shared hop. The two hops are merged,
+/// so a tick that is both never doubles. With motion off nothing moves; the
+/// saved card says the rest.
+class _NurseryCard extends StatefulWidget {
+  const _NurseryCard({
+    required this.state,
+    required this.need,
+    required this.palette,
+    required this.sceneHeight,
+    required this.needTicked,
+    required this.babyLine,
+    required this.lineIsDraft,
+    required this.hopAnimation,
+  });
+
+  final AppState state;
+  final MaternalNeed need;
+  final AppPalette palette;
+  final double sceneHeight;
+  final bool needTicked;
+  final String babyLine;
+  final bool lineIsDraft;
+  final Animation<double> hopAnimation;
+
+  @override
+  State<_NurseryCard> createState() => _NurseryCardState();
+}
+
+class _NurseryCardState extends State<_NurseryCard>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _allDone = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 400),
+  );
+  late final Animation<double> _allDoneHop = bumpyHop().animate(_allDone);
+  late Animation<double> _hop = _merge();
+  late bool _wasAllDone = _isAllDone;
+
+  bool get _isAllDone =>
+      widget.state.allChecked &&
+      widget.state.checkInStatus == CheckInSaveStatus.saved;
+
+  // Both hops go up (negative); the higher one wins.
+  Animation<double> _merge() =>
+      AnimationMin<double>(widget.hopAnimation, _allDoneHop);
+
+  @override
+  void didUpdateWidget(_NurseryCard old) {
+    super.didUpdateWidget(old);
+    if (old.hopAnimation != widget.hopAnimation) _hop = _merge();
+  }
+
+  @override
+  void dispose() {
+    _allDone.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final allDone = _isAllDone;
+    if (allDone && !_wasAllDone && !MediaQuery.disableAnimationsOf(context)) {
+      // After this frame, so the hop never starts in the middle of a build.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _allDone.forward(from: 0);
+      });
+    }
+    _wasAllDone = allDone;
+    return _NurseryCardBody(
+      state: widget.state,
+      need: widget.need,
+      palette: widget.palette,
+      sceneHeight: widget.sceneHeight,
+      needTicked: widget.needTicked,
+      babyLine: widget.babyLine,
+      lineIsDraft: widget.lineIsDraft,
+      hopAnimation: _hop,
+    );
+  }
+}
+
+/// The hard paper shadow under the Wardrobe tag, so it lies on the sky like
+/// cut paper instead of a soft smudge.
+class _PaperTagShadow extends StatelessWidget {
+  const _PaperTagShadow({required this.palette, required this.child});
+
+  final AppPalette palette;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) => DecoratedBox(
+    key: const ValueKey('wardrobe-tag'),
+    decoration: BoxDecoration(
+      borderRadius: AppRadii.control,
+      boxShadow: paperShadows(palette, raised: true),
+    ),
+    child: child,
+  );
 }

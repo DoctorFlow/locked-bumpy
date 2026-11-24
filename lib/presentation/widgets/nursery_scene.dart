@@ -126,7 +126,8 @@ class _NurserySceneState extends State<NurseryScene> {
             child: FittedBox(child: widget.avatar),
           ),
           if (cornerAction != null && !separateAction)
-            Positioned(top: 6, left: 6, child: cornerAction),
+            // 12 in, clear of the card's 20 px corner cut.
+            Positioned(top: 12, left: 12, child: cornerAction),
         ],
       ),
     );
