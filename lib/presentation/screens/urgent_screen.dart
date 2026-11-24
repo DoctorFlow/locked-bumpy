@@ -53,13 +53,12 @@ class UrgentScreen extends StatelessWidget {
       builder: (context) => Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          PaperCard(
-            padding: const EdgeInsets.all(AppSpace.l),
-            child: UrgentSignsBlock(
-              urgent: list,
-              palette: palette,
-              week: state.currentWeek,
-            ),
+          // One frame: the block's own 2 px ink-edged paper is the card,
+          // so it gets the full page width like every other page.
+          UrgentSignsBlock(
+            urgent: list,
+            palette: palette,
+            week: state.currentWeek,
           ),
           if (list != null) ...[
             const SizedBox(height: AppSpace.xl),

@@ -10,7 +10,7 @@ part of 'today_screen.dart';
 
 /// The parent's newest question in their own words, right under Bumpy's
 /// line, so a parent who reopens the app at the appointment finds it at
-/// once. One slim line of paper; the whole strip opens "Show at my visit".
+/// once. A slim strip of paper; the whole strip opens "Show at my visit".
 /// Absent when there is no question in the parent's own words.
 class _OwnWordsStrip extends StatelessWidget {
   const _OwnWordsStrip({
@@ -48,32 +48,29 @@ class _OwnWordsStrip extends StatelessWidget {
               ),
               child: Row(
                 children: [
-                  // One line of text: the quiet label, then the words in
-                  // quotes, cut with an ellipsis. At very large text it may
-                  // take a second line, so some of the words still show.
+                  // The quiet label on its own line, then the words in
+                  // quotes with the full width, up to two lines. The
+                  // ellipsis shows only past two lines.
                   Expanded(
-                    child: Text.rich(
-                      TextSpan(
-                        children: [
-                          TextSpan(
-                            text: '$label  ',
-                            style: AppText.label.copyWith(
-                              color: palette.inkSoft,
-                            ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          label,
+                          key: const ValueKey('own-words-strip-label'),
+                          style: AppText.label.copyWith(color: palette.inkSoft),
+                        ),
+                        Text(
+                          '“$question”',
+                          key: const ValueKey('own-words-strip-question'),
+                          style: AppText.bodyStrong.copyWith(
+                            color: palette.ink,
                           ),
-                          TextSpan(
-                            text: '“$question”',
-                            style: AppText.bodyStrong.copyWith(
-                              color: palette.ink,
-                            ),
-                          ),
-                        ],
-                      ),
-                      key: const ValueKey('own-words-strip-question'),
-                      maxLines: MediaQuery.textScalerOf(context).scale(16) > 24
-                          ? 2
-                          : 1,
-                      overflow: TextOverflow.ellipsis,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
                     ),
                   ),
                   const SizedBox(width: AppSpace.xs),
