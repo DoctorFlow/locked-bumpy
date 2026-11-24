@@ -15,6 +15,8 @@ import 'package:little_bumpy/domain/models/need.dart';
 import 'package:little_bumpy/main.dart';
 import 'package:little_bumpy/presentation/screens/guide_screen.dart';
 import 'package:little_bumpy/presentation/screens/guides_screen.dart';
+import 'package:little_bumpy/presentation/screens/this_week_screen.dart'
+    show chapterSourceLine;
 import 'package:little_bumpy/core/theme/paper.dart';
 import 'package:little_bumpy/presentation/widgets/draft_tag.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -145,6 +147,63 @@ void main() {
     expect(saved.week, 17);
   });
 
+  testWidgets('"Add to my visit list" is the full-width outlined button '
+      'used on Guides', (t) async {
+    await openThisWeek(t);
+    final add = find.text('Add to my visit list');
+    await t.ensureVisible(add);
+    await t.pumpAndSettle();
+    final button = find.ancestor(
+      of: add,
+      matching: find.byType(OutlinedButton),
+    );
+    expect(button, findsOneWidget);
+    expect(
+      find.ancestor(of: add, matching: find.byType(FilledButton)),
+      findsNothing,
+    );
+    expect(
+      find.descendant(of: button, matching: find.byIcon(Icons.playlist_add)),
+      findsOneWidget,
+    );
+    final piece = find.byKey(const ValueKey('chapter-question-piece'));
+    // Full width inside the piece's 16 px padding.
+    expect(t.getSize(button).width, t.getSize(piece).width - 2 * 16);
+    expect(t.getSize(button).height, greaterThanOrEqualTo(48));
+  });
+
+  test('the source line keeps the page title, not the site name', () {
+    expect(
+      chapterSourceLine(
+        'NHS',
+        '15 weeks pregnant guide - Best Start in Life - NHS',
+      ),
+      'Source: NHS, 15 weeks pregnant guide',
+    );
+    expect(
+      chapterSourceLine('NHS', 'Inducing labour - NHS'),
+      'Source: NHS, Inducing labour',
+    );
+    expect(
+      chapterSourceLine('CDC', 'Pregnancy and Oral Health Facts'),
+      'Source: CDC, Pregnancy and Oral Health Facts',
+    );
+    expect(chapterSourceLine('CDC', ''), 'Source: CDC');
+  });
+
+  testWidgets('the source line is quiet Regular 14, not bold label type', (
+    t,
+  ) async {
+    await openThisWeek(t);
+    final source = find.byKey(const ValueKey('chapter-know-source'));
+    await t.ensureVisible(source);
+    final text = t.widget<Text>(source);
+    expect(text.data, 'Source: Test Kite Club, Kite basics');
+    expect(text.style!.fontSize, 14);
+    expect(text.style!.fontWeight, isNot(FontWeight.w700));
+    expect(text.style!.letterSpacing ?? 0, 0);
+  });
+
   testWidgets('the curious question opens that need\'s guide page', (t) async {
     ContentLoader.debugSetGuides({
       MaternalNeed.rest: Guide.reviewAll(
@@ -245,7 +304,7 @@ void main() {
         expect(t.takeException(), isNull);
         final button = find.ancestor(
           of: find.text('Add to my visit list'),
-          matching: find.byType(FilledButton),
+          matching: find.byType(OutlinedButton),
         );
         expect(t.getSize(button).height, greaterThanOrEqualTo(48));
       },

@@ -259,6 +259,18 @@ SCENARIOS = [
         tap("Guides", "tab"), wait(500), shot("guide-iron-hidden"),
         scroll(), shot("guide-iron-hidden-2"),
     ], shot=None, note="guides tab while the Iron guide is hidden (a draft, release build)"),
+    # Polish lane C: the Iron guide page from top to sources, and the Guides
+    # tab scrolled past the first need card. No expect(): the page's
+    # headings are plain text, so the shots themselves are the proof.
+    S("c-guide", steps=[
+        tap("Guides", "tab"), tap("Iron", "button", find=True), wait(800),
+        shot("c-guide"), scroll(), shot("c-guide-2"), scroll(), shot("c-guide-3"),
+        scroll(), shot("c-guide-4"), scroll(), shot("c-guide-5"), scroll(), shot("c-guide-6"),
+        scroll(), shot("c-guide-7"), scroll(), shot("c-guide-8"),
+    ], shot=None, note="polish-c: the whole Iron guide page"),
+    S("c-guides", steps=[
+        tap("Guides", "tab"), wait(500), shot("c-guides"), scroll(), shot("c-guides-2"),
+    ], shot=None, note="polish-c: Guides tab and its need cards"),
     # Visit: steps from roles/lane-visit.md (Today card "For your visit" with
     # the parent's own question and a "Show at my visit" button; show page
     # with Close and Edit).

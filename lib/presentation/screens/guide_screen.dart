@@ -13,7 +13,7 @@ import '../widgets/bumpy_avatar.dart';
 import '../widgets/draft_tag.dart';
 import '../widgets/need_word.dart';
 import '../widgets/visit_topics.dart';
-import 'guides_screen.dart' show CostumeTag;
+import 'guides_screen.dart' show CostumeTag, VisitListButton;
 import 'urgent_screen.dart';
 
 /// One need's guide as a full page: five numbered paper cards, then sources
@@ -108,21 +108,12 @@ class GuideScreen extends StatelessWidget {
           style: _body(palette),
         ),
         const SizedBox(height: AppSpace.l),
-        Align(
-          alignment: AlignmentDirectional.centerStart,
-          child: OutlinedButton.icon(
-            onPressed: () => VisitTopics.edit(context, state, include: need),
-            icon: Icon(
-              state.visitTopics.contains(need)
-                  ? Icons.bookmark
-                  : Icons.bookmark_outline,
-            ),
-            label: Text(
-              state.visitTopics.contains(need)
-                  ? 'On my visit list'
-                  : 'Add to my visit list',
-            ),
-          ),
+        VisitListButton(
+          onPressed: () => VisitTopics.edit(context, state, include: need),
+          saved: state.visitTopics.contains(need),
+          label: state.visitTopics.contains(need)
+              ? 'On my visit list'
+              : 'Add to my visit list',
         ),
       ],
     ),
@@ -192,65 +183,75 @@ class GuideScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(fact.text, style: _body(palette)),
-                  const SizedBox(height: 2),
-                  // Quiet source line: `label` size (13) in Regular, so it
-                  // sits under the fact it backs. Bold label type made a
-                  // repeated "Leeds Teaching Hospitals NHS Trust" louder.
+                  const SizedBox(height: AppSpace.xs),
+                  // Every fact shows where it comes from, legibly: `small`
+                  // (14 Regular) in inkSoft, the same "Source:" wording as
+                  // the chapter page. Quiet, but never a bare 13 px name.
                   Text(
-                    fact.sourceOrg,
-                    style: AppText.label.copyWith(
-                      color: palette.inkSoft,
-                      fontWeight: FontWeight.w400,
-                      letterSpacing: 0,
-                    ),
+                    'Source: ${fact.sourceOrg}',
+                    key: ValueKey('guide-fact-source-${fact.id}'),
+                    style: AppText.small.copyWith(color: palette.inkSoft),
                   ),
                 ],
               ),
             ),
-          // "Try this" on its own raised piece with a strip in the need's
-          // colour: a change of rhythm after the facts. The last fact's 16
-          // below is the 16 above this piece.
-          if (g.tryThis.isNotEmpty)
-            KeyedSubtree(
-              child: PaperCard(
-                key: const ValueKey('guide-try-this'),
-                raised: true,
-                child: IntrinsicHeight(
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      ExcludeSemantics(
-                        child: SizedBox(
-                          width: 4,
-                          child: ColoredBox(color: need.color),
-                        ),
-                      ),
-                      Expanded(
-                        child: Padding(
-                          padding: const EdgeInsets.fromLTRB(
-                            AppSpace.m,
-                            AppSpace.m,
-                            AppSpace.m,
-                            0,
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              _SubHeading('Try this', palette: palette),
-                              for (final idea in g.tryThis)
-                                _Bullet(
-                                  palette: palette,
-                                  child: Text(idea, style: _body(palette)),
-                                ),
-                            ],
+          // "Try this" on its own raised piece, headed by the need's own
+          // paper icon: a change of rhythm after the facts. (A 4 px colour
+          // strip down the left edge was cut square by the rounded corners
+          // and read as a stray line.) Even 16 inside on every side: the
+          // last idea's 12 below plus 4.
+          if (g.tryThis.isNotEmpty) ...[
+            const SizedBox(height: AppSpace.s),
+            PaperCard(
+              key: const ValueKey('guide-try-this'),
+              raised: true,
+              padding: const EdgeInsets.fromLTRB(
+                AppSpace.l,
+                AppSpace.l,
+                AppSpace.l,
+                AppSpace.xs,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: AppSpace.m),
+                    child: Row(
+                      children: [
+                        ExcludeSemantics(
+                          child: Image.asset(
+                            need.iconPath,
+                            key: const ValueKey('guide-try-this-icon'),
+                            width: 28,
+                            height: 28,
+                            errorBuilder: (_, _, _) =>
+                                const SizedBox(width: 28, height: 28),
                           ),
                         ),
-                      ),
-                    ],
+                        const SizedBox(width: AppSpace.s),
+                        Expanded(
+                          child: Semantics(
+                            header: true,
+                            child: Text(
+                              'Try this',
+                              style: AppText.heading.copyWith(
+                                color: palette.ink,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
+                  for (final idea in g.tryThis)
+                    _Bullet(
+                      palette: palette,
+                      child: Text(idea, style: _body(palette)),
+                    ),
+                ],
               ),
             ),
+          ],
         ],
       ),
       gap,
@@ -581,21 +582,6 @@ class _Marker extends StatelessWidget {
   );
 }
 
-class _SubHeading extends StatelessWidget {
-  const _SubHeading(this.text, {required this.palette});
-  final String text;
-  final AppPalette palette;
-
-  @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.only(bottom: AppSpace.s),
-    child: Semantics(
-      header: true,
-      child: Text(text, style: AppText.bodyStrong.copyWith(color: palette.ink)),
-    ),
-  );
-}
-
 class _Bullet extends StatelessWidget {
   const _Bullet({required this.palette, required this.child});
   final AppPalette palette;
@@ -759,16 +745,10 @@ class _QuestionRowState extends State<_QuestionRow> {
           else
             Padding(
               padding: const EdgeInsets.only(bottom: AppSpace.xs),
-              child: Align(
-                alignment: AlignmentDirectional.centerStart,
-                child: OutlinedButton.icon(
-                  onPressed: _busy ? null : () => _change(add: true),
-                  icon: const Icon(Icons.bookmark_add_outlined),
-                  label: Text(
-                    'Add to visit list',
-                    semanticsLabel: 'Add to visit list: ${widget.question}',
-                  ),
-                ),
+              child: VisitListButton(
+                onPressed: _busy ? null : () => _change(add: true),
+                label: 'Add to visit list',
+                semanticsLabel: 'Add to visit list: ${widget.question}',
               ),
             ),
           if (_failed)

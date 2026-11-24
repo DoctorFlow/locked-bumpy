@@ -137,14 +137,16 @@ class _ChapterPage extends StatelessWidget {
                 const SizedBox(height: AppSpace.s),
                 Text(chapter.knowText, style: body),
                 const SizedBox(height: AppSpace.s),
-                // Quiet text only: the app opens no links.
+                // Quiet text only: the app opens no links. Regular 14, and
+                // only the page's own title, not the site name the web page
+                // adds after " - " (display trimming; the record is kept).
                 Text(
-                  chapter.knowSourceTitle.isEmpty
-                      ? 'Source: ${chapter.knowSourceOrg}'
-                      : 'Source: ${chapter.knowSourceOrg}, '
-                            '${chapter.knowSourceTitle}',
+                  chapterSourceLine(
+                    chapter.knowSourceOrg,
+                    chapter.knowSourceTitle,
+                  ),
                   key: const ValueKey('chapter-know-source'),
-                  style: AppText.label.copyWith(color: palette.inkSoft),
+                  style: AppText.small.copyWith(color: palette.inkSoft),
                 ),
                 const SizedBox(height: AppSpace.xxl),
                 // Get ready: the suggested question is its own piece with
@@ -167,8 +169,6 @@ class _ChapterPage extends StatelessWidget {
                       week: week,
                       state: state,
                       palette: palette,
-                      fill: band,
-                      onFill: onBand,
                     ),
                   ),
                   const SizedBox(height: AppSpace.m),
@@ -956,16 +956,12 @@ class _AddQuestion extends StatefulWidget {
     required this.week,
     required this.state,
     required this.palette,
-    required this.fill,
-    required this.onFill,
   });
 
   final String question;
   final int week;
   final AppState state;
   final AppPalette palette;
-  final Color fill;
-  final Color onFill;
 
   @override
   State<_AddQuestion> createState() => _AddQuestionState();
@@ -1029,14 +1025,20 @@ class _AddQuestionState extends State<_AddQuestion> {
                     ],
                   ),
                 )
-              : FilledButton.icon(
+              // The one form of this action on Guides, the guide page and
+              // here (`VisitListButton` in guides_screen.dart; this part
+              // file cannot import it): full width, outlined, list-plus.
+              : OutlinedButton.icon(
+                  key: const ValueKey('chapter-add-question'),
                   onPressed: _saving ? null : _add,
-                  style: FilledButton.styleFrom(
-                    backgroundColor: widget.fill,
-                    foregroundColor: widget.onFill,
+                  style: OutlinedButton.styleFrom(
+                    minimumSize: const Size.fromHeight(AppSpace.target),
                   ),
-                  icon: const Icon(Icons.playlist_add_rounded),
-                  label: const Text('Add to my visit list'),
+                  icon: const Icon(Icons.playlist_add, size: 22),
+                  label: const Text(
+                    'Add to my visit list',
+                    textAlign: TextAlign.center,
+                  ),
                 ),
         ),
         if (_notSaved)
@@ -1126,4 +1128,12 @@ class _CuriousLink extends StatelessWidget {
       ),
     );
   }
+}
+
+/// The chapter's quiet source line: "Source: NHS, 15 weeks pregnant guide".
+/// Web page titles carry the site after " - " ("... - Best Start in Life -
+/// NHS"); only the first part is shown, and the stored record is untouched.
+String chapterSourceLine(String org, String title) {
+  final page = title.split(' - ').first.trim();
+  return page.isEmpty ? 'Source: $org' : 'Source: $org, $page';
 }
