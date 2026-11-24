@@ -138,7 +138,22 @@ class SettingsScreen extends StatelessWidget {
                                       context.mounted &&
                                       !state.isPaused &&
                                       !state.isFirstRun) {
-                                    await state.saveDueDate(picked);
+                                    final saved = await state.saveDueDate(
+                                      picked,
+                                    );
+                                    if (!saved &&
+                                        context.mounted &&
+                                        !state.isPaused) {
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        const SnackBar(
+                                          content: Text(
+                                            'Couldn’t save the due date. Please try again.',
+                                          ),
+                                        ),
+                                      );
+                                    }
                                   }
                                 },
                               ),

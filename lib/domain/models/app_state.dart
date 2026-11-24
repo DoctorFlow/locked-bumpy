@@ -44,12 +44,45 @@ class AppState extends ChangeNotifier {
   /// sit behind a fresh setup.
   bool get isFirstRun => _dueDate == null && !_erasePending;
 
-  Future<void> saveDueDate(DateTime date) async {
+  int _setupRevision = 0;
+
+  Future<bool> finishSetup({
+    required DateTime date,
+    required bool halloween,
+    required SkinTone tone,
+    required String nickname,
+  }) async {
+    if (!isFirstRun || isPaused) return false;
+    final revision = ++_setupRevision;
+    final name = nickname.trim();
+    final saved = await _prefs.saveSetup(
+      date: date,
+      halloween: halloween,
+      tone: tone,
+      nickname: name,
+      active: () => revision == _setupRevision && isFirstRun && !isPaused,
+    );
+    if (!saved) return false;
+    _isHalloween = halloween;
+    _skinTone = tone;
+    _nickname = name;
+    _acceptDueDate(date);
+    return true;
+  }
+
+  Future<bool> saveDueDate(DateTime date) async {
+    if (isPaused) return false;
+    final saved = await _prefs.saveDueDate(date);
+    if (!saved) return false;
+    _acceptDueDate(date);
+    return true;
+  }
+
+  void _acceptDueDate(DateTime date) {
     refreshDay();
     _originalDueDate ??= date;
     _dueDate = date;
     notifyListeners();
-    await _prefs.saveDueDate(date);
   }
 
   // ── Nickname ─────────────────────────────────────────────────────────────
@@ -63,9 +96,11 @@ class AppState extends ChangeNotifier {
   String get babyDisplayName => _nickname.isEmpty ? 'Little Bumpy' : _nickname;
 
   Future<void> saveNickname(String value) async {
+    if (isPaused) return;
     _nickname = value.trim();
+    final saved = _prefs.saveNickname(_nickname);
     notifyListeners();
-    await _prefs.saveNickname(_nickname);
+    await saved;
   }
 
   Set<MaternalNeed> _visitTopics;
@@ -88,10 +123,11 @@ class AppState extends ChangeNotifier {
   SkinTone get skinTone => _skinTone;
 
   Future<void> saveSkinTone(SkinTone tone) async {
-    if (tone == _skinTone) return;
+    if (isPaused || tone == _skinTone) return;
     _skinTone = tone;
+    final saved = _prefs.saveSkinTone(tone);
     notifyListeners();
-    await _prefs.saveSkinTone(tone);
+    await saved;
   }
 
   bool _isHalloween;
@@ -109,9 +145,11 @@ class AppState extends ChangeNotifier {
   }
 
   Future<void> toggleMode() async {
+    if (isPaused) return;
     _isHalloween = !_isHalloween;
+    final saved = _prefs.saveIsHalloween(_isHalloween);
     notifyListeners();
-    await _prefs.saveIsHalloween(_isHalloween);
+    await saved;
   }
 
   // ── Pause ────────────────────────────────────────────────────────────────
@@ -135,6 +173,7 @@ class AppState extends ChangeNotifier {
     // Erase already shows Pause and owns the pause key until it settles.
     if (_erasing != null) return;
     if (!_isPaused) {
+      _setupRevision++;
       _isPaused = true;
       notifyListeners();
     }
@@ -313,6 +352,7 @@ class AppState extends ChangeNotifier {
   });
 
   Future<bool> _erase() async {
+    _setupRevision++;
     _eraseFailed = false;
     _isPaused = true;
     _costumeOverride = null;

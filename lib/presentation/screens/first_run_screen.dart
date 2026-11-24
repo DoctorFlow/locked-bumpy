@@ -120,16 +120,20 @@ class _FirstRunScreenState extends State<FirstRunScreen> {
         ? _pickedDate!
         : PregnancyCalculator.dueDateFromLmp(_pickedDate!);
 
-    final nickname = _nicknameController.text.trim();
-
-    // Persist look choice if it changed during onboarding.
-    if (_pickHalloween != widget.state.isHalloween) {
-      await widget.state.toggleMode();
-    }
-    await widget.state.saveSkinTone(_skinTone);
-    await widget.state.saveNickname(nickname);
-    await widget.state.saveDueDate(dueDate);
-    // isFirstRun flips to false → parent rebuilds to main shell.
+    final saved = await widget.state.finishSetup(
+      date: dueDate,
+      halloween: _pickHalloween,
+      tone: _skinTone,
+      nickname: _nicknameController.text,
+    );
+    if (!mounted || saved || widget.state.isPaused) return;
+    setState(() => _saving = false);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: const Text('Couldn’t save your setup on this device.'),
+        action: SnackBarAction(label: 'Retry', onPressed: _confirm),
+      ),
+    );
   }
 
   @override
@@ -171,44 +175,51 @@ class _FirstRunScreenState extends State<FirstRunScreen> {
                       ],
                     ),
                     Expanded(
-                      child: PageView(
-                        controller: _pages,
-                        physics: const NeverScrollableScrollPhysics(),
-                        children: [
-                          _Step1Date(
-                            palette: palette,
-                            skinTone: _skinTone,
-                            useDueDate: _useDueDate,
-                            pickedDate: _pickedDate,
-                            previewWeek: _previewWeek,
-                            onToggleMode: (v) =>
-                                setState(() => _useDueDate = v),
-                            onPickDate: _pickDate,
-                            onSwitchLamp: () => setState(
-                              () => _pickHalloween = !_pickHalloween,
+                      child: AbsorbPointer(
+                        absorbing: _saving,
+                        child: PageView(
+                          controller: _pages,
+                          physics: const NeverScrollableScrollPhysics(),
+                          children: [
+                            _Step1Date(
+                              palette: palette,
+                              skinTone: _skinTone,
+                              useDueDate: _useDueDate,
+                              pickedDate: _pickedDate,
+                              previewWeek: _previewWeek,
+                              onToggleMode: (v) =>
+                                  setState(() => _useDueDate = v),
+                              onPickDate: _pickDate,
+                              onSwitchLamp: () => setState(
+                                () => _pickHalloween = !_pickHalloween,
+                              ),
+                              onEnter: _pickedDate != null && !_saving
+                                  ? _confirm
+                                  : null,
+                              onNext: _pickedDate != null
+                                  ? () => _goTo(1)
+                                  : null,
                             ),
-                            onEnter: _pickedDate != null && !_saving
-                                ? _confirm
-                                : null,
-                            onNext: _pickedDate != null ? () => _goTo(1) : null,
-                          ),
-                          _Step2Nickname(
-                            palette: palette,
-                            controller: _nicknameController,
-                            onBack: () => _goTo(0),
-                            onNext: () => _goTo(2),
-                          ),
-                          _Step3Look(
-                            palette: palette,
-                            skinTone: _skinTone,
-                            onTone: (tone) => setState(() => _skinTone = tone),
-                            isHalloween: _pickHalloween,
-                            saving: _saving,
-                            onToggle: (v) => setState(() => _pickHalloween = v),
-                            onBack: () => _goTo(1),
-                            onConfirm: _confirm,
-                          ),
-                        ],
+                            _Step2Nickname(
+                              palette: palette,
+                              controller: _nicknameController,
+                              onBack: () => _goTo(0),
+                              onNext: () => _goTo(2),
+                            ),
+                            _Step3Look(
+                              palette: palette,
+                              skinTone: _skinTone,
+                              onTone: (tone) =>
+                                  setState(() => _skinTone = tone),
+                              isHalloween: _pickHalloween,
+                              saving: _saving,
+                              onToggle: (v) =>
+                                  setState(() => _pickHalloween = v),
+                              onBack: () => _goTo(1),
+                              onConfirm: _confirm,
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ],

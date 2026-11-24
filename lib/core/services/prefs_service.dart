@@ -58,26 +58,62 @@ class PrefsService {
     return DateTime.tryParse(raw);
   }
 
-  Future<void> saveDueDate(DateTime date) => _prefs.setString(
-    originalDueDate == null
-        ? AppConstants.prefsDueDateKey
-        : AppConstants.prefsCorrectedDueDateKey,
-    _isoDate(date),
-  );
+  Future<bool> _writeDate(DateTime date, {required bool original}) async {
+    final saved = await _attempt(
+      () => _prefs.setString(
+        original
+            ? AppConstants.prefsDueDateKey
+            : AppConstants.prefsCorrectedDueDateKey,
+        _isoDate(date),
+      ),
+    );
+    // The plugin updates its cache even on failure. A later load must see disk.
+    if (!saved) await _reloadFromDisk();
+    return saved;
+  }
+
+  Future<bool> saveDueDate(DateTime date) =>
+      _orderedWrite(() => _writeDate(date, original: originalDueDate == null));
+
+  /// The original due date commits setup. Before it exists, relaunch opens
+  /// the welcome screen. All writes finish ahead of any subsequently queued Erase.
+  Future<bool> saveSetup({
+    required DateTime date,
+    required bool halloween,
+    required SkinTone tone,
+    required String nickname,
+    required bool Function() active,
+  }) => _orderedWrite(() async {
+    if (!active() ||
+        !await _prefs.setBool(AppConstants.prefsIsHalloweenKey, halloween)) {
+      return false;
+    }
+    if (!active() ||
+        !await _prefs.setString(AppConstants.prefsSkinToneKey, tone.name)) {
+      return false;
+    }
+    if (!active() ||
+        !await _prefs.setString(AppConstants.prefsNicknameKey, nickname)) {
+      return false;
+    }
+    return active() && await _writeDate(date, original: true);
+  });
 
   // ── Mode & pause ─────────────────────────────────────────────────────────
 
   SkinTone get skinTone =>
       SkinTone.fromPreference(_prefs.getString(AppConstants.prefsSkinToneKey));
 
-  Future<void> saveSkinTone(SkinTone tone) =>
-      _prefs.setString(AppConstants.prefsSkinToneKey, tone.name);
+  Future<bool> saveSkinTone(SkinTone tone) => _orderedWrite(
+    () => _prefs.setString(AppConstants.prefsSkinToneKey, tone.name),
+  );
 
   bool get isHalloween =>
       _prefs.getBool(AppConstants.prefsIsHalloweenKey) ?? true;
 
-  Future<void> saveIsHalloween(bool value) =>
-      _prefs.setBool(AppConstants.prefsIsHalloweenKey, value);
+  Future<bool> saveIsHalloween(bool value) => _orderedWrite(
+    () => _prefs.setBool(AppConstants.prefsIsHalloweenKey, value),
+  );
 
   bool get isPaused => _prefs.getBool(AppConstants.prefsIsPausedKey) ?? false;
 
@@ -108,8 +144,9 @@ class PrefsService {
   /// Empty string means the mother hasn't set a nickname.
   String get nickname => _prefs.getString(AppConstants.prefsNicknameKey) ?? '';
 
-  Future<void> saveNickname(String value) =>
-      _prefs.setString(AppConstants.prefsNicknameKey, value.trim());
+  Future<bool> saveNickname(String value) => _orderedWrite(
+    () => _prefs.setString(AppConstants.prefsNicknameKey, value.trim()),
+  );
 
   // ── Daily check-ins ──────────────────────────────────────────────────────
 

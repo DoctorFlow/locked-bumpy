@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:little_bumpy/core/services/prefs_service.dart';
 import 'package:little_bumpy/domain/models/app_state.dart';
 import 'package:little_bumpy/main.dart';
+import 'package:little_bumpy/domain/models/skin_tone.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 const marker = 'erase_in_progress';
@@ -20,6 +21,11 @@ class FlakyPrefs implements SharedPreferences {
   bool failPauseWrite = false;
   bool failMarkerWrite = false;
   bool failReload = false;
+  String? rejectString;
+  String? throwString;
+  String? delayedString;
+  Completer<void>? stringStarted;
+  Completer<void>? stringGate;
   Completer<void>? pauseGate;
   Completer<void>? dailyGate;
   bool failDaily = false;
@@ -56,7 +62,13 @@ class FlakyPrefs implements SharedPreferences {
   List<String>? getStringList(String key) =>
       _cacheGone.contains(key) ? null : disk.getStringList(key);
   @override
-  Future<bool> setString(String key, String value) {
+  Future<bool> setString(String key, String value) async {
+    if (key == delayedString) {
+      stringStarted!.complete();
+      await stringGate!.future;
+    }
+    if (key == rejectString) return false;
+    if (key == throwString) throw StateError('profile write failed');
     _cacheGone.remove(key);
     return disk.setString(key, value);
   }
@@ -123,6 +135,82 @@ void main() {
     'due_date_iso': '2027-05-10',
     'baby_nickname': 'Cub',
   };
+
+  final initialDate = DateTime(2027, 4, 12);
+
+  Future<bool> enter() => state.finishSetup(
+    date: initialDate,
+    halloween: false,
+    tone: SkinTone.deep,
+    nickname: ' Clover ',
+  );
+
+  test(
+    'setup enters only when the profile and original date are saved',
+    () async {
+      await start({});
+      flaky.throwString = 'baby_nickname';
+      expect(await enter(), isFalse);
+      expect(state.isFirstRun, isTrue);
+      expect(disk.getString('due_date_iso'), isNull);
+      flaky.throwString = null;
+      flaky.rejectString = 'due_date_iso';
+      expect(await enter(), isFalse);
+      expect(state.isFirstRun, isTrue);
+      expect(state.currentWeek, isNull);
+      flaky.rejectString = null;
+      expect(await enter(), isTrue);
+      final restored = coldBoot();
+      expect(restored.dueDate, initialDate);
+      expect(restored.skinTone, SkinTone.deep);
+      expect(restored.nickname, 'Clover');
+      expect(restored.isHalloween, isFalse);
+    },
+  );
+
+  test(
+    'a rejected correction keeps both the week and its original anchor',
+    () async {
+      await start(active);
+      final oldWeek = state.currentWeek;
+      final oldCount = state.daysTogetherCount;
+      flaky.rejectString = 'corrected_due_date_iso';
+      expect(await state.saveDueDate(initialDate), isFalse);
+      expect(state.currentWeek, oldWeek);
+      expect(state.daysTogetherCount, oldCount);
+      expect(coldBoot().dueDate, DateTime(2027, 5, 10));
+      flaky.rejectString = null;
+      expect(await state.saveDueDate(initialDate), isTrue);
+      expect(state.currentWeek, isNot(oldWeek));
+      expect(state.daysTogetherCount, oldCount);
+    },
+  );
+
+  for (final erase in [false, true]) {
+    test(
+      'interrupted setup stops before nickname and date (erase=$erase)',
+      () async {
+        await start({});
+        flaky.delayedString = 'skin_tone';
+        flaky.stringStarted = Completer<void>();
+        flaky.stringGate = Completer<void>();
+        final setup = enter();
+        await flaky.stringStarted!.future;
+        final privacy = erase ? state.eraseAll() : state.pause();
+        flaky.stringGate!.complete();
+        expect(await setup, isFalse);
+        await privacy;
+        expect(disk.getString('due_date_iso'), isNull);
+        expect(disk.getString('baby_nickname'), isNull);
+        expect(state.isFirstRun, isTrue);
+        if (erase) {
+          expect(disk.getKeys(), isEmpty);
+        } else {
+          expect(coldBoot().isPaused, isTrue);
+        }
+      },
+    );
+  }
 
   test(
     'rapid taps retain all choices across a failed save and retry',
