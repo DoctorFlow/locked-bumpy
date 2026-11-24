@@ -118,7 +118,11 @@ class _FirstRunScreenState extends State<FirstRunScreen> {
   }
 
   void _goTo(int step) {
-    FocusScope.of(context).unfocus();
+    // Drop the focused control only. Unfocusing the route's own scope
+    // (FocusScope.of(context).unfocus()) took the whole page out of focus;
+    // on the web with a screen reader on, the nickname field then lost the
+    // browser's focus a moment after each tap and took no typing.
+    FocusManager.instance.primaryFocus?.unfocus();
     setState(() => _step = step);
     if (MediaQuery.disableAnimationsOf(context)) {
       _pages.jumpToPage(step);
