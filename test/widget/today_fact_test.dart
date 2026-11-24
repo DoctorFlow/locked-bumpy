@@ -88,6 +88,15 @@ void main() {
     expect(t.getTopLeft(pairing).dy, lessThan(t.getTopLeft(fact).dy));
     expect(t.getTopLeft(fact).dy, lessThan(t.getTopLeft(visit).dy));
 
+    // The same full-width outlined button as on Guides and the chapter page.
+    final add = find.byKey(const ValueKey('fact-add-question'));
+    expect(t.widget(add), isA<OutlinedButton>());
+    expect(
+      find.descendant(of: add, matching: find.byIcon(Icons.playlist_add)),
+      findsOneWidget,
+    );
+    expect(t.getSize(add).width, greaterThan(t.getSize(fact).width * 0.8));
+
     await tapOn(t, find.byKey(const ValueKey('fact-add-question')));
     expect(state.hasVisitQuestion(_question), isTrue);
     expect(state.visitQuestions.single.text, _question);

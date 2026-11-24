@@ -125,14 +125,12 @@ class _FactCard extends StatelessWidget {
                         ],
                       ),
                     )
-                  // One action, one form: the same full-width button as on
-                  // the chapter page.
-                  : FilledButton.tonalIcon(
+                  // One action, one form: the full-width outlined button used
+                  // on Guides, the guide page and the chapter page.
+                  : OutlinedButton.icon(
                       key: const ValueKey('fact-add-question'),
-                      style: FilledButton.styleFrom(
+                      style: OutlinedButton.styleFrom(
                         minimumSize: const Size.fromHeight(AppSpace.target),
-                        backgroundColor: palette.paperRaised,
-                        foregroundColor: palette.ink,
                       ),
                       onPressed: adding ? null : () => onAddQuestion(question),
                       icon: const Icon(Icons.playlist_add, size: 22),
