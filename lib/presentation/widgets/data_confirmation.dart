@@ -8,9 +8,11 @@ Future<void> confirmStartFresh(BuildContext context, AppState state) async {
     context: context,
     builder: (ctx) => _ConfirmDialog(
       palette: palette,
-      title: 'Start a fresh day?',
-      body: "Today's check-ins will reset. Your date and nickname stay.",
-      confirmLabel: 'Yes, start fresh',
+      title: 'Reset today’s check-ins and resume?',
+      body:
+          'Today’s check-ins and costume choice clear, and the app resumes. '
+          'Your date, nickname and visit list stay.',
+      confirmLabel: 'Yes, reset and resume',
       confirmDestructive: false,
     ),
   );

@@ -362,7 +362,7 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Clears today's check-ins and unpauses. Used by Start Fresh.
+  /// Clears today's check-ins and unpauses. Used by "Reset today’s check-ins and resume" on Paused.
   Future<void> clearTodayCheckIns() async {
     if (_erasing != null || _erasePending) return;
     _day = _now();
@@ -389,7 +389,7 @@ class AppState extends ChangeNotifier {
   bool get eraseFailed => _eraseFailed;
 
   /// True when an Erase began on disk (marker persisted) and is not confirmed
-  /// finished. Resume and Start Fresh are refused; only Erase retry proceeds.
+  /// finished. Resume and the reset are refused; only Erase retry proceeds.
   bool get erasePending => _erasePending;
 
   /// Wipes Little Bumpy's data and returns to First Run. Used by Erase.

@@ -114,6 +114,19 @@ void main() {
       expect(find.text('Try Erase again'), findsNothing);
     });
 
+    testWidgets("the reset confirm uses the button's words", (tester) async {
+      final state = await _buildState(isPaused: true);
+      await tester.pumpWidget(_wrap(PausedScreen(state: state), state));
+      await tester.pump();
+      final reset = find.text('Reset today’s check-ins and resume');
+      await tester.ensureVisible(reset);
+      await tester.tap(reset);
+      await tester.pumpAndSettle();
+      expect(find.text('Reset today’s check-ins and resume?'), findsOneWidget);
+      expect(find.text('Yes, reset and resume'), findsOneWidget);
+      expect(find.textContaining('fresh'), findsNothing);
+    });
+
     testWidgets('interrupted Erase shows a retry and disables Resume', (
       tester,
     ) async {
