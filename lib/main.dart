@@ -103,7 +103,7 @@ class _LittleBumpyAppState extends State<LittleBumpyApp>
             final wideVisit =
                 !state.isFirstRun &&
                 !state.isPaused &&
-                state.currentTab == 0 &&
+                state.currentTab <= 1 &&
                 (bounds.maxWidth >= 640 ||
                     (bounds.maxWidth >= 540 &&
                         MediaQuery.textScalerOf(context).scale(14) <= 21)) &&

@@ -6,6 +6,7 @@ import '../../core/theme/palette.dart';
 import '../../domain/models/app_state.dart';
 import '../../domain/models/week_card.dart';
 import '../widgets/bumpy_avatar.dart';
+import '../widgets/nursery_scene.dart';
 
 /// This Week tab — browse gestational weeks 4–42 with approved baby-voice cards.
 class ThisWeekScreen extends StatefulWidget {
@@ -299,102 +300,114 @@ class _WeekCardView extends StatelessWidget {
   final WeekCard? card;
   final AppPalette palette;
   final bool isCurrentWeek;
-  final Widget? portrait;
+  final BumpyAvatar? portrait;
   final VoidCallback onReturn;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: palette.paper,
-        borderRadius: BorderRadius.circular(24),
-        border: isCurrentWeek
-            ? Border.all(color: palette.accent, width: 2)
-            : null,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.2),
-            offset: const Offset(0, 3),
-            blurRadius: 0,
-          ),
-        ],
-      ),
+    final size = MediaQuery.sizeOf(context);
+    final beside =
+        size.width >= 540 &&
+        size.height <= 600 &&
+        MediaQuery.textScalerOf(context).scale(14) <= 21;
+    final avatar = portrait;
+    final room = avatar == null
+        ? null
+        : NurseryScene(
+            palette: palette,
+            avatar: avatar,
+            height: beside ? 150 : 192,
+          );
+    final text = Padding(
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 18),
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (portrait != null)
-            portrait!
-          else
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: palette.moon.withValues(alpha: 0.3),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(7),
-                child: Image.asset(
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              if (!isCurrentWeek) ...[
+                Image.asset(
                   'assets/images/need-rest.png',
-                  fit: BoxFit.contain,
+                  width: 34,
+                  height: 34,
                   excludeFromSemantics: true,
                 ),
-              ),
-            ),
-          const SizedBox(height: 16),
-          if (isCurrentWeek) ...[
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
-              margin: const EdgeInsets.only(bottom: 10),
-              decoration: BoxDecoration(
-                color: palette.accent.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(
-                  color: palette.accent.withValues(alpha: 0.5),
+                const SizedBox(width: 10),
+              ],
+              Expanded(
+                child: Wrap(
+                  spacing: 12,
+                  runSpacing: 4,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                    Semantics(
+                      header: true,
+                      child: Text(
+                        'Week $week',
+                        style: TextStyle(
+                          fontSize: 28,
+                          fontWeight: FontWeight.bold,
+                          color: palette.accent,
+                        ),
+                      ),
+                    ),
+                    if (isCurrentWeek)
+                      Text(
+                        'You are here',
+                        style: TextStyle(
+                          color: palette.inkSoft,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                  ],
                 ),
               ),
-              child: Text(
-                'You are here',
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.bold,
-                  color: palette.accent,
-                ),
-              ),
-            ),
-          ],
-          Text(
-            'Week $week',
-            style: TextStyle(
-              fontSize: 28,
-              fontWeight: FontWeight.bold,
-              color: palette.accent,
-            ),
+            ],
           ),
           if (card != null) ...[
-            const SizedBox(height: 16),
+            const SizedBox(height: 10),
             Text(
               card!.babyLine,
-              style: TextStyle(
-                fontSize: 17,
-                fontWeight: FontWeight.w600,
-                height: 1.4,
-                color: palette.ink,
-              ),
-              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 18, height: 1.45, color: palette.ink),
             ),
           ],
           if (!isCurrentWeek) ...[
             const SizedBox(height: 12),
-            TextButton(
-              style: TextButton.styleFrom(foregroundColor: palette.ink),
+            TextButton.icon(
+              style: TextButton.styleFrom(
+                foregroundColor: palette.ink,
+                minimumSize: const Size(48, 48),
+              ),
+              icon: const Icon(Icons.arrow_back_rounded, size: 18),
+              label: const Text('Back to this week'),
               onPressed: onReturn,
-              child: const Text('Back to this week'),
             ),
           ],
         ],
+      ),
+    );
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 4),
+        child: Material(
+          color: palette.paper,
+          borderRadius: BorderRadius.circular(22),
+          clipBehavior: Clip.antiAlias,
+          child: room != null && beside
+              ? Row(
+                  children: [
+                    Expanded(flex: 4, child: room),
+                    Expanded(flex: 6, child: text),
+                  ],
+                )
+              : Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [?room, text],
+                ),
+        ),
       ),
     );
   }
