@@ -583,6 +583,7 @@ class _WeekInvitationState extends State<_WeekInvitation> {
         const SizedBox(height: AppSpace.xl),
         _SectionTitle(
           'One thing to get ready',
+          icon: Icons.checklist_rounded,
           marker: palette.accent,
           palette: palette,
         ),
@@ -603,6 +604,7 @@ class _WeekInvitationState extends State<_WeekInvitation> {
             children: [
               _SectionTitle(
                 'Something to look forward to',
+                icon: Icons.wb_sunny_rounded,
                 marker: palette.accent,
                 palette: palette,
               ),

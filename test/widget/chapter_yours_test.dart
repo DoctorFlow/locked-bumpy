@@ -145,4 +145,83 @@ void main() {
       expect(find.text('Add to my visit list'), findsOneWidget);
     });
   });
+
+  group('three parts, each its own', () {
+    testWidgets('know, get ready and look forward each have their own sign', (
+      t,
+    ) async {
+      await open(t);
+      final page = find.byType(PageView);
+      Finder inPage(Finder f) => find.descendant(of: page, matching: f);
+      for (final icon in [
+        Icons.lightbulb_outline_rounded,
+        Icons.checklist_rounded,
+        Icons.wb_sunny_rounded,
+      ]) {
+        expect(inPage(find.byIcon(icon)), findsOneWidget);
+      }
+      // Get ready is framed; look forward is the washed, warm piece.
+      final frame = find.byKey(const ValueKey('chapter-ready-frame'));
+      expect(
+        find.descendant(
+          of: frame,
+          matching: find.text('One thing to get ready'),
+        ),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(
+          of: find.byKey(const ValueKey('chapter-look-forward')),
+          matching: find.text('Something to look forward to'),
+        ),
+        findsOneWidget,
+      );
+    });
+
+    for (final halloween in [false, true]) {
+      testWidgets('the first screen at 375 x 812 holds the picture, the line '
+          'line and the start of one thing to know '
+          '(${halloween ? 'Halloween' : 'Everyday'})', (t) async {
+        await open(
+          t,
+          nickname: 'Peanut',
+          size: const Size(375, 812),
+          halloween: halloween,
+        );
+        final fold = t
+            .getTopLeft(find.byKey(const ValueKey('week-strip-fixed')))
+            .dy;
+        expect(
+          t.getBottomLeft(find.byKey(const ValueKey('chapter-picture'))).dy,
+          lessThan(fold),
+        );
+        expect(
+          t.getBottomLeft(find.text('I folded a tiny paper kite today.')).dy,
+          lessThan(fold),
+        );
+        // The start of the part: its heading begins above the fold.
+        expect(t.getTopLeft(find.text('One thing to know')).dy, lessThan(fold));
+        expect(t.takeException(), isNull);
+      });
+    }
+
+    for (final halloween in [false, true]) {
+      testWidgets('320 px and 200 percent: nothing clips '
+          '(${halloween ? 'Halloween' : 'Everyday'})', (t) async {
+        await open(
+          t,
+          nickname: 'Peanut',
+          size: const Size(320, 568),
+          textScale: 2,
+          halloween: halloween,
+          visit: const [],
+        );
+        expect(
+          find.byKey(const ValueKey('chapter-week-strip')),
+          findsOneWidget,
+        );
+        expect(t.takeException(), isNull);
+      });
+    }
+  });
 }
