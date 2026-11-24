@@ -1,6 +1,6 @@
 part of 'today_screen.dart';
 
-// ── Check-ins panel: the three rows, the saved summary and save status ─────
+// ── Check-ins: three optional ticks, the saved summary and save status ─────
 
 class _CheckInsPanel extends StatelessWidget {
   const _CheckInsPanel({
@@ -27,10 +27,11 @@ class _CheckInsPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final summary = allDone && !reviewing;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        if (allDone && !reviewing)
+        if (summary)
           _SavedCheckIns(
             needs: checkIns,
             palette: palette,
@@ -42,36 +43,32 @@ class _CheckInsPanel extends StatelessWidget {
             header: true,
             child: Text(
               allDone ? 'Saved check-ins' : "Today's check-ins",
-              style: TextStyle(
-                fontSize: 17,
-                fontWeight: FontWeight.bold,
-                color: palette.moonlight,
-              ),
+              style: _T.heading.copyWith(color: palette.moonlight),
             ),
           ),
-        if (state.completedCheckIns.isEmpty || (allDone && reviewing)) ...[
-          const SizedBox(height: 3),
+        // Always shown, so the rows never jump under a finger mid-tap.
+        if (!summary) ...[
+          const SizedBox(height: 4),
           Text(
             allDone
                 ? 'Tap a checked row to undo it.'
-                : 'Tap a row when you’ve done it.',
-            style: TextStyle(color: palette.moonlightSoft, fontSize: 14),
+                : 'Tick any that fit your day.',
+            style: _T.body.copyWith(color: palette.moonlightSoft),
           ),
         ],
-        const SizedBox(height: 10),
-        if (!allDone || reviewing)
-          Material(
-            color: palette.paperRaised,
-            borderRadius: BorderRadius.circular(18),
-            clipBehavior: Clip.antiAlias,
+        const SizedBox(height: 8),
+        if (!summary)
+          _PaperCard(
+            palette: palette,
+            raised: true,
             child: Column(
               children: [
                 for (final item in checkIns) ...[
                   if (item != checkIns.first)
                     Divider(
                       height: 1,
-                      indent: 56,
-                      endIndent: 16,
+                      indent: 52,
+                      endIndent: 12,
                       color: palette.inkSoft.withValues(alpha: .22),
                     ),
                   _CheckInTile(
@@ -79,7 +76,7 @@ class _CheckInsPanel extends StatelessWidget {
                     title: item == need
                         ? '${need.needName} · Need of the Day'
                         : item.label,
-                    subtitle: item.foodHint,
+                    subtitle: _checkInHint(item),
                     need: item,
                     isTicked: state.isChecked(item.name),
                     palette: palette,
@@ -101,7 +98,7 @@ class _CheckInsPanel extends StatelessWidget {
                         ? 'Saving check-ins…'
                         : 'Your check-ins couldn’t be saved on this device.',
                     textAlign: TextAlign.center,
-                    style: TextStyle(color: palette.moonlight),
+                    style: _T.body.copyWith(color: palette.moonlight),
                   ),
                   if (state.checkInStatus == CheckInSaveStatus.failed)
                     TextButton(
@@ -118,29 +115,52 @@ class _CheckInsPanel extends StatelessWidget {
           ),
         if (allDone && reviewing)
           TextButton(
-            style: TextButton.styleFrom(foregroundColor: palette.moonlight),
+            style: TextButton.styleFrom(
+              foregroundColor: palette.moonlight,
+              minimumSize: const Size(48, 48),
+            ),
             onPressed: onEndReview,
             child: const Text('Back to summary'),
           ),
-        const SizedBox(height: 8),
+        // The way into This Week; the summary card carries its own.
+        if (!summary) ...[
+          const SizedBox(height: 16),
+          Align(
+            alignment: AlignmentDirectional.centerStart,
+            child: OutlinedButton.icon(
+              key: const ValueKey('today-week-link'),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: palette.moonlight,
+                side: BorderSide(color: palette.moonlightSoft, width: 1.5),
+                minimumSize: const Size(48, 48),
+                shape: const RoundedRectangleBorder(
+                  borderRadius: _controlCorners,
+                ),
+              ),
+              onPressed: () => state.setTab(1),
+              icon: const Icon(Icons.auto_stories_outlined, size: 22),
+              label: Text(
+                'Get ready for week ${state.currentWeek ?? AppConstants.minWeek}',
+                style: _T.bodyStrong,
+              ),
+            ),
+          ),
+        ],
+        const SizedBox(height: 16),
         Text(
           state.daysTogetherCount == 1
               ? '1 day together'
               : '${state.daysTogetherCount} days together',
           textAlign: TextAlign.center,
-          style: TextStyle(color: palette.moonlightSoft, fontSize: 14),
+          style: _T.body.copyWith(color: palette.moonlightSoft),
         ),
-        const SizedBox(height: 20),
+        const SizedBox(height: 16),
         Text(
-          AppConstants.disclaimer,
-          style: TextStyle(
-            fontSize: 11,
-            color: palette.moonlightSoft,
-            height: 1.3,
-          ),
+          TodayScreen.disclaimer,
+          style: _T.body.copyWith(color: palette.moonlightSoft),
           textAlign: TextAlign.center,
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 8),
       ],
     );
   }
@@ -160,22 +180,22 @@ class _SavedCheckIns extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: palette.paperRaised,
-      borderRadius: BorderRadius.circular(18),
+    return _PaperCard(
+      palette: palette,
+      raised: true,
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Wrap(
-              spacing: 6,
+              spacing: 8,
               children: [
                 for (final need in needs)
                   Image.asset(
                     need.iconPath,
-                    height: 26,
-                    width: 26,
+                    height: 28,
+                    width: 28,
                     excludeFromSemantics: true,
                   ),
               ],
@@ -185,34 +205,36 @@ class _SavedCheckIns extends StatelessWidget {
               header: true,
               child: Text(
                 'Today’s check-ins are saved',
-                style: TextStyle(
-                  color: palette.ink,
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: _T.heading.copyWith(color: palette.ink),
               ),
             ),
-            const SizedBox(height: 3),
+            const SizedBox(height: 4),
             Text(
-              needs.map((need) => need.label).join(' · '),
-              style: TextStyle(color: palette.inkSoft, fontSize: 14),
+              needs.map(_needWord).join(' · '),
+              style: _T.body.copyWith(color: palette.inkSoft),
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 12),
             OutlinedButton.icon(
               style: OutlinedButton.styleFrom(
                 foregroundColor: palette.ink,
-                side: BorderSide(color: palette.inkSoft),
+                side: BorderSide(color: palette.inkSoft, width: 1.5),
                 minimumSize: const Size.fromHeight(48),
+                shape: const RoundedRectangleBorder(
+                  borderRadius: _controlCorners,
+                ),
               ),
               onPressed: onWeek,
-              icon: const Icon(Icons.menu_book_outlined, size: 18),
+              icon: const Icon(Icons.auto_stories_outlined, size: 22),
               label: const Text(
                 'Open this week’s card',
                 textAlign: TextAlign.center,
               ),
             ),
             TextButton(
-              style: TextButton.styleFrom(foregroundColor: palette.ink),
+              style: TextButton.styleFrom(
+                foregroundColor: palette.ink,
+                minimumSize: const Size(48, 48),
+              ),
               onPressed: onReview,
               child: const Text('Review saved check-ins'),
             ),
@@ -251,34 +273,31 @@ class _CheckInTile extends StatelessWidget {
       button: true,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
         child: Container(
-          constraints: const BoxConstraints(minHeight: 48),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          constraints: const BoxConstraints(minHeight: 56),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           child: Row(
             children: [
               Image.asset(
                 need.iconPath,
-                width: 32,
-                height: 32,
+                width: 28,
+                height: 28,
                 excludeFromSemantics: true,
               ),
-              const SizedBox(width: 14),
+              const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       title,
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: palette.ink,
-                      ),
+                      style: _T.bodyStrong.copyWith(color: palette.ink),
                     ),
+                    // A one-line hint: DESIGN.md `small`, so a tick row stays
+                    // short enough to tap whole at 200 percent text.
                     Text(
                       subtitle,
-                      style: TextStyle(fontSize: 14, color: palette.inkSoft),
+                      style: _T.small.copyWith(color: palette.inkSoft),
                     ),
                   ],
                 ),
@@ -286,17 +305,18 @@ class _CheckInTile extends StatelessWidget {
               if (isTicked)
                 ExcludeSemantics(
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 6),
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
                     child: Text(
                       'Done',
-                      style: TextStyle(fontSize: 12, color: palette.ink),
+                      style: _T.label.copyWith(color: palette.ink),
                     ),
                   ),
                 ),
               AnimatedContainer(
                 duration: MediaQuery.disableAnimationsOf(context)
                     ? Duration.zero
-                    : const Duration(milliseconds: 200),
+                    : const Duration(milliseconds: 250),
+                curve: Curves.easeOutBack,
                 width: 28,
                 height: 28,
                 decoration: BoxDecoration(

@@ -52,7 +52,9 @@ void main() {
     expect(state.todayNeed, MaternalNeed.iron);
     expect(state.completedCheckIns, {'iron'});
     expect(find.text('IRON · Need of the Day'), findsOneWidget);
-    expect(find.text('TODAY · IRON'), findsOneWidget);
+    // The need stays named under any costume (Today's pairing tag).
+    expect(find.text('Today · Iron'), findsOneWidget);
+    expect(find.text('Dressed as a witch for fun'), findsOneWidget);
     expect(find.text('Iron in. Thank you!'), findsOneWidget);
     await tester.tap(find.byTooltip('Switch to Everyday'));
     await tester.pumpAndSettle();
