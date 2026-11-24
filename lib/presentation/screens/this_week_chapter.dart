@@ -3,7 +3,8 @@ part of 'this_week_screen.dart';
 // A chapter page: one stretch of weeks told as a page of a storybook.
 // Order (CHAPTER-CONTRACT.md): picture with title and weeks, Bumpy's line,
 // one thing to know, the card for this exact week, one thing to get ready,
-// something to look forward to, then the curious question as a quiet link.
+// something to look forward to, then the curious question as a way into
+// the guide.
 
 /// Opens the guide for [need]. When the gate hides that guide (not approved,
 /// and not a draft in a review build), the Guides tab opens instead, where
@@ -40,14 +41,20 @@ Color _onAccent(Color accent) =>
     ? _darkOnAccent
     : _lightOnAccent;
 
-/// Fill and text for a button in the chapter's colour, deepened when needed
-/// so its 16 px label keeps at least 4.5:1 contrast.
-(Color, Color) _buttonColours(Color accent) {
+/// The chapter's colour as a fill that carries text, and the text on it.
+///
+/// Most chapter colours are mid tones that reach about 4:1 with both dark and
+/// light text. The fill moves the smallest step towards deep plum (light
+/// text) or towards cream (dark text) that gives at least 4.5:1, so the hue
+/// stays the chapter's own. Used for the title band and the main button.
+(Color, Color) _accentPair(Color accent) {
   final text = _onAccent(accent);
   if (_contrast(accent, text) >= 4.5) return (accent, text);
-  for (var t = .05; t < 1; t += .05) {
-    final fill = Color.lerp(accent, _darkOnAccent, t)!;
-    if (_contrast(fill, _lightOnAccent) >= 4.5) return (fill, _lightOnAccent);
+  for (var t = .02; t < 1; t += .02) {
+    final deep = Color.lerp(accent, _darkOnAccent, t)!;
+    if (_contrast(deep, _lightOnAccent) >= 4.5) return (deep, _lightOnAccent);
+    final light = Color.lerp(accent, _lightOnAccent, t)!;
+    if (_contrast(light, _darkOnAccent) >= 4.5) return (light, _darkOnAccent);
   }
   return (_darkOnAccent, _lightOnAccent);
 }
@@ -75,166 +82,165 @@ class _ChapterPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final accent = chapter.accent;
-    final onAccent = _onAccent(accent);
-    final titleStyle = TextStyle(
-      color: palette.ink,
-      fontWeight: FontWeight.bold,
-      fontSize: 18,
+    final (band, onBand) = _accentPair(chapter.accent);
+    final body = AppText.body.copyWith(color: palette.ink);
+    final bumpy = BumpyAvatar(
+      need: state.costumeOverride ?? state.todayNeed,
+      palette: palette,
+      happy: true,
+      skinTone: state.skinTone,
     );
-    final bodyStyle = TextStyle(color: palette.ink, fontSize: 16, height: 1.4);
-    final softStyle = TextStyle(
-      color: palette.inkSoft,
-      fontSize: 16,
-      height: 1.4,
-    );
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Material(
-        color: palette.paper,
-        borderRadius: BorderRadius.circular(22),
-        clipBehavior: Clip.antiAlias,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            _ChapterHeader(
-              chapter: chapter,
-              palette: palette,
-              state: state,
-              onAccent: onAccent,
+    return PaperCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _ChapterHeader(
+            chapter: chapter,
+            palette: palette,
+            bumpy: bumpy,
+            band: band,
+            onBand: onBand,
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpace.l,
+              AppSpace.xl,
+              AppSpace.l,
+              AppSpace.l,
             ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(18, 18, 18, 14),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  _BumpySays(
-                    line: chapter.bumpyLine,
-                    accent: accent,
-                    palette: palette,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _BumpySays(
+                  line: chapter.bumpyLine,
+                  palette: palette,
+                  bumpy: bumpy,
+                ),
+                const SizedBox(height: AppSpace.xxl),
+                _SectionTitle(
+                  'One thing to know',
+                  marker: band,
+                  palette: palette,
+                ),
+                const SizedBox(height: AppSpace.s),
+                Text(chapter.knowText, style: body),
+                const SizedBox(height: AppSpace.s),
+                // Quiet text only: the app opens no links.
+                Text(
+                  chapter.knowSourceTitle.isEmpty
+                      ? 'Source: ${chapter.knowSourceOrg}'
+                      : 'Source: ${chapter.knowSourceOrg}, '
+                            '${chapter.knowSourceTitle}',
+                  key: const ValueKey('chapter-know-source'),
+                  style: AppText.small.copyWith(
+                    color: palette.inkSoft,
+                    fontStyle: FontStyle.italic,
                   ),
-                  const SizedBox(height: 22),
-                  _SectionTitle(
-                    'One thing to know',
-                    accent: accent,
-                    style: titleStyle,
-                  ),
-                  const SizedBox(height: 6),
-                  Text(chapter.knowText, style: bodyStyle),
-                  const SizedBox(height: 6),
-                  // Quiet text only: the app opens no links.
-                  Text(
-                    chapter.knowSourceTitle.isEmpty
-                        ? 'Source: ${chapter.knowSourceOrg}'
-                        : 'Source: ${chapter.knowSourceOrg}, '
-                              '${chapter.knowSourceTitle}',
-                    key: const ValueKey('chapter-know-source'),
-                    style: softStyle.copyWith(fontStyle: FontStyle.italic),
-                  ),
-                  const SizedBox(height: 20),
-                  _ChapterWeekCard(
-                    week: week,
-                    card: card,
-                    palette: palette,
-                    accent: accent,
-                    isCurrentWeek: isCurrentWeek,
-                    onReturn: onReturn,
-                  ),
-                  const SizedBox(height: 22),
-                  _SectionTitle(
-                    'One thing to get ready',
-                    accent: accent,
-                    style: titleStyle,
-                  ),
-                  const SizedBox(height: 6),
-                  Text(chapter.readyText, style: bodyStyle),
-                  if (chapter.suggestedQuestion.isNotEmpty) ...[
-                    const SizedBox(height: 10),
-                    _AddQuestion(
-                      question: chapter.suggestedQuestion,
-                      state: state,
-                      palette: palette,
-                      accent: accent,
-                    ),
-                  ],
-                  Align(
-                    alignment: AlignmentDirectional.centerStart,
-                    child: TextButton.icon(
-                      onPressed: onVisit,
-                      style: TextButton.styleFrom(
-                        foregroundColor: palette.ink,
-                        minimumSize: const Size(48, 48),
-                      ),
-                      icon: const Icon(Icons.edit_note_rounded),
-                      label: const Text('Write my own question'),
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  _PaperPanel(
-                    color: Color.lerp(palette.paperRaised, accent, .14)!,
-                    edge: accent,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _SectionTitle(
-                          'Something to look forward to',
-                          accent: accent,
-                          style: titleStyle,
+                ),
+                const SizedBox(height: AppSpace.xl),
+                _ChapterWeekCard(
+                  week: week,
+                  card: card,
+                  palette: palette,
+                  band: band,
+                  onBand: onBand,
+                  isCurrentWeek: isCurrentWeek,
+                  onReturn: onReturn,
+                ),
+                const SizedBox(height: AppSpace.xxl),
+                _SectionTitle(
+                  'One thing to get ready',
+                  marker: band,
+                  palette: palette,
+                ),
+                const SizedBox(height: AppSpace.s),
+                Text(chapter.readyText, style: body),
+                const SizedBox(height: AppSpace.l),
+                PaperCard(
+                  raised: true,
+                  padding: const EdgeInsets.all(AppSpace.l),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      if (chapter.suggestedQuestion.isNotEmpty) ...[
+                        _AddQuestion(
+                          question: chapter.suggestedQuestion,
+                          state: state,
+                          palette: palette,
+                          fill: band,
+                          onFill: onBand,
                         ),
-                        const SizedBox(height: 6),
-                        Text(chapter.lookForward, style: bodyStyle),
+                        const SizedBox(height: AppSpace.s),
                       ],
-                    ),
+                      OutlinedButton.icon(
+                        onPressed: onVisit,
+                        icon: const Icon(Icons.edit_note_rounded),
+                        label: const Text('Write my own question'),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 12),
-                  _CuriousLink(
-                    question: chapter.curiousQuestion,
-                    need: chapter.curiousNeed,
-                    palette: palette,
-                    accent: accent,
-                    onTap: () =>
-                        _openGuide(context, state, chapter.curiousNeed),
+                ),
+                const SizedBox(height: AppSpace.xxl),
+                _TintedPiece(
+                  tint: band,
+                  palette: palette,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _SectionTitle(
+                        'Something to look forward to',
+                        marker: band,
+                        palette: palette,
+                      ),
+                      const SizedBox(height: AppSpace.s),
+                      Text(chapter.lookForward, style: body),
+                    ],
                   ),
-                ],
-              ),
+                ),
+                const SizedBox(height: AppSpace.l),
+                _CuriousLink(
+                  question: chapter.curiousQuestion,
+                  need: chapter.curiousNeed,
+                  palette: palette,
+                  band: band,
+                  onBand: onBand,
+                  onTap: () => _openGuide(context, state, chapter.curiousNeed),
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 }
 
-/// Picture, deckled at the bottom like torn paper, over the accent strip
-/// that carries the title and weeks.
+/// Picture, deckled at the bottom like torn paper, over the band in the
+/// chapter's colour that carries the title and weeks.
 class _ChapterHeader extends StatelessWidget {
   const _ChapterHeader({
     required this.chapter,
     required this.palette,
-    required this.state,
-    required this.onAccent,
+    required this.bumpy,
+    required this.band,
+    required this.onBand,
   });
 
   final Chapter chapter;
   final AppPalette palette;
-  final AppState state;
-  final Color onAccent;
+  final Widget bumpy;
+  final Color band;
+  final Color onBand;
 
   @override
   Widget build(BuildContext context) {
-    final accent = chapter.accent;
     final panel = _AccentPaperPanel(
-      accent: accent,
+      accent: chapter.accent,
       palette: palette,
-      bumpy: BumpyAvatar(
-        need: state.costumeOverride ?? state.todayNeed,
-        palette: palette,
-        happy: true,
-        skinTone: state.skinTone,
-      ),
+      bumpy: bumpy,
     );
     return ColoredBox(
-      color: accent,
+      color: band,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -262,7 +268,12 @@ class _ChapterHeader extends StatelessWidget {
             ),
           ),
           Padding(
-            padding: const EdgeInsets.fromLTRB(18, 8, 18, 16),
+            padding: const EdgeInsets.fromLTRB(
+              AppSpace.l,
+              AppSpace.s,
+              AppSpace.l,
+              AppSpace.l,
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -270,44 +281,30 @@ class _ChapterHeader extends StatelessWidget {
                   header: true,
                   child: Text(
                     chapter.title,
-                    style: TextStyle(
-                      color: onAccent,
-                      fontSize: 26,
-                      height: 1.2,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: AppText.display.copyWith(color: onBand),
                   ),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: AppSpace.s),
                 Wrap(
-                  spacing: 10,
-                  runSpacing: 6,
+                  spacing: AppSpace.s,
+                  runSpacing: AppSpace.s,
                   crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
-                    // A small paper tag, readable on any accent colour.
+                    // A small paper tag, readable on any chapter colour.
                     DecoratedBox(
                       decoration: BoxDecoration(
                         color: palette.paper,
-                        borderRadius: BorderRadius.circular(8),
-                        boxShadow: const [
-                          BoxShadow(
-                            color: Color(0x33000000),
-                            offset: Offset(0, 1.5),
-                          ),
-                        ],
+                        borderRadius: AppRadii.tag,
+                        boxShadow: paperShadows(palette, raised: true),
                       ),
                       child: Padding(
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 3,
+                          horizontal: AppSpace.m,
+                          vertical: AppSpace.s,
                         ),
                         child: Text(
                           'Weeks ${chapter.fromWeek} to ${chapter.toWeek}',
-                          style: TextStyle(
-                            color: palette.ink,
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                          ),
+                          style: AppText.label.copyWith(color: palette.ink),
                         ),
                       ),
                     ),
@@ -341,8 +338,8 @@ class _AccentPaperPanel extends StatelessWidget {
   Widget build(BuildContext context) {
     final sky = Color.lerp(
       accent,
-      palette.isHalloween ? palette.skyTop : Colors.white,
-      palette.isHalloween ? .55 : .45,
+      palette.isHalloween ? palette.skyTop : palette.paper,
+      palette.isHalloween ? .55 : .5,
     )!;
     return ColoredBox(
       color: sky,
@@ -350,10 +347,14 @@ class _AccentPaperPanel extends StatelessWidget {
         fit: StackFit.expand,
         children: [
           CustomPaint(
-            painter: _PaperHillsPainter(accent: accent, moon: palette.moon),
+            painter: _PaperHillsPainter(
+              accent: accent,
+              moon: palette.moon,
+              shadow: palette.shadow,
+            ),
           ),
           Padding(
-            padding: const EdgeInsets.only(top: 8, bottom: 14),
+            padding: const EdgeInsets.only(top: AppSpace.s, bottom: AppSpace.l),
             child: FittedBox(child: bumpy),
           ),
         ],
@@ -363,20 +364,23 @@ class _AccentPaperPanel extends StatelessWidget {
 }
 
 class _PaperHillsPainter extends CustomPainter {
-  const _PaperHillsPainter({required this.accent, required this.moon});
+  const _PaperHillsPainter({
+    required this.accent,
+    required this.moon,
+    required this.shadow,
+  });
 
   final Color accent;
   final Color moon;
+  final Color shadow;
 
   @override
   void paint(Canvas canvas, Size size) {
     final w = size.width;
     final h = size.height;
-    final shadow = Paint()
-      ..color = const Color(0x33000000)
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3);
+    final under = Paint()..color = shadow.withValues(alpha: .3);
     void paper(Path path, Color color) {
-      canvas.drawPath(path.shift(const Offset(0, 3)), shadow);
+      canvas.drawPath(path.shift(const Offset(0, 2)), under);
       canvas.drawPath(path, Paint()..color = color);
     }
 
@@ -410,7 +414,7 @@ class _PaperHillsPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_PaperHillsPainter old) =>
-      old.accent != accent || old.moon != moon;
+      old.accent != accent || old.moon != moon || old.shadow != shadow;
 }
 
 /// A soft torn-paper bottom edge.
@@ -447,113 +451,263 @@ class _DeckledEdge extends CustomClipper<Path> {
 
 /// A small cut-paper diamond in the chapter's colour before each heading.
 class _SectionTitle extends StatelessWidget {
-  const _SectionTitle(this.text, {required this.accent, required this.style});
+  const _SectionTitle(this.text, {required this.marker, required this.palette});
 
   final String text;
-  final Color accent;
-  final TextStyle style;
+  final Color marker;
+  final AppPalette palette;
 
   @override
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Transform.rotate(
-          angle: math.pi / 4,
-          child: Container(
-            width: 11,
-            height: 11,
-            decoration: BoxDecoration(
-              color: accent,
-              borderRadius: BorderRadius.circular(2),
-              boxShadow: const [
-                BoxShadow(color: Color(0x33000000), offset: Offset(0, 1.5)),
-              ],
+        _PaperDiamond(color: marker, palette: palette),
+        const SizedBox(width: AppSpace.m),
+        Expanded(
+          child: Semantics(
+            header: true,
+            child: Text(
+              text,
+              style: AppText.heading.copyWith(color: palette.ink),
             ),
           ),
-        ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: Semantics(header: true, child: Text(text, style: style)),
         ),
       ],
     );
   }
 }
 
-class _PaperPanel extends StatelessWidget {
-  const _PaperPanel({
-    required this.color,
-    required this.edge,
+/// A 12 px paper diamond with a hard shadow. Decorative.
+class _PaperDiamond extends StatelessWidget {
+  const _PaperDiamond({required this.color, required this.palette});
+
+  final Color color;
+  final AppPalette palette;
+
+  @override
+  Widget build(BuildContext context) {
+    return Transform.rotate(
+      angle: math.pi / 4,
+      child: Container(
+        width: 12,
+        height: 12,
+        decoration: BoxDecoration(
+          color: color,
+          borderRadius: const BorderRadius.only(
+            topLeft: Radius.circular(3),
+            topRight: Radius.circular(1),
+            bottomRight: Radius.circular(3),
+            bottomLeft: Radius.circular(1),
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: palette.shadow.withValues(
+                alpha: palette.isHalloween ? 1 : .45,
+              ),
+              offset: const Offset(1, 1),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// A piece on the card washed with the chapter's colour. [PaperCard] only
+/// knows plain raised paper, so this one is drawn here with the same edge,
+/// corners and shadow.
+class _TintedPiece extends StatelessWidget {
+  const _TintedPiece({
+    required this.tint,
+    required this.palette,
     required this.child,
   });
 
-  final Color color;
-  final Color edge;
+  final Color tint;
+  final AppPalette palette;
   final Widget child;
 
   @override
   Widget build(BuildContext context) {
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: color,
-        borderRadius: BorderRadius.circular(16),
-        border: Border(bottom: BorderSide(color: edge, width: 3)),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x22000000),
-            offset: Offset(0, 2),
-            blurRadius: 2,
-          ),
-        ],
+        // A lighter wash at night, where the mix turns muddy sooner.
+        color: Color.lerp(
+          palette.paperRaised,
+          tint,
+          palette.isHalloween ? .12 : .16,
+        ),
+        borderRadius: AppRadii.control,
+        border: Border.all(color: palette.edge),
+        boxShadow: paperShadows(palette, raised: true),
       ),
-      child: Padding(padding: const EdgeInsets.all(14), child: child),
+      child: Padding(padding: const EdgeInsets.all(AppSpace.l), child: child),
     );
   }
 }
 
-/// Bumpy's line in a paper speech bubble.
+/// Bumpy's line, spoken: a small Bumpy beside a paper speech bubble whose
+/// tail points at them. On a narrow or large-text screen Bumpy stands above
+/// the bubble instead.
 class _BumpySays extends StatelessWidget {
   const _BumpySays({
     required this.line,
-    required this.accent,
     required this.palette,
+    required this.bumpy,
   });
 
   final String line;
-  final Color accent;
   final AppPalette palette;
+  final Widget bumpy;
 
   @override
   Widget build(BuildContext context) {
     return Semantics(
       container: true,
       label: 'Bumpy says',
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          color: palette.paperRaised,
-          border: Border.all(color: accent, width: 2),
-          borderRadius: const BorderRadius.only(
-            topLeft: Radius.circular(4),
-            topRight: Radius.circular(20),
-            bottomLeft: Radius.circular(20),
-            bottomRight: Radius.circular(20),
-          ),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
-          child: Text(
-            line,
-            style: TextStyle(
-              color: palette.ink,
-              fontSize: 18,
-              height: 1.45,
-              fontStyle: FontStyle.italic,
+      child: LayoutBuilder(
+        builder: (context, box) {
+          final stacked =
+              box.maxWidth < 300 ||
+              MediaQuery.textScalerOf(context).scale(16) > 24;
+          const size = 64.0;
+          final face = ExcludeSemantics(
+            child: SizedBox.square(
+              dimension: size,
+              child: FittedBox(child: bumpy),
             ),
-          ),
-        ),
+          );
+          final bubble = _SpeechBubble(
+            palette: palette,
+            tailUp: stacked,
+            child: Text(
+              line,
+              style: AppText.bumpyStory.copyWith(color: palette.ink),
+            ),
+          );
+          if (stacked) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(left: AppSpace.s),
+                  child: face,
+                ),
+                bubble,
+              ],
+            );
+          }
+          return Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              face,
+              Expanded(child: bubble),
+            ],
+          );
+        },
       ),
     );
   }
+}
+
+class _SpeechBubble extends StatelessWidget {
+  const _SpeechBubble({
+    required this.palette,
+    required this.tailUp,
+    required this.child,
+  });
+
+  final AppPalette palette;
+  final bool tailUp;
+  final Widget child;
+
+  static const double tail = 14;
+
+  @override
+  Widget build(BuildContext context) {
+    return CustomPaint(
+      painter: _BubblePainter(palette: palette, tailUp: tailUp),
+      child: Padding(
+        padding: tailUp
+            ? const EdgeInsets.fromLTRB(
+                AppSpace.l,
+                tail + AppSpace.m,
+                AppSpace.l,
+                AppSpace.l,
+              )
+            : const EdgeInsets.fromLTRB(
+                tail + AppSpace.l,
+                AppSpace.m,
+                AppSpace.l,
+                AppSpace.l,
+              ),
+        child: child,
+      ),
+    );
+  }
+}
+
+/// Raised paper with hand-cut corners and a small tail, a 1 px lit edge and
+/// the hard paper shadow.
+class _BubblePainter extends CustomPainter {
+  const _BubblePainter({required this.palette, required this.tailUp});
+
+  final AppPalette palette;
+  final bool tailUp;
+
+  Path _shape(Size size) {
+    const t = _SpeechBubble.tail;
+    final body = tailUp
+        ? Rect.fromLTWH(0, t, size.width, size.height - t)
+        : Rect.fromLTWH(t, 0, size.width - t, size.height);
+    final r = AppRadii.card;
+    final path = Path()
+      ..addRRect(
+        RRect.fromRectAndCorners(
+          body,
+          topLeft: r.topLeft,
+          topRight: r.topRight,
+          bottomRight: r.bottomRight,
+          bottomLeft: r.bottomLeft,
+        ),
+      );
+    final tip = tailUp
+        ? (Path()
+            ..moveTo(24, t + 6)
+            ..lineTo(32, 0)
+            ..lineTo(48, t + 6)
+            ..close())
+        : (Path()
+            ..moveTo(t + 6, 22)
+            ..lineTo(0, 30)
+            ..lineTo(t + 6, 44)
+            ..close());
+    return Path.combine(PathOperation.union, path, tip);
+  }
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final shape = _shape(size);
+    canvas.drawPath(
+      shape.shift(const Offset(0, 2)),
+      Paint()
+        ..color = palette.shadow.withValues(
+          alpha: palette.isHalloween ? 1 : .45,
+        ),
+    );
+    canvas.drawPath(shape, Paint()..color = palette.paperRaised);
+    canvas.drawPath(
+      shape,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1
+        ..color = palette.edge,
+    );
+  }
+
+  @override
+  bool shouldRepaint(_BubblePainter old) =>
+      old.palette != palette || old.tailUp != tailUp;
 }
 
 /// The existing weekly card for this exact week, inside the chapter.
@@ -562,7 +716,8 @@ class _ChapterWeekCard extends StatelessWidget {
     required this.week,
     required this.card,
     required this.palette,
-    required this.accent,
+    required this.band,
+    required this.onBand,
     required this.isCurrentWeek,
     required this.onReturn,
   });
@@ -570,60 +725,52 @@ class _ChapterWeekCard extends StatelessWidget {
   final int week;
   final WeekCard? card;
   final AppPalette palette;
-  final Color accent;
+  final Color band;
+  final Color onBand;
   final bool isCurrentWeek;
   final VoidCallback onReturn;
 
   @override
   Widget build(BuildContext context) {
-    return _PaperPanel(
-      color: palette.paperRaised,
-      edge: accent,
+    return PaperCard(
+      raised: true,
+      padding: const EdgeInsets.all(AppSpace.l),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Wrap(
-            spacing: 12,
-            runSpacing: 4,
+            spacing: AppSpace.m,
+            runSpacing: AppSpace.s,
             crossAxisAlignment: WrapCrossAlignment.center,
             children: [
               Semantics(
                 header: true,
                 child: Text(
                   'Week $week',
-                  style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                    color: palette.ink,
-                  ),
+                  style: AppText.title.copyWith(color: palette.ink),
                 ),
               ),
-              if (isCurrentWeek)
-                Text(
-                  'You are here',
-                  style: TextStyle(
-                    color: palette.inkSoft,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
+              if (isCurrentWeek) _HereTag(fill: band, ink: onBand),
               // Only a review build ever shows a draft card.
               if (card?.isDraft ?? false) DraftTag(palette: palette),
             ],
           ),
           if (card != null) ...[
-            const SizedBox(height: 8),
+            const SizedBox(height: AppSpace.s),
             Text(
               card!.babyLine,
-              style: TextStyle(fontSize: 18, height: 1.45, color: palette.ink),
+              style: AppText.bumpyStory.copyWith(color: palette.ink),
             ),
           ],
           if (!isCurrentWeek) ...[
-            const SizedBox(height: 6),
+            const SizedBox(height: AppSpace.s),
             TextButton.icon(
               style: TextButton.styleFrom(
                 foregroundColor: palette.ink,
-                minimumSize: const Size(48, 48),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpace.xs,
+                  vertical: AppSpace.m,
+                ),
               ),
               icon: const Icon(Icons.arrow_back_rounded, size: 18),
               label: const Text('Back to this week'),
@@ -636,19 +783,43 @@ class _ChapterWeekCard extends StatelessWidget {
   }
 }
 
+/// "You are here" as a small paper tag.
+class _HereTag extends StatelessWidget {
+  const _HereTag({required this.fill, required this.ink});
+
+  final Color fill;
+  final Color ink;
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(color: fill, borderRadius: AppRadii.tag),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpace.s,
+          vertical: AppSpace.xs,
+        ),
+        child: Text('You are here', style: AppText.label.copyWith(color: ink)),
+      ),
+    );
+  }
+}
+
 /// One tap puts the chapter's question on the visit list.
 class _AddQuestion extends StatefulWidget {
   const _AddQuestion({
     required this.question,
     required this.state,
     required this.palette,
-    required this.accent,
+    required this.fill,
+    required this.onFill,
   });
 
   final String question;
   final AppState state;
   final AppPalette palette;
-  final Color accent;
+  final Color fill;
+  final Color onFill;
 
   @override
   State<_AddQuestion> createState() => _AddQuestionState();
@@ -676,20 +847,14 @@ class _AddQuestionState extends State<_AddQuestion> {
   Widget build(BuildContext context) {
     final palette = widget.palette;
     final added = widget.state.hasVisitQuestion(widget.question);
-    final (fill, label) = _buttonColours(widget.accent);
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
           '“${widget.question}”',
-          style: TextStyle(
-            color: palette.ink,
-            fontSize: 16,
-            height: 1.4,
-            fontWeight: FontWeight.w600,
-          ),
+          style: AppText.bodyStrong.copyWith(color: palette.ink),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: AppSpace.m),
         Semantics(
           liveRegion: true,
           child: added
@@ -700,16 +865,14 @@ class _AddQuestionState extends State<_AddQuestion> {
                       Icon(
                         Icons.check_circle_rounded,
                         color: palette.ink,
-                        size: 22,
+                        size: 24,
                       ),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: AppSpace.s),
                       Expanded(
                         child: Text(
                           'On your visit list',
-                          style: TextStyle(
+                          style: AppText.bodyStrong.copyWith(
                             color: palette.ink,
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
                           ),
                         ),
                       ),
@@ -719,13 +882,8 @@ class _AddQuestionState extends State<_AddQuestion> {
               : FilledButton.icon(
                   onPressed: _saving ? null : _add,
                   style: FilledButton.styleFrom(
-                    backgroundColor: fill,
-                    foregroundColor: label,
-                    minimumSize: const Size(48, 48),
-                    textStyle: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
+                    backgroundColor: widget.fill,
+                    foregroundColor: widget.onFill,
                   ),
                   icon: const Icon(Icons.playlist_add_rounded),
                   label: const Text('Add to my visit list'),
@@ -733,10 +891,10 @@ class _AddQuestionState extends State<_AddQuestion> {
         ),
         if (_notSaved)
           Padding(
-            padding: const EdgeInsets.only(top: 4),
+            padding: const EdgeInsets.only(top: AppSpace.xs),
             child: Text(
               'That did not save. You can try again.',
-              style: TextStyle(color: palette.inkSoft, fontSize: 16),
+              style: AppText.body.copyWith(color: palette.ink),
             ),
           ),
       ],
@@ -744,51 +902,77 @@ class _AddQuestionState extends State<_AddQuestion> {
   }
 }
 
-/// The curious question: a quiet link into the guide for its need.
+/// The curious question: a paper row that opens the guide for its need.
 class _CuriousLink extends StatelessWidget {
   const _CuriousLink({
     required this.question,
     required this.need,
     required this.palette,
-    required this.accent,
+    required this.band,
+    required this.onBand,
     required this.onTap,
   });
 
   final String question;
   final MaternalNeed need;
   final AppPalette palette;
-  final Color accent;
+  final Color band;
+  final Color onBand;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return TextButton(
-      onPressed: onTap,
-      style: TextButton.styleFrom(
-        foregroundColor: palette.inkSoft,
-        minimumSize: const Size(48, 48),
-        alignment: AlignmentDirectional.centerStart,
-        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
-      ),
-      child: Row(
-        children: [
-          Icon(Icons.menu_book_rounded, size: 20, color: palette.inkSoft),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              question,
-              semanticsLabel: '$question Opens the ${need.label} guide.',
-              style: TextStyle(
-                fontSize: 16,
-                height: 1.35,
-                color: palette.inkSoft,
-                decoration: TextDecoration.underline,
-                decorationColor: accent,
-                decorationThickness: 2,
+    return PaperCard(
+      raised: true,
+      child: Semantics(
+        button: true,
+        child: InkWell(
+          onTap: onTap,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: AppSpace.row),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpace.m,
+                AppSpace.m,
+                AppSpace.s,
+                AppSpace.m,
+              ),
+              child: Row(
+                children: [
+                  DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: band,
+                      borderRadius: AppRadii.tag,
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(AppSpace.s),
+                      child: Icon(
+                        Icons.menu_book_rounded,
+                        size: 24,
+                        color: onBand,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: AppSpace.m),
+                  Expanded(
+                    child: Text(
+                      question,
+                      semanticsLabel:
+                          '$question Opens the ${need.label} guide.',
+                      style: AppText.bodyStrong.copyWith(color: palette.ink),
+                    ),
+                  ),
+                  const SizedBox(width: AppSpace.s),
+                  Icon(
+                    Icons.arrow_forward_rounded,
+                    size: 24,
+                    color: palette.inkSoft,
+                  ),
+                ],
               ),
             ),
           ),
-        ],
+        ),
       ),
     );
   }

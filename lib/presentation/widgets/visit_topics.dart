@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'pause_button.dart';
 
+import '../../core/theme/app_text.dart';
 import '../../core/theme/palette.dart';
+import '../../core/theme/paper.dart';
 import '../../domain/models/app_state.dart';
 import '../../domain/models/need.dart';
 import '../../domain/models/visit_question.dart';
@@ -39,11 +41,15 @@ class VisitTopics extends StatelessWidget {
     final topics = state.visitTopics;
     final questions = state.visitQuestions;
     final empty = topics.isEmpty && questions.isEmpty;
-    return Material(
-      color: palette.paperRaised,
-      borderRadius: BorderRadius.circular(18),
+    return PaperCard(
+      raised: true,
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
+        padding: const EdgeInsets.fromLTRB(
+          AppSpace.l,
+          AppSpace.l,
+          AppSpace.l,
+          AppSpace.s,
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -51,43 +57,39 @@ class VisitTopics extends StatelessWidget {
               header: true,
               child: Text(
                 'For my next visit',
-                style: TextStyle(
-                  color: palette.ink,
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: AppText.heading.copyWith(color: palette.ink),
               ),
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: AppSpace.xs),
             if (empty)
               Text(
                 'Keep a list of questions and topics for your doctor or midwife.',
-                style: TextStyle(color: palette.inkSoft),
+                style: AppText.body.copyWith(color: palette.inkSoft),
               ),
             for (final question in questions)
               Padding(
-                padding: const EdgeInsets.only(top: 5),
+                padding: const EdgeInsets.only(top: AppSpace.xs),
                 child: Text(
                   question.text,
-                  style: TextStyle(color: palette.ink),
+                  style: AppText.body.copyWith(color: palette.ink),
                 ),
               ),
             for (final need in MaternalNeed.values.where(topics.contains))
               Padding(
-                padding: const EdgeInsets.only(top: 5),
+                padding: const EdgeInsets.only(top: AppSpace.xs),
                 child: Row(
                   children: [
                     Image.asset(
                       need.iconPath,
-                      width: 22,
-                      height: 22,
+                      width: 24,
+                      height: 24,
                       excludeFromSemantics: true,
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: AppSpace.s),
                     Expanded(
                       child: Text(
                         need.label,
-                        style: TextStyle(color: palette.ink),
+                        style: AppText.body.copyWith(color: palette.ink),
                       ),
                     ),
                   ],
@@ -242,7 +244,18 @@ class _VisitEditorState extends State<_VisitEditor> {
       return;
     }
     if (mounted && ModalRoute.of(context)?.isCurrent == true) {
+      // Back to where the list was opened from, with a calm word that it
+      // landed. A snack bar is a live region, so screen readers say it too.
+      final messenger = ScaffoldMessenger.maybeOf(context);
       Navigator.pop(context);
+      messenger
+        ?..hideCurrentSnackBar()
+        ..showSnackBar(
+          const SnackBar(
+            key: ValueKey('visit-saved'),
+            content: Text('Your visit list is saved.'),
+          ),
+        );
     }
   }
 
@@ -258,7 +271,12 @@ class _VisitEditorState extends State<_VisitEditor> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(18, 8, 6, 0),
+            padding: const EdgeInsets.fromLTRB(
+              AppSpace.l,
+              AppSpace.s,
+              AppSpace.s,
+              0,
+            ),
             child: Row(
               children: [
                 Expanded(
@@ -266,11 +284,7 @@ class _VisitEditorState extends State<_VisitEditor> {
                     header: true,
                     child: Text(
                       'For my next visit',
-                      style: TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                        color: palette.ink,
-                      ),
+                      style: AppText.title.copyWith(color: palette.ink),
                     ),
                   ),
                 ),
@@ -292,44 +306,51 @@ class _VisitEditorState extends State<_VisitEditor> {
   Widget _scrollingBody(AppPalette palette, List<VisitQuestion> questions) {
     return SingleChildScrollView(
       padding: EdgeInsets.fromLTRB(
-        18,
+        AppSpace.l,
         0,
-        18,
-        16 + MediaQuery.viewInsetsOf(context).bottom,
+        AppSpace.l,
+        AppSpace.l + MediaQuery.viewInsetsOf(context).bottom,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
             'What would you like to ask your doctor or midwife?',
-            style: TextStyle(color: palette.inkSoft),
+            style: AppText.body.copyWith(color: palette.inkSoft),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppSpace.m),
           for (final question in questions)
             Padding(
               key: ValueKey('visit-question-${question.text}'),
-              padding: const EdgeInsets.only(bottom: 4),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      question.text,
-                      style: TextStyle(fontSize: 16, color: palette.ink),
+              padding: const EdgeInsets.only(bottom: AppSpace.s),
+              child: PaperCard(
+                raised: true,
+                padding: const EdgeInsets.only(left: AppSpace.m),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        question.text,
+                        style: AppText.body.copyWith(color: palette.ink),
+                      ),
                     ),
-                  ),
-                  IconButton(
-                    tooltip: 'Remove this question',
-                    constraints: const BoxConstraints(
-                      minWidth: 48,
-                      minHeight: 48,
+                    IconButton(
+                      tooltip: 'Remove this question',
+                      constraints: const BoxConstraints(
+                        minWidth: 48,
+                        minHeight: 48,
+                      ),
+                      onPressed: _saving ? null : () => _remove(question),
+                      icon: Icon(
+                        Icons.remove_circle_outline,
+                        color: palette.ink,
+                      ),
                     ),
-                    onPressed: _saving ? null : () => _remove(question),
-                    icon: Icon(Icons.remove_circle_outline, color: palette.ink),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
-          const SizedBox(height: 4),
+          const SizedBox(height: AppSpace.xs),
           TextFormField(
             key: const ValueKey('visit-question-field'),
             controller: _field,
@@ -343,17 +364,13 @@ class _VisitEditorState extends State<_VisitEditor> {
               labelText: questions.isEmpty
                   ? 'My question, in my own words'
                   : 'Another question, in my own words',
-              border: const OutlineInputBorder(),
             ),
             onFieldSubmitted: (_) => _add(),
           ),
           Align(
             alignment: AlignmentDirectional.centerEnd,
             child: TextButton.icon(
-              style: TextButton.styleFrom(
-                foregroundColor: palette.ink,
-                minimumSize: const Size(48, 48),
-              ),
+              style: TextButton.styleFrom(foregroundColor: palette.ink),
               onPressed: _saving ? null : _add,
               icon: const Icon(Icons.add, size: 18),
               label: const Text('Add question'),
@@ -363,17 +380,19 @@ class _VisitEditorState extends State<_VisitEditor> {
             Semantics(
               liveRegion: true,
               child: Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: Text(_note!, style: TextStyle(color: palette.ink)),
+                padding: const EdgeInsets.only(bottom: AppSpace.s),
+                child: Text(
+                  _note!,
+                  style: AppText.body.copyWith(color: palette.ink),
+                ),
               ),
             ),
-          const SizedBox(height: 4),
-          Text(
-            'Topics',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: palette.ink,
+          const SizedBox(height: AppSpace.m),
+          Semantics(
+            header: true,
+            child: Text(
+              'Topics',
+              style: AppText.heading.copyWith(color: palette.ink),
             ),
           ),
           for (final need in MaternalNeed.values)
@@ -386,9 +405,10 @@ class _VisitEditorState extends State<_VisitEditor> {
                 height: 34,
                 excludeFromSemantics: true,
               ),
-              activeColor: palette.accent,
-              checkColor: palette.accentText,
-              title: Text(need.label, style: TextStyle(color: palette.ink)),
+              title: Text(
+                need.label,
+                style: AppText.body.copyWith(color: palette.ink),
+              ),
               value: _selected.contains(need),
               onChanged: _saving
                   ? null
@@ -400,23 +420,21 @@ class _VisitEditorState extends State<_VisitEditor> {
                       }
                     }),
             ),
-          const SizedBox(height: 10),
+          const SizedBox(height: AppSpace.l),
           if (_saveFailed)
             Semantics(
               liveRegion: true,
               child: Padding(
-                padding: const EdgeInsets.only(bottom: 8),
+                padding: const EdgeInsets.only(bottom: AppSpace.s),
                 child: Text(
                   'Your visit list couldn’t be saved on this device.',
-                  style: TextStyle(color: palette.ink),
+                  style: AppText.body.copyWith(color: palette.ink),
                 ),
               ),
             ),
           FilledButton(
             style: FilledButton.styleFrom(
-              backgroundColor: palette.ink,
-              foregroundColor: palette.paper,
-              minimumSize: const Size.fromHeight(48),
+              minimumSize: const Size.fromHeight(AppSpace.target),
             ),
             onPressed: _saving ? null : _save,
             child: Text(

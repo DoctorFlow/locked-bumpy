@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:little_bumpy/content/content_loader.dart';
+import 'package:little_bumpy/core/theme/app_text.dart';
 import 'package:little_bumpy/core/theme/palette.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:little_bumpy/domain/models/app_state.dart';
@@ -35,7 +36,7 @@ void main() {
           find.byWidgetPredicate(
             (w) =>
                 w is Text &&
-                w.style?.fontSize == 28 &&
+                w.style?.fontSize == AppText.display.fontSize &&
                 (w.data?.startsWith('Week ') ?? false),
           ),
         );
