@@ -215,8 +215,10 @@ class VisitTopics extends StatelessWidget {
 }
 
 /// How far above the bottom of the screen the tab bar's top edge sits; 0
-/// when there is no tab bar (first run, Paused).
-double _tabBarClearance(BuildContext context) {
+/// when there is no tab bar (first run, Paused). A note that floats this
+/// far up (plus a step) never covers the tabs; the show page keeps this
+/// much room under its last control.
+double tabBarClearance(BuildContext context) {
   final screen = MediaQuery.sizeOf(context).height;
   double found = 0;
   void visit(Element element) {
@@ -380,7 +382,7 @@ class _VisitEditorState extends State<_VisitEditor> {
       // It floats above the tab bar for 2 seconds, so it never covers or
       // takes a tap meant for the tabs.
       final messenger = ScaffoldMessenger.maybeOf(context);
-      final clearance = _tabBarClearance(context);
+      final clearance = tabBarClearance(context);
       Navigator.pop(context);
       messenger
         ?..hideCurrentSnackBar()

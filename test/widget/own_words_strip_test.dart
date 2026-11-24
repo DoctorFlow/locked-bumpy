@@ -224,4 +224,66 @@ void main() {
     });
   }
 
+  for (final halloween in [false, true]) {
+    final look = halloween ? 'Halloween' : 'Everyday';
+    testWidgets('the show view has room under Copy my list at 320 px and 200 '
+        'percent text ($look)', (t) async {
+      t.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        SystemChannels.platform,
+        (call) async => null,
+      );
+      addTearDown(
+        () => t.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+          SystemChannels.platform,
+          null,
+        ),
+      );
+      await _phone(t, const Size(320, 568), text: 2);
+      final state = await _start(halloween: halloween);
+      await state.addVisitQuestion(_picked, need: MaternalNeed.iron);
+      await state.addVisitQuestion(_older);
+      await state.addVisitQuestion(_own);
+      await state.saveVisitTopics({MaternalNeed.rest, MaternalNeed.water});
+      await _reopen(t);
+      final navTop = t.getRect(find.byType(AppNavBar)).top;
+      final navHeight = 568 - navTop;
+      await t.ensureVisible(find.byKey(_strip));
+      await t.pumpAndSettle();
+      await t.tap(find.byKey(_strip));
+      await t.pumpAndSettle();
+      expect(find.byType(VisitScreen), findsOneWidget);
+      final scroller = find.descendant(
+        of: find.byType(VisitScreen),
+        matching: find.byType(Scrollable),
+      );
+      // Scroll to the very end.
+      await t.fling(scroller, const Offset(0, -3000), 3000);
+      await t.pumpAndSettle();
+      final copy = find.byKey(const ValueKey('visit-copy'));
+      final button = t.getRect(copy);
+      // The whole button sits clear of where the tab bar is, and clear of
+      // a floating note, with room to spare.
+      expect(button.bottom, lessThanOrEqualTo(navTop - 8));
+      expect(568 - button.bottom, greaterThanOrEqualTo(navHeight));
+      expect(t.getSize(copy).height, greaterThanOrEqualTo(48));
+      expect(find.text('Edit').hitTestable(), findsOneWidget);
+      await t.tap(copy);
+      await t.pump();
+      await t.pump(const Duration(milliseconds: 500));
+      final note = t.getRect(
+        find
+            .descendant(
+              of: find.byKey(const ValueKey('visit-copied')),
+              matching: find.byType(Material),
+            )
+            .first,
+      );
+      // The note does not sit on the button it answers.
+      expect(note.top, greaterThanOrEqualTo(t.getRect(copy).bottom));
+      expect(t.takeException(), isNull);
+      await t.pumpAndSettle(const Duration(seconds: 3));
+      await t.pumpWidget(const SizedBox());
+    });
+
+  }
 }
