@@ -5,7 +5,9 @@ import '../widgets/pause_button.dart';
 import '../../content/chapter_loader.dart';
 import '../../content/content_loader.dart';
 import '../../core/constants/app_constants.dart';
+import '../../core/theme/app_text.dart';
 import '../../core/theme/palette.dart';
+import '../../core/theme/paper.dart';
 import '../../domain/models/app_state.dart';
 import '../../domain/models/chapter.dart';
 import '../../domain/models/content_record.dart';
@@ -116,7 +118,12 @@ class _ThisWeekScreenState extends State<ThisWeekScreen> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 8, 8, 4),
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpace.l,
+                    AppSpace.s,
+                    AppSpace.s,
+                    AppSpace.xs,
+                  ),
                   child: Row(
                     children: [
                       Expanded(
@@ -124,11 +131,7 @@ class _ThisWeekScreenState extends State<ThisWeekScreen> {
                           header: true,
                           child: Text(
                             'Choose a week',
-                            style: TextStyle(
-                              color: palette.ink,
-                              fontSize: 21,
-                              fontWeight: FontWeight.bold,
-                            ),
+                            style: AppText.title.copyWith(color: palette.ink),
                           ),
                         ),
                       ),
@@ -146,10 +149,15 @@ class _ThisWeekScreenState extends State<ThisWeekScreen> {
                 ),
                 Flexible(
                   child: SingleChildScrollView(
-                    padding: const EdgeInsets.fromLTRB(14, 4, 14, 16),
+                    padding: const EdgeInsets.fromLTRB(
+                      AppSpace.l,
+                      AppSpace.xs,
+                      AppSpace.l,
+                      AppSpace.l,
+                    ),
                     child: Wrap(
-                      spacing: 6,
-                      runSpacing: 6,
+                      spacing: AppSpace.s,
+                      runSpacing: AppSpace.s,
                       alignment: WrapAlignment.center,
                       children: [
                         for (var n = _minWeek; n <= _maxWeek; n++)
@@ -162,27 +170,40 @@ class _ThisWeekScreenState extends State<ThisWeekScreen> {
                             button: true,
                             excludeSemantics: true,
                             onTap: () => Navigator.pop(sheet, n),
-                            child: TextButton(
-                              style: TextButton.styleFrom(
-                                minimumSize: const Size(54, 48),
+                            // A week tile is a paper piece, not a link: no
+                            // underline. Selected = accent fill plus a tick.
+                            child: FilledButton.tonal(
+                              style: FilledButton.styleFrom(
+                                minimumSize: const Size(56, 48),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: AppSpace.m,
+                                ),
                                 foregroundColor: n == selected
                                     ? palette.accentText
                                     : palette.ink,
                                 backgroundColor: n == selected
                                     ? palette.accent
                                     : palette.paperRaised,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                  side: n == _currentWeek
-                                      ? BorderSide(
-                                          color: palette.accent,
-                                          width: 2,
-                                        )
-                                      : BorderSide.none,
-                                ),
+                                side: n == _currentWeek
+                                    ? BorderSide(
+                                        color: n == selected
+                                            ? palette.accentDeep
+                                            : palette.accent,
+                                        width: 2,
+                                      )
+                                    : BorderSide(color: palette.outline),
                               ),
                               onPressed: () => Navigator.pop(sheet, n),
-                              child: Text('$n'),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  if (n == selected) ...[
+                                    const Icon(Icons.check_rounded, size: 16),
+                                    const SizedBox(width: AppSpace.xs),
+                                  ],
+                                  Text('$n'),
+                                ],
+                              ),
                             ),
                           ),
                       ],
@@ -220,9 +241,25 @@ class _ThisWeekScreenState extends State<ThisWeekScreen> {
     }
 
     final mode = palette.isHalloween ? 'halloween' : 'everyday';
+    // Each week is a page that starts right under the top bar and scrolls on
+    // its own. The week strip sits below the pages, never on top of them, so
+    // the last section always scrolls fully into view above it.
+    Widget page(Key key, Widget child) => CustomScrollView(
+      key: key,
+      slivers: [
+        SliverPadding(
+          padding: const EdgeInsets.fromLTRB(
+            AppSpace.page,
+            AppSpace.s,
+            AppSpace.page,
+            AppSpace.xl,
+          ),
+          sliver: SliverToBoxAdapter(child: child),
+        ),
+      ],
+    );
     return Column(
       children: [
-        const SizedBox(height: 8),
         Expanded(
           child: PageView.builder(
             controller: _pages,
@@ -238,90 +275,91 @@ class _ThisWeekScreenState extends State<ThisWeekScreen> {
               );
               final chapter = ChapterLoader.forWeek(_chapters, week);
               if (chapter != null) {
-                return Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: CustomScrollView(
-                    key: PageStorageKey('chapter-week-$week'),
-                    slivers: [
-                      SliverFillRemaining(
-                        hasScrollBody: false,
-                        child: _ChapterPage(
-                          chapter: chapter,
-                          week: week,
-                          card: card,
-                          palette: palette,
-                          state: widget.state,
-                          isCurrentWeek: week == _currentWeek,
-                          onReturn: () => _goTo(_currentWeek),
-                          onVisit: () =>
-                              VisitTopics.edit(context, widget.state),
-                        ),
-                      ),
-                    ],
+                return page(
+                  PageStorageKey('chapter-week-$week'),
+                  _ChapterPage(
+                    chapter: chapter,
+                    week: week,
+                    card: card,
+                    palette: palette,
+                    state: widget.state,
+                    isCurrentWeek: week == _currentWeek,
+                    onReturn: () => _goTo(_currentWeek),
+                    onVisit: () => VisitTopics.edit(context, widget.state),
                   ),
                 );
               }
-              return Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: CustomScrollView(
-                  key: PageStorageKey('week-$week'),
-                  slivers: [
-                    SliverFillRemaining(
-                      hasScrollBody: false,
-                      child: _WeekCardView(
-                        onVisit: () => VisitTopics.edit(context, widget.state),
-                        onReturn: () => _goTo(_currentWeek),
-                        portrait: week == _currentWeek
-                            ? BumpyAvatar(
-                                need:
-                                    widget.state.costumeOverride ??
-                                    widget.state.todayNeed,
-                                palette: palette,
-                                happy: false,
-                                skinTone: widget.state.skinTone,
-                              )
-                            : null,
-                        week: week,
-                        card: card,
-                        palette: palette,
-                        isCurrentWeek: week == _currentWeek,
-                      ),
-                    ),
-                  ],
+              return page(
+                PageStorageKey('week-$week'),
+                _WeekCardView(
+                  onVisit: () => VisitTopics.edit(context, widget.state),
+                  onReturn: () => _goTo(_currentWeek),
+                  portrait: week == _currentWeek
+                      ? BumpyAvatar(
+                          need:
+                              widget.state.costumeOverride ??
+                              widget.state.todayNeed,
+                          palette: palette,
+                          happy: false,
+                          skinTone: widget.state.skinTone,
+                        )
+                      : null,
+                  week: week,
+                  card: card,
+                  palette: palette,
+                  isCurrentWeek: week == _currentWeek,
                 ),
               );
             },
           ),
         ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              _NavButton(
-                icon: Icons.arrow_back_ios_new,
-                label: 'Previous week',
-                enabled: _selectedWeek > _minWeek,
-                palette: palette,
-                onTap: () => _goTo(_selectedWeek - 1),
+        // A quiet strip: no fills, soft moonlight, a hairline above. It is
+        // there when wanted and does not compete with the page.
+        DecoratedBox(
+          decoration: BoxDecoration(
+            border: Border(
+              top: BorderSide(
+                color: palette.moonlightSoft.withValues(alpha: .25),
               ),
-              Flexible(
-                child: TextButton(
-                  style: TextButton.styleFrom(
-                    foregroundColor: palette.moonlight,
-                  ),
-                  onPressed: _chooseWeek,
-                  child: const Text('Choose week', textAlign: TextAlign.center),
+            ),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: AppSpace.s),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                _NavButton(
+                  icon: Icons.arrow_back_ios_new,
+                  label: 'Previous week',
+                  enabled: _selectedWeek > _minWeek,
+                  palette: palette,
+                  onTap: () => _goTo(_selectedWeek - 1),
                 ),
-              ),
-              _NavButton(
-                icon: Icons.arrow_forward_ios,
-                label: 'Next week',
-                enabled: _selectedWeek < _maxWeek,
-                palette: palette,
-                onTap: () => _goTo(_selectedWeek + 1),
-              ),
-            ],
+                Flexible(
+                  child: TextButton.icon(
+                    style: TextButton.styleFrom(
+                      foregroundColor: palette.moonlightSoft,
+                    ),
+                    onPressed: _chooseWeek,
+                    icon: const Icon(
+                      Icons.calendar_view_month_rounded,
+                      size: 20,
+                    ),
+                    label: const Text(
+                      'Choose week',
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
+                _NavButton(
+                  icon: Icons.arrow_forward_ios,
+                  label: 'Next week',
+                  enabled: _selectedWeek < _maxWeek,
+                  palette: palette,
+                  onTap: () => _goTo(_selectedWeek + 1),
+                ),
+              ],
+            ),
           ),
         ),
       ],
@@ -331,6 +369,8 @@ class _ThisWeekScreenState extends State<ThisWeekScreen> {
 
 // ─────────────────────────────────────────────────────────────────────────────
 
+/// A week without a chapter page (none ship tonight, and a chapter hidden by
+/// review status falls back here too): the week's own card as one paper page.
 class _WeekCardView extends StatelessWidget {
   const _WeekCardView({
     required this.onVisit,
@@ -368,8 +408,11 @@ class _WeekCardView extends StatelessWidget {
           );
     final text = Padding(
       padding: short
-          ? const EdgeInsets.symmetric(horizontal: 12, vertical: 6)
-          : const EdgeInsets.fromLTRB(20, 16, 20, 18),
+          ? const EdgeInsets.symmetric(
+              horizontal: AppSpace.m,
+              vertical: AppSpace.s,
+            )
+          : const EdgeInsets.all(AppSpace.l),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -380,37 +423,28 @@ class _WeekCardView extends StatelessWidget {
               if (!isCurrentWeek) ...[
                 Image.asset(
                   'assets/images/need-rest.png',
-                  width: 34,
-                  height: 34,
+                  width: 40,
+                  height: 40,
                   excludeFromSemantics: true,
                 ),
-                const SizedBox(width: 10),
+                const SizedBox(width: AppSpace.m),
               ],
               Expanded(
                 child: Wrap(
-                  spacing: 12,
-                  runSpacing: 4,
+                  spacing: AppSpace.m,
+                  runSpacing: AppSpace.s,
                   crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
                     Semantics(
                       header: true,
                       child: Text(
                         'Week $week',
-                        style: TextStyle(
-                          fontSize: short ? 22 : 28,
-                          fontWeight: FontWeight.bold,
-                          color: palette.accent,
-                        ),
+                        style: (short ? AppText.title : AppText.display)
+                            .copyWith(color: palette.accent),
                       ),
                     ),
                     if (isCurrentWeek)
-                      Text(
-                        'You are here',
-                        style: TextStyle(
-                          color: palette.inkSoft,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
+                      _HereTag(fill: palette.accent, ink: palette.accentText),
                     // Only a review build ever shows a draft card.
                     if (card?.isDraft ?? false) DraftTag(palette: palette),
                   ],
@@ -419,22 +453,21 @@ class _WeekCardView extends StatelessWidget {
             ],
           ),
           if (card != null) ...[
-            SizedBox(height: short ? 5 : 10),
+            SizedBox(height: short ? AppSpace.xs : AppSpace.m),
             Text(
               card!.babyLine,
-              style: TextStyle(
-                fontSize: short ? 16 : 18,
-                height: short ? 1.3 : 1.45,
-                color: palette.ink,
-              ),
+              style: AppText.bumpyStory.copyWith(color: palette.ink),
             ),
           ],
           if (!isCurrentWeek) ...[
-            const SizedBox(height: 12),
+            const SizedBox(height: AppSpace.s),
             TextButton.icon(
               style: TextButton.styleFrom(
                 foregroundColor: palette.ink,
-                minimumSize: const Size(48, 48),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpace.xs,
+                  vertical: AppSpace.m,
+                ),
               ),
               icon: const Icon(Icons.arrow_back_rounded, size: 18),
               label: const Text('Back to this week'),
@@ -450,27 +483,20 @@ class _WeekCardView extends StatelessWidget {
         ],
       ),
     );
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 4),
-        child: Material(
-          color: palette.paper,
-          borderRadius: BorderRadius.circular(22),
-          clipBehavior: Clip.antiAlias,
-          child: room != null && beside
-              ? Row(
-                  children: [
-                    Expanded(flex: short ? 1 : 2, child: room),
-                    Expanded(flex: short ? 2 : 3, child: text),
-                  ],
-                )
-              : Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [?room, text],
-                ),
-        ),
-      ),
+    return PaperCard(
+      child: room != null && beside
+          ? Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(flex: short ? 1 : 2, child: room),
+                Expanded(flex: short ? 2 : 3, child: text),
+              ],
+            )
+          : Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [?room, text],
+            ),
     );
   }
 }
@@ -515,70 +541,57 @@ class _WeekInvitationState extends State<_WeekInvitation> {
       _ =>
         'Think through getting to your next visit. Is there anything about timing, travel or support you want to ask about?',
     };
-    final titleStyle = TextStyle(
-      color: palette.ink,
-      fontWeight: FontWeight.bold,
-      fontSize: 18,
-    );
-    final bodyStyle = TextStyle(
-      color: palette.inkSoft,
-      fontSize: 16,
-      height: 1.4,
-    );
+    final body = AppText.body.copyWith(color: palette.ink);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Divider(height: 28, color: palette.inkSoft.withValues(alpha: .28)),
-        Semantics(
-          header: true,
-          child: Text('One thing to get ready', style: titleStyle),
+        const SizedBox(height: AppSpace.xl),
+        _SectionTitle(
+          'One thing to get ready',
+          marker: palette.accent,
+          palette: palette,
         ),
-        const SizedBox(height: 5),
-        Text(preparation, style: bodyStyle),
-        Align(
-          alignment: AlignmentDirectional.centerStart,
-          child: TextButton.icon(
-            onPressed: widget.onVisit,
-            style: TextButton.styleFrom(
-              foregroundColor: palette.accent,
-              minimumSize: const Size(48, 48),
-            ),
-            icon: const Icon(Icons.edit_note_rounded),
-            label: const Text('My question for the visit'),
-          ),
+        const SizedBox(height: AppSpace.s),
+        Text(preparation, style: body),
+        const SizedBox(height: AppSpace.m),
+        OutlinedButton.icon(
+          onPressed: widget.onVisit,
+          icon: const Icon(Icons.edit_note_rounded),
+          label: const Text('My question for the visit'),
         ),
-        DecoratedBox(
-          decoration: BoxDecoration(
-            color: palette.paperRaised,
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(14, 13, 14, 4),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Semantics(
-                  header: true,
-                  child: Text(
-                    'Something to look forward to',
-                    style: titleStyle,
+        const SizedBox(height: AppSpace.xl),
+        _TintedPiece(
+          tint: palette.accent,
+          palette: palette,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _SectionTitle(
+                'Something to look forward to',
+                marker: palette.accent,
+                palette: palette,
+              ),
+              const SizedBox(height: AppSpace.s),
+              Semantics(
+                liveRegion: true,
+                child: Text(
+                  ideas[(widget.week - 4 + _offset) % ideas.length],
+                  style: body,
+                ),
+              ),
+              const SizedBox(height: AppSpace.xs),
+              TextButton(
+                style: TextButton.styleFrom(
+                  foregroundColor: palette.ink,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpace.xs,
+                    vertical: AppSpace.m,
                   ),
                 ),
-                const SizedBox(height: 5),
-                Semantics(
-                  liveRegion: true,
-                  child: Text(
-                    ideas[(widget.week - 4 + _offset) % ideas.length],
-                    style: bodyStyle,
-                  ),
-                ),
-                TextButton(
-                  style: TextButton.styleFrom(foregroundColor: palette.ink),
-                  onPressed: () => setState(() => _offset++),
-                  child: const Text('Try another idea'),
-                ),
-              ],
-            ),
+                onPressed: () => setState(() => _offset++),
+                child: const Text('Try another idea'),
+              ),
+            ],
           ),
         ),
       ],
@@ -586,6 +599,8 @@ class _WeekInvitationState extends State<_WeekInvitation> {
   }
 }
 
+/// Previous and next week: plain moonlight arrows on the page, no fill, so
+/// the strip stays quieter than the page above it.
 class _NavButton extends StatelessWidget {
   const _NavButton({
     required this.icon,
@@ -609,16 +624,12 @@ class _NavButton extends StatelessWidget {
       child: IconButton(
         onPressed: enabled ? onTap : null,
         style: IconButton.styleFrom(
-          minimumSize: const Size(48, 48),
-          foregroundColor: palette.moonlight,
+          minimumSize: const Size(AppSpace.target, AppSpace.target),
+          foregroundColor: palette.moonlightSoft,
           disabledForegroundColor: palette.moonlightSoft.withValues(
-            alpha: 0.45,
+            alpha: 0.35,
           ),
-          // Both looks use a dark sky outside the paper card.
-          backgroundColor: palette.moonlight.withValues(alpha: 0.10),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
+          shape: const RoundedRectangleBorder(borderRadius: AppRadii.control),
         ),
         icon: Icon(icon, semanticLabel: label, size: 20),
       ),

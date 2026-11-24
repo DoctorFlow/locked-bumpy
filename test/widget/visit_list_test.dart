@@ -159,6 +159,9 @@ void main() {
     await t.enterText(find.byKey(const ValueKey('visit-question-field')), _own);
     await tapOn(t, find.byKey(const ValueKey('visit-topic-water')));
     await tapOn(t, find.text('Save visit list'));
+    // The sheet closes and says, calmly, that the list landed.
+    expect(find.text('Save visit list'), findsNothing);
+    expect(find.text('Your visit list is saved.'), findsOneWidget);
     final cold = await AppState.load(now: _now);
     expect(cold.visitQuestions.map((q) => q.text), [_second, _own]);
     expect(cold.visitTopics, {MaternalNeed.water});

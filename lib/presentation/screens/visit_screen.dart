@@ -1,16 +1,28 @@
 import 'package:flutter/material.dart';
 
+import '../../core/theme/app_text.dart';
 import '../../core/theme/palette.dart';
+import '../../core/theme/paper.dart';
 import '../../domain/models/app_state.dart';
 import '../../domain/models/need.dart';
 import '../widgets/visit_topics.dart';
 
 /// One clean page to hold up at the visit: the questions in large type, then
 /// the topics as plain words. Only a close control and a quiet Edit.
+///
+/// The plainest page in the app: flat paper, no cards, no pictures, and the
+/// largest reading type, so it can be held up across a desk.
 class VisitScreen extends StatelessWidget {
   const VisitScreen({super.key, required this.state});
 
   final AppState state;
+
+  /// The design system's reading style at the size this page needs. The
+  /// system has no style above 18 for app text, so it is set here only.
+  static final TextStyle showText = AppText.body.copyWith(
+    fontSize: 24,
+    height: 32 / 24,
+  );
 
   static Future<void> open(BuildContext context, AppState state) =>
       Navigator.of(context).push(
@@ -27,7 +39,8 @@ class VisitScreen extends StatelessWidget {
         final topics = MaternalNeed.values
             .where(state.visitTopics.contains)
             .toList();
-        final body = TextStyle(fontSize: 24, height: 1.35, color: palette.ink);
+        final body = showText.copyWith(color: palette.ink);
+        final week = state.currentWeek;
         return Scaffold(
           backgroundColor: palette.paper,
           body: SafeArea(
@@ -35,7 +48,12 @@ class VisitScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(4, 4, 8, 0),
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpace.xs,
+                    AppSpace.xs,
+                    AppSpace.s,
+                    0,
+                  ),
                   child: Row(
                     children: [
                       IconButton(
@@ -51,7 +69,6 @@ class VisitScreen extends StatelessWidget {
                       TextButton(
                         style: TextButton.styleFrom(
                           foregroundColor: palette.inkSoft,
-                          minimumSize: const Size(48, 48),
                         ),
                         onPressed: () => VisitTopics.edit(context, state),
                         child: const Text('Edit'),
@@ -61,7 +78,12 @@ class VisitScreen extends StatelessWidget {
                 ),
                 Expanded(
                   child: SingleChildScrollView(
-                    padding: const EdgeInsets.fromLTRB(24, 8, 24, 32),
+                    padding: const EdgeInsets.fromLTRB(
+                      AppSpace.xl,
+                      AppSpace.s,
+                      AppSpace.xl,
+                      AppSpace.xxl,
+                    ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -69,15 +91,20 @@ class VisitScreen extends StatelessWidget {
                           header: true,
                           child: Text(
                             'My questions',
-                            style: TextStyle(
-                              fontSize: 32,
-                              height: 1.2,
-                              fontWeight: FontWeight.bold,
-                              color: palette.ink,
-                            ),
+                            style: AppText.display.copyWith(color: palette.ink),
                           ),
                         ),
-                        const SizedBox(height: 16),
+                        // The first thing a clinician asks.
+                        if (week != null) ...[
+                          const SizedBox(height: AppSpace.xs),
+                          Text(
+                            'Week $week',
+                            style: AppText.heading.copyWith(
+                              color: palette.inkSoft,
+                            ),
+                          ),
+                        ],
+                        const SizedBox(height: AppSpace.xl),
                         if (questions.isEmpty && topics.isEmpty)
                           Text(
                             'Nothing here yet. Tap Edit to add a question.',
@@ -86,7 +113,7 @@ class VisitScreen extends StatelessWidget {
                         for (final (index, question) in questions.indexed)
                           Padding(
                             key: ValueKey('visit-show-question-$index'),
-                            padding: const EdgeInsets.only(bottom: 18),
+                            padding: const EdgeInsets.only(bottom: AppSpace.l),
                             child: MergeSemantics(
                               child: Row(
                                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -97,7 +124,7 @@ class VisitScreen extends StatelessWidget {
                                       fontWeight: FontWeight.bold,
                                     ),
                                   ),
-                                  const SizedBox(width: 12),
+                                  const SizedBox(width: AppSpace.m),
                                   Expanded(
                                     child: Text(question.text, style: body),
                                   ),
@@ -106,7 +133,7 @@ class VisitScreen extends StatelessWidget {
                             ),
                           ),
                         if (topics.isNotEmpty) ...[
-                          const SizedBox(height: 8),
+                          const SizedBox(height: AppSpace.s),
                           Semantics(
                             header: true,
                             child: Text(
@@ -114,10 +141,12 @@ class VisitScreen extends StatelessWidget {
                               style: body.copyWith(fontWeight: FontWeight.bold),
                             ),
                           ),
-                          const SizedBox(height: 6),
+                          const SizedBox(height: AppSpace.s),
                           for (final need in topics)
                             Padding(
-                              padding: const EdgeInsets.only(bottom: 6),
+                              padding: const EdgeInsets.only(
+                                bottom: AppSpace.s,
+                              ),
                               child: Text(need.label, style: body),
                             ),
                         ],
