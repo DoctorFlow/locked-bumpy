@@ -49,6 +49,8 @@ class _FirstRunScreenState extends State<FirstRunScreen> {
   static const _stepCount = 5;
 
   final PageController _pages = PageController();
+  // Sits under the look being tried, so the date picker opens in that look.
+  final GlobalKey _themed = GlobalKey();
   int _step = 0;
 
   // ── Date state ───────────────────────────────────────────────────────────
@@ -115,7 +117,7 @@ class _FirstRunScreenState extends State<FirstRunScreen> {
   Future<void> _pickDate() async {
     widget.state.refreshDay();
     final picked = await pickPregnancyDate(
-      context,
+      _themed.currentContext ?? context,
       today: widget.state.today,
       useDueDate: _useDueDate,
       onPause: widget.state.pause,
@@ -172,6 +174,7 @@ class _FirstRunScreenState extends State<FirstRunScreen> {
       child: Theme(
         data: buildTheme(palette),
         child: Scaffold(
+          key: _themed,
           backgroundColor: palette.skyBottom,
           body: Center(
             child: ConstrainedBox(
