@@ -202,6 +202,21 @@ class VisitTopics extends StatelessWidget {
                   ),
                 ),
             TextButton.icon(
+              onFocusChange: (focused) {
+                if (!focused ||
+                    FocusManager.instance.highlightMode !=
+                        FocusHighlightMode.traditional) {
+                  return;
+                }
+                final target = FocusManager.instance.primaryFocus?.context;
+                if (target == null) return;
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  if (target.mounted &&
+                      FocusManager.instance.primaryFocus?.context == target) {
+                    Scrollable.ensureVisible(target, alignment: .5);
+                  }
+                });
+              },
               style: TextButton.styleFrom(foregroundColor: palette.ink),
               onPressed: () => edit(context, state),
               icon: const Icon(Icons.edit_outlined, size: 18),

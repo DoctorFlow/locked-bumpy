@@ -64,6 +64,8 @@ class _ClosetSheetState extends State<ClosetSheet> {
     final state = widget.state;
     final palette = AppPalette.of(context);
     final name = _costumeName(_preview);
+    final size = MediaQuery.sizeOf(context);
+    final shortPhone = size.width <= 375 && size.height <= 600;
     final header = Row(
       children: [
         Expanded(
@@ -104,7 +106,7 @@ class _ClosetSheetState extends State<ClosetSheet> {
             ),
           ),
         ),
-        const SizedBox(height: 12),
+        SizedBox(height: shortPhone ? 6 : 12),
         LayoutBuilder(
           builder: (context, constraints) {
             final columns =
@@ -117,12 +119,13 @@ class _ClosetSheetState extends State<ClosetSheet> {
                 : 2;
             return Wrap(
               spacing: 8,
-              runSpacing: 8,
+              runSpacing: shortPhone ? 4 : 8,
               children: [
                 for (final need in MaternalNeed.values)
                   SizedBox(
                     width: (constraints.maxWidth - 8 * (columns - 1)) / columns,
                     child: _CostumeCard(
+                      thumbnailSize: shortPhone ? 48 : 65,
                       need: need,
                       skinTone: state.skinTone,
                       palette: palette,
@@ -195,12 +198,14 @@ String _costumeName(MaternalNeed need) =>
 
 class _CostumeCard extends StatelessWidget {
   const _CostumeCard({
+    required this.thumbnailSize,
     required this.need,
     required this.palette,
     required this.selected,
     required this.skinTone,
     required this.onTap,
   });
+  final double thumbnailSize;
   final MaternalNeed need;
   final AppPalette palette;
   final bool selected;
@@ -232,7 +237,7 @@ class _CostumeCard extends StatelessWidget {
           children: [
             SizedBox(
               width: double.infinity,
-              height: 65,
+              height: thumbnailSize,
               child: ColoredBox(
                 color: Color.alphaBlend(
                   palette.moonlight.withValues(alpha: .40),
@@ -241,8 +246,8 @@ class _CostumeCard extends StatelessWidget {
                 child: Center(
                   child: Image(
                     image: paperPortrait(need.assetPath(palette), skinTone),
-                    height: 63,
-                    width: 63,
+                    height: thumbnailSize - 2,
+                    width: thumbnailSize - 2,
                     gaplessPlayback: true,
                   ),
                 ),
