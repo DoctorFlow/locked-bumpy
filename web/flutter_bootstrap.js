@@ -31,12 +31,4 @@ _flutter.loader.load({
     canvasKitBaseUrl: new URL("canvaskit/", document.baseURI).href,
     fontFallbackBaseUrl: new URL("fonts/", document.baseURI).href,
   },
-  onEntrypointLoaded: async (initializer) => {
-    try {
-      const runner = await initializer.initializeEngine();
-      await runner.runApp();
-    } catch (_) {
-      openingFailed();
-    }
-  },
 }).catch(openingFailed);
