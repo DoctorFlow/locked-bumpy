@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../../core/theme/app_text.dart';
 import 'pause_button.dart';
 
 /// Shown under the picker's buttons when OK is pressed with no day chosen.
@@ -36,8 +37,7 @@ Future<DateTime?> pickPregnancyDate(
   final route = _GuardedDialogRoute<DateTime>(
     context: context,
     guard: guard,
-    barrierColor:
-        DialogTheme.of(context).barrierColor ?? Colors.black54,
+    barrierColor: DialogTheme.of(context).barrierColor ?? Colors.black54,
     themes: InheritedTheme.capture(from: context, to: navigator.context),
     builder: (dialog) {
       final size = MediaQuery.sizeOf(dialog);
@@ -55,12 +55,20 @@ Future<DateTime?> pickPregnancyDate(
           insetPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         ),
       );
-      final pause = Material(
-        color: Theme.of(dialog).colorScheme.surface,
-        shape: const CircleBorder(),
-        child: PauseButton(
-          onPressed: onPause,
-          color: Theme.of(dialog).colorScheme.onSurface,
+      // Inset like the dialog itself (8 px), so the circle is never cut by
+      // the screen edge.
+      final pause = Padding(
+        key: const ValueKey('picker-pause'),
+        padding: short
+            ? const EdgeInsets.only(top: 8, right: 8)
+            : const EdgeInsets.only(right: 8, bottom: 8),
+        child: Material(
+          color: Theme.of(dialog).colorScheme.surface,
+          shape: const CircleBorder(),
+          child: PauseButton(
+            onPressed: onPause,
+            color: Theme.of(dialog).colorScheme.onSurface,
+          ),
         ),
       );
       return Center(
@@ -156,6 +164,29 @@ class _GuardedCalendarState extends State<_GuardedCalendar> {
       ..emptyOk = _emptyOk
       ..onRefused = _showRefused;
     HardwareKeyboard.instance.addHandler(_onKey);
+    _watchFrames();
+  }
+
+  /// A day can be chosen by touch, keyboard or a screen reader's tap (which
+  /// sends no pointer events), so the choice is read again after every frame
+  /// while the picker is open. A post-frame callback never asks for a frame
+  /// itself, so an idle picker costs nothing.
+  void _watchFrames() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _syncChosen();
+      _watchFrames();
+    });
+  }
+
+  void _syncChosen() {
+    final chosen = _dayChosen();
+    if (chosen != _chosen) {
+      setState(() {
+        _chosen = chosen;
+        if (chosen) _refused = false;
+      });
+    }
   }
 
   @override
@@ -178,14 +209,7 @@ class _GuardedCalendarState extends State<_GuardedCalendar> {
 
   void _recheckAfterFrame() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      final chosen = _dayChosen();
-      if (chosen != _chosen) {
-        setState(() {
-          _chosen = chosen;
-          if (chosen) _refused = false;
-        });
-      }
+      if (mounted) _syncChosen();
     });
   }
 
@@ -257,16 +281,33 @@ class _GuardedCalendarState extends State<_GuardedCalendar> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
-    // While no day is chosen OK is dimmed but still readable.
+    // While no day is chosen OK rests on raised paper, still readable: a
+    // button waiting for a day, not a dead link.
     final dimmedOk = TextButton.styleFrom(
+      backgroundColor: scheme.surfaceContainerHighest,
       foregroundColor: scheme.onSurface.withValues(alpha: 0.6),
+      minimumSize: const Size(88, 40),
+      tapTargetSize: MaterialTapTargetSize.padded,
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+      textStyle: AppText.button,
     );
+    // Once a day is chosen OK is the main action. The app theme says how;
+    // under any other theme it is still a filled button. Both states share
+    // one text style so the change between them can animate.
+    final chosenOk =
+        theme.datePickerTheme.confirmButtonStyle ??
+        TextButton.styleFrom(
+          backgroundColor: scheme.primary,
+          foregroundColor: scheme.onPrimary,
+          minimumSize: const Size(88, 40),
+          tapTargetSize: MaterialTapTargetSize.padded,
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+          textStyle: AppText.button,
+        );
     final picker = Theme(
       data: theme.copyWith(
         datePickerTheme: theme.datePickerTheme.copyWith(
-          confirmButtonStyle: _chosen
-              ? theme.datePickerTheme.confirmButtonStyle
-              : dimmedOk,
+          confirmButtonStyle: _chosen ? chosenOk : dimmedOk,
         ),
       ),
       child: Listener(

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../core/theme/app_text.dart';
+import '../../core/theme/palette.dart';
+import '../../core/theme/paper.dart';
 import '../../domain/models/skin_tone.dart';
 import 'paper_portrait.dart';
 
@@ -18,6 +20,7 @@ class SkinTonePicker extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = AppPalette.of(context);
     final heading = Semantics(
       header: true,
       child: Text(
@@ -31,26 +34,25 @@ class SkinTonePicker extends StatelessWidget {
         if (showPreview)
           Row(
             children: [
-              SizedBox.square(
-                dimension: 80,
-                child: ClipOval(
-                  child: OverflowBox(
-                    alignment: Alignment.topCenter,
-                    minHeight: 118,
-                    maxHeight: 118,
-                    minWidth: 118,
-                    maxWidth: 118,
-                    child: Image(
-                      key: const ValueKey('skin-tone-preview'),
-                      image: paperPortrait(
-                        'assets/images/everyday.png',
-                        selected,
-                      ),
-                      fit: BoxFit.contain,
-                      gaplessPlayback: true,
-                      excludeFromSemantics: true,
-                    ),
-                  ),
+              // The whole Bumpy on a raised paper tile, like the need
+              // portraits on Guides: no cropped head, no cut shirt.
+              Container(
+                key: const ValueKey('skin-tone-preview-tile'),
+                width: 80,
+                height: 80,
+                padding: const EdgeInsets.all(AppSpace.xs),
+                decoration: BoxDecoration(
+                  color: palette.paperRaised,
+                  borderRadius: AppRadii.control,
+                  border: Border.all(color: palette.edge),
+                  boxShadow: paperShadows(palette, raised: true),
+                ),
+                child: Image(
+                  key: const ValueKey('skin-tone-preview'),
+                  image: paperPortrait('assets/images/everyday.png', selected),
+                  fit: BoxFit.contain,
+                  gaplessPlayback: true,
+                  excludeFromSemantics: true,
                 ),
               ),
               const SizedBox(width: 12),

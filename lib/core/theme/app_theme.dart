@@ -340,5 +340,18 @@ DatePickerThemeData _datePicker(AppPalette p, Color disabledInk) {
       RoundedRectangleBorder(borderRadius: AppRadii.control),
     ),
     dividerColor: p.rule,
+    // OK is the main action: an accent piece with no underline. Cancel is a
+    // quiet ink link, so it never outshines OK. The stock action bar is only
+    // 52 tall with 8 px at the side, so the piece is drawn 40 tall inside a
+    // 48 px touch target and clears the dialog's rounded corner.
+    confirmButtonStyle: TextButton.styleFrom(
+      backgroundColor: p.accent,
+      foregroundColor: p.accentText,
+      minimumSize: const Size(88, 40),
+      tapTargetSize: MaterialTapTargetSize.padded,
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+      textStyle: AppText.button,
+    ),
+    cancelButtonStyle: TextButton.styleFrom(foregroundColor: p.ink),
   );
 }
