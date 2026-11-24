@@ -8,8 +8,31 @@ import '../../core/theme/palette.dart';
 import '../../core/theme/paper.dart';
 import '../../domain/models/app_state.dart';
 import '../../domain/models/need.dart';
-import '../../domain/models/visit_question.dart';
 import '../screens/visit_screen.dart';
+
+const _months = [
+  'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', //
+  'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+];
+
+/// The one quiet line under a question picked from the app's suggestions:
+/// where it came from and the day it was added, "From week 20 · 12 Nov".
+/// Null for the parent's own words, which need no label.
+String? visitOriginLine(VisitQuestion question) {
+  final from = switch (question.origin) {
+    VisitOrigin.own => null,
+    VisitOrigin.week =>
+      question.week == null ? 'From This Week' : 'From week ${question.week}',
+    VisitOrigin.guide =>
+      question.need == null
+          ? 'From a guide'
+          : 'From the ${needWord(question.need!).toLowerCase()} guide',
+    VisitOrigin.today => 'From Today',
+  };
+  if (from == null) return null;
+  final day = question.added;
+  return day == null ? from : '$from · ${day.day} ${_months[day.month - 1]}';
+}
 
 /// A parent's private agenda. Selecting a topic never records a care action.
 class VisitTopics extends StatelessWidget {
@@ -41,7 +64,7 @@ class VisitTopics extends StatelessWidget {
   Widget build(BuildContext context) {
     final palette = AppPalette.of(context);
     final topics = state.visitTopics;
-    final questions = state.visitQuestions;
+    final questions = state.visitQuestionsOwnFirst;
     final empty = topics.isEmpty && questions.isEmpty;
     // The hint under the title: what the list is for, or what the row does.
     final hint = empty
@@ -302,6 +325,34 @@ class _VisitEditorState extends State<_VisitEditor> {
     });
   }
 
+  /// Lets the parent change the words of a saved question. Changed words
+  /// are the parent's own, so the question moves up with their own words.
+  Future<void> _edit(VisitQuestion question) async {
+    if (_saving) return;
+    final words = await showDialog<String>(
+      context: context,
+      builder: (_) => _EditWordsDialog(question: question),
+    );
+    if (!mounted || words == null) return;
+    final text = words.trim();
+    if (text.isEmpty || text == question.text && question.isOwnWords) return;
+    setState(() => _saving = true);
+    var ok = false;
+    try {
+      ok = await _state.editVisitQuestion(question.text, text);
+    } catch (_) {
+      ok = false;
+    }
+    if (!mounted) return;
+    setState(() {
+      _saving = false;
+      _note = ok
+          ? null
+          : 'This question couldn’t be changed on this device. '
+                'You can try again.';
+    });
+  }
+
   Future<void> _save() async {
     if (_saving || _state.isPaused || _state.isFirstRun) return;
     setState(() {
@@ -353,7 +404,7 @@ class _VisitEditorState extends State<_VisitEditor> {
   @override
   Widget build(BuildContext context) {
     final palette = AppPalette.of(context);
-    final questions = _state.visitQuestions;
+    final questions = _state.visitQuestionsOwnFirst;
     // The title, Pause and close stay in view while the list scrolls.
     return SafeArea(
       top: false,
@@ -420,10 +471,37 @@ class _VisitEditorState extends State<_VisitEditor> {
                 child: Row(
                   children: [
                     Expanded(
-                      child: Text(
-                        question.text,
-                        style: AppText.body.copyWith(color: palette.ink),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          vertical: AppSpace.s,
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              question.text,
+                              style: AppText.body.copyWith(color: palette.ink),
+                            ),
+                            if (visitOriginLine(question) case final line?)
+                              Text(
+                                line,
+                                key: ValueKey('visit-origin-${question.text}'),
+                                style: AppText.small.copyWith(
+                                  color: palette.inkSoft,
+                                ),
+                              ),
+                          ],
+                        ),
                       ),
+                    ),
+                    IconButton(
+                      tooltip: 'Change the words: ${question.text}',
+                      constraints: const BoxConstraints(
+                        minWidth: 48,
+                        minHeight: 48,
+                      ),
+                      onPressed: _saving ? null : () => _edit(question),
+                      icon: Icon(Icons.edit_outlined, color: palette.ink),
                     ),
                     IconButton(
                       tooltip: 'Remove from visit list: ${question.text}',
@@ -539,6 +617,72 @@ class _VisitEditorState extends State<_VisitEditor> {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// A small dialog to change the words of one saved question. Returns the new
+/// words, or null when the parent leaves it as it was.
+class _EditWordsDialog extends StatefulWidget {
+  const _EditWordsDialog({required this.question});
+
+  final VisitQuestion question;
+
+  @override
+  State<_EditWordsDialog> createState() => _EditWordsDialogState();
+}
+
+class _EditWordsDialogState extends State<_EditWordsDialog> {
+  late final _field = TextEditingController(text: widget.question.text);
+
+  @override
+  void dispose() {
+    _field.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = AppPalette.of(context);
+    return AlertDialog(
+      title: const Text('Change the words'),
+      scrollable: true,
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (!widget.question.isOwnWords) ...[
+            Text(
+              'Once you change it, it sits with your own words.',
+              style: AppText.body.copyWith(color: palette.inkSoft),
+            ),
+            const SizedBox(height: AppSpace.m),
+          ],
+          TextField(
+            key: const ValueKey('visit-edit-field'),
+            controller: _field,
+            autofocus: true,
+            minLines: 1,
+            maxLines: 5,
+            enableSuggestions: false,
+            autocorrect: false,
+            decoration: const InputDecoration(
+              labelText: 'In my own words',
+            ),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Cancel'),
+        ),
+        FilledButton(
+          key: const ValueKey('visit-edit-save'),
+          onPressed: () => Navigator.pop(context, _field.text),
+          child: const Text('Save'),
+        ),
+      ],
     );
   }
 }

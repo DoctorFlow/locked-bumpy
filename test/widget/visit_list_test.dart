@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:little_bumpy/presentation/widgets/need_word.dart';
 import 'package:little_bumpy/core/services/prefs_service.dart';
@@ -16,6 +17,7 @@ DateTime _now() => DateTime(2026, 11, 23);
 const _own = 'Is it safe to keep cycling to work?';
 const _second = 'Can my partner come to the scan?';
 const _guide = 'Could we check my iron?';
+const _week = 'When will I feel movement?';
 
 void main() {
   Future<AppState> start(Map<String, Object> extra) async {
@@ -65,12 +67,13 @@ void main() {
     await t.pumpWidget(const SizedBox());
   });
 
-  testWidgets('Today puts the parent’s own words first and the show page '
-      'lists everything in order', (t) async {
+  testWidgets('Today shows the newest own words and the show page puts '
+      'own words first, each picked one with its origin line', (t) async {
     final handle = t.ensureSemantics();
     final state = await start({});
     await state.addVisitQuestion(_guide, need: MaternalNeed.iron);
     await state.addVisitQuestion(_own);
+    await state.addVisitQuestion(_week, origin: VisitOrigin.week);
     await state.addVisitQuestion(_second);
     await state.saveVisitTopics({MaternalNeed.water, MaternalNeed.rest});
     await t.pumpWidget(LittleBumpyApp(state: state));
@@ -78,14 +81,16 @@ void main() {
 
     final card = find.byKey(const ValueKey('visit-card'));
     await t.ensureVisible(card);
+    // The newest of the parent's own questions, with no count of the rest.
     expect(
-      find.descendant(of: card, matching: find.text(_own)),
+      find.descendant(of: card, matching: find.text(_second)),
       findsOneWidget,
     );
     expect(
-      find.descendant(of: card, matching: find.text('And 4 more on your list')),
+      find.descendant(of: card, matching: find.text('More on your list')),
       findsOneWidget,
     );
+    expect(find.textContaining(RegExp(r'\d+ more')), findsNothing);
     await tapOn(t, find.text('Show at my visit'));
 
     expect(find.byType(VisitScreen), findsOneWidget);
@@ -93,13 +98,22 @@ void main() {
     expect(find.byType(BottomNavigationBar).hitTestable(), findsNothing);
     final order = [
       find.text('My questions'),
-      find.text(_guide),
+      find.text(VisitScreen.ownWordsHeading),
       find.text(_own),
       find.text(_second),
+      find.text(VisitScreen.pickedHeading),
+      find.text(_guide),
+      find.text('From the iron guide · 23 Nov'),
+      find.text(_week),
+      find.text('From week 16 · 23 Nov'),
       find.text('Topics'),
       find.text(MaternalNeed.water.label),
       find.text(MaternalNeed.rest.label),
+      find.text('Copy my list'),
     ];
+    for (var i = 0; i < order.length; i++) {
+      expect(order[i], findsOneWidget, reason: '$i');
+    }
     for (var i = 1; i < order.length; i++) {
       expect(
         t.getTopLeft(order[i]).dy,
@@ -107,9 +121,15 @@ void main() {
         reason: '$i',
       );
     }
-    expect(find.bySemanticsLabel('1.\n$_guide'), findsOneWidget);
-    expect(find.bySemanticsLabel('2.\n$_own'), findsOneWidget);
-    expect(find.bySemanticsLabel('3.\n$_second'), findsOneWidget);
+    // Own words carry no label; a picked one reads with its origin.
+    expect(find.bySemanticsLabel(_own), findsOneWidget);
+    expect(
+      find.bySemanticsLabel('$_guide\nFrom the iron guide · 23 Nov'),
+      findsOneWidget,
+    );
+    // Nothing numbers or ticks the questions.
+    expect(find.text('1.'), findsNothing);
+    expect(find.byType(Checkbox), findsNothing);
 
     // Edit opens the list over the page; a removal shows at once.
     await tapOn(t, find.text('Edit'));
@@ -122,12 +142,148 @@ void main() {
     );
     await tapOn(t, find.byTooltip('Close visit list'));
     expect(find.text(_second), findsNothing);
-    expect(find.bySemanticsLabel('2.\n$_own'), findsOneWidget);
     await tapOn(t, find.byTooltip('Close'));
     expect(find.byType(VisitScreen), findsNothing);
-    expect(find.text('And 3 more on your list'), findsOneWidget);
+    expect(
+      find.descendant(of: card, matching: find.text(_own)),
+      findsOneWidget,
+    );
     handle.dispose();
     await t.pumpWidget(const SizedBox());
+  });
+
+  testWidgets('the editor lists own words first and changing a picked '
+      'question moves it to the parent’s own words', (t) async {
+    final state = await start({});
+    await state.addVisitQuestion(_guide, need: MaternalNeed.iron);
+    await state.addVisitQuestion(_own);
+    await t.pumpWidget(LittleBumpyApp(state: state));
+    await t.pumpAndSettle();
+    await tapOn(t, find.text('Show at my visit'));
+    await tapOn(t, find.text('Edit'));
+
+    final ownRow = find.byKey(const ValueKey('visit-question-$_own'));
+    final guideRow = find.byKey(const ValueKey('visit-question-$_guide'));
+    expect(t.getTopLeft(ownRow).dy, lessThan(t.getTopLeft(guideRow).dy));
+    expect(find.byKey(const ValueKey('visit-origin-$_own')), findsNothing);
+    expect(
+      find.descendant(
+        of: guideRow,
+        matching: find.text('From the iron guide · 23 Nov'),
+      ),
+      findsOneWidget,
+    );
+
+    // Change the words of the picked question.
+    await tapOn(
+      t,
+      find.descendant(
+        of: guideRow,
+        matching: find.byTooltip(RegExp('^Change the words: ')),
+      ),
+    );
+    expect(find.text('Change the words'), findsOneWidget);
+    expect(
+      find.text('Once you change it, it sits with your own words.'),
+      findsOneWidget,
+    );
+    const mine = 'Could we check my iron at this visit?';
+    await t.enterText(find.byKey(const ValueKey('visit-edit-field')), mine);
+    await tapOn(t, find.byKey(const ValueKey('visit-edit-save')));
+
+    expect(state.hasVisitQuestion(_guide), isFalse);
+    expect(state.visitQuestionsOwnFirst.map((q) => q.text), [_own, mine]);
+    expect(state.visitQuestions.every((q) => q.isOwnWords), isTrue);
+    expect(find.byKey(const ValueKey('visit-origin-$mine')), findsNothing);
+
+    // Cancel leaves the words as they were.
+    await tapOn(
+      t,
+      find.descendant(
+        of: find.byKey(const ValueKey('visit-question-$mine')),
+        matching: find.byTooltip(RegExp('^Change the words: ')),
+      ),
+    );
+    expect(
+      find.text('Once you change it, it sits with your own words.'),
+      findsNothing,
+    );
+    await t.enterText(find.byKey(const ValueKey('visit-edit-field')), 'x');
+    await tapOn(t, find.text('Cancel'));
+    expect(state.hasVisitQuestion(mine), isTrue);
+
+    // It stays in the parent's own words after a cold restart.
+    final cold = await AppState.load(now: _now);
+    final changed = cold.visitQuestions.singleWhere((q) => q.text == mine);
+    expect(changed.origin, VisitOrigin.own);
+    expect(changed.added, DateTime(2026, 11, 23));
+    await tapOn(t, find.byTooltip('Close visit list'));
+    expect(find.text(VisitScreen.pickedHeading), findsNothing);
+    expect(find.text(mine), findsOneWidget);
+    await t.pumpWidget(const SizedBox());
+  });
+
+  testWidgets('Copy my list puts the whole list on the clipboard as plain '
+      'text, own words first, and says so', (t) async {
+    String? copied;
+    t.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+      SystemChannels.platform,
+      (call) async {
+        if (call.method == 'Clipboard.setData') {
+          copied = (call.arguments as Map)['text'] as String;
+        }
+        return null;
+      },
+    );
+    addTearDown(
+      () => t.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        SystemChannels.platform,
+        null,
+      ),
+    );
+    final state = await start({});
+    await state.addVisitQuestion(_guide, need: MaternalNeed.iron);
+    await state.addVisitQuestion(_own);
+    await state.saveVisitTopics({MaternalNeed.water});
+    await t.pumpWidget(LittleBumpyApp(state: state));
+    await t.pumpAndSettle();
+    await tapOn(t, find.text('Show at my visit'));
+    expect(
+      find.ancestor(
+        of: find.text('Copy my list'),
+        matching: find.byWidgetPredicate((w) => w is OutlinedButton),
+      ),
+      findsOneWidget,
+    );
+    await tapOn(t, find.text('Copy my list'));
+    expect(
+      copied,
+      'My questions\n'
+      'Week 16\n'
+      '\n'
+      'In my own words\n'
+      '- $_own\n'
+      '\n'
+      'Picked from Bumpy’s suggestions\n'
+      '- $_guide\n'
+      '\n'
+      'Topics\n'
+      '- Water\n',
+    );
+    expect(copied, VisitScreen.plainText(state));
+    expect(find.text('Your list is copied.'), findsOneWidget);
+    await t.pumpWidget(const SizedBox());
+  });
+
+  testWidgets('an empty show page offers no copy', (t) async {
+    final state = await start({});
+    await t.pumpWidget(MaterialApp(home: VisitScreen(state: state)));
+    await t.pumpAndSettle();
+    expect(find.text('Copy my list'), findsNothing);
+    expect(
+      find.text('Nothing here yet. Tap Edit to add a question.'),
+      findsOneWidget,
+    );
   });
 
   testWidgets('the list adds several questions, trims, keeps one of each '

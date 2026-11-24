@@ -6,6 +6,8 @@ import 'need_rotation.dart';
 import 'skin_tone.dart';
 import 'visit_question.dart';
 
+export 'visit_question.dart' show VisitOrigin, VisitQuestion;
+
 enum CheckInSaveStatus { saved, saving, failed }
 
 /// Central app state. Loaded from [PrefsService] at startup.
@@ -113,10 +115,24 @@ class AppState extends ChangeNotifier {
   /// Questions for the visit in full words, in the order they were added.
   List<VisitQuestion> get visitQuestions => List.unmodifiable(_visitQuestions);
 
-  /// The parent's own typed question: the first one not tied to a guide.
+  /// The parent's own words first, then the questions picked from the app's
+  /// suggestions; each group in the order added. The order every list shows.
+  List<VisitQuestion> get visitQuestionsOwnFirst =>
+      List.unmodifiable(VisitQuestion.ownFirst(_visitQuestions));
+
+  /// The parent's own typed question: the first one in their own words.
   String get visitQuestion {
     for (final question in _visitQuestions) {
-      if (question.need == null) return question.text;
+      if (question.isOwnWords) return question.text;
+    }
+    return '';
+  }
+
+  /// The question the parent most recently put in their own words; empty
+  /// when there is none.
+  String get newestOwnQuestion {
+    for (final question in _visitQuestions.reversed) {
+      if (question.isOwnWords) return question.text;
     }
     return '';
   }
@@ -127,12 +143,61 @@ class AppState extends ChangeNotifier {
   }
 
   /// Returns false when the save failed. Adding the same words twice keeps one.
-  Future<bool> addVisitQuestion(String text, {MaternalNeed? need}) async {
+  ///
+  /// [origin] says where the words came from; left out, a question with a
+  /// [need] came from a guide and one without was typed by the parent. A
+  /// question picked from a week remembers [week], or the current week.
+  Future<bool> addVisitQuestion(
+    String text, {
+    MaternalNeed? need,
+    VisitOrigin? origin,
+    int? week,
+  }) async {
     if (isPaused || isFirstRun) return false;
     final clean = text.trim();
     if (clean.isEmpty) return false;
     if (hasVisitQuestion(clean)) return true;
-    final next = [..._visitQuestions, VisitQuestion(clean, need: need)];
+    final from = origin ?? (need == null ? VisitOrigin.own : VisitOrigin.guide);
+    final now = _now();
+    final question = VisitQuestion(
+      clean,
+      need: need,
+      origin: from,
+      week: from == VisitOrigin.week ? week ?? currentWeek : null,
+      added: DateTime(now.year, now.month, now.day),
+    );
+    final next = [..._visitQuestions, question];
+    if (!await _prefs.saveVisitQuestions(next)) return false;
+    if (isFirstRun) return false;
+    _visitQuestions = next;
+    notifyListeners();
+    return true;
+  }
+
+  /// Changes the words of a saved question. The question then counts as the
+  /// parent's own words, wherever it came from, and moves to the end of the
+  /// list as the newest, dated today. If the new words match another
+  /// question on the list, the two become one. Returns false when the save
+  /// failed.
+  Future<bool> editVisitQuestion(String from, String to) async {
+    if (isPaused || isFirstRun) return false;
+    final old = from.trim();
+    final words = to.trim();
+    if (words.isEmpty) return false;
+    final index = _visitQuestions.indexWhere((q) => q.text == old);
+    if (index < 0) return false;
+    final current = _visitQuestions[index];
+    if (words == old && current.isOwnWords) return true;
+    final now = _now();
+    final next = <VisitQuestion>[
+      for (final (i, question) in _visitQuestions.indexed)
+        if (i != index && question.text != words) question,
+      VisitQuestion(
+        words,
+        origin: VisitOrigin.own,
+        added: DateTime(now.year, now.month, now.day),
+      ),
+    ];
     if (!await _prefs.saveVisitQuestions(next)) return false;
     if (isFirstRun) return false;
     _visitQuestions = next;

@@ -133,15 +133,13 @@ class PrefsService {
   /// stored list with the topic names; see [VisitQuestion.encode].
   List<VisitQuestion> get visitQuestions {
     final saved = _prefs.getStringList(AppConstants.prefsVisitTopicsKey) ?? [];
-    return [
-      for (final value in saved) ?VisitQuestion.tryParse(value),
-    ];
+    return [for (final value in saved) ?VisitQuestion.tryParse(value)];
   }
 
-  /// The parent's own typed question: the first one not tied to a guide.
+  /// The parent's own typed question: the first one in their own words.
   String get visitQuestion {
     for (final question in visitQuestions) {
-      if (question.need == null) return question.text;
+      if (question.isOwnWords) return question.text;
     }
     return '';
   }
@@ -154,11 +152,11 @@ class PrefsService {
       final questions = visitQuestions;
       if (question != null) {
         final text = question.trim();
-        final own = questions.indexWhere((q) => q.need == null);
+        final own = questions.indexWhere((q) => q.isOwnWords);
         if (own >= 0 && text.isEmpty) {
           questions.removeAt(own);
         } else if (own >= 0) {
-          questions[own] = VisitQuestion(text);
+          questions[own] = questions[own].inOwnWords(text);
         } else if (text.isNotEmpty) {
           questions.insert(0, VisitQuestion(text));
         }

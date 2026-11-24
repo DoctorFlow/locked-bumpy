@@ -173,6 +173,7 @@ void main() {
       final saved = (await AppState.load()).visitQuestions;
       expect(saved.single.text, q);
       expect(saved.single.need, MaternalNeed.iron);
+      expect(saved.single.origin, VisitOrigin.guide);
 
       await t.tap(find.text('Remove'));
       await t.pumpAndSettle();

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../../core/theme/app_text.dart';
 import '../../core/theme/palette.dart';
@@ -37,7 +38,15 @@ class VisitScreen extends StatelessWidget {
     return ListenableBuilder(
       listenable: state,
       builder: (context, _) {
-        final questions = state.visitQuestions;
+        final questions = state.visitQuestionsOwnFirst;
+        final own = [
+          for (final q in questions)
+            if (q.isOwnWords) q,
+        ];
+        final picked = [
+          for (final q in questions)
+            if (!q.isOwnWords) q,
+        ];
         final topics = MaternalNeed.values
             .where(state.visitTopics.contains)
             .toList();
@@ -114,38 +123,29 @@ class VisitScreen extends StatelessWidget {
                             'Nothing here yet. Tap Edit to add a question.',
                             style: body.copyWith(color: palette.inkSoft),
                           ),
-                        for (final (index, question) in questions.indexed)
-                          Padding(
-                            key: ValueKey('visit-show-question-$index'),
-                            padding: const EdgeInsets.only(bottom: AppSpace.l),
-                            child: MergeSemantics(
-                              child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    '${index + 1}.',
-                                    style: body.copyWith(
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  const SizedBox(width: AppSpace.m),
-                                  Expanded(
-                                    child: Text(question.text, style: body),
-                                  ),
-                                ],
-                              ),
+                        if (own.isNotEmpty) ...[
+                          _GroupHeading(ownWordsHeading, palette: palette),
+                          for (final question in own)
+                            _ShownQuestion(
+                              question: question,
+                              style: body,
+                              palette: palette,
                             ),
-                          ),
+                        ],
+                        if (picked.isNotEmpty) ...[
+                          if (own.isNotEmpty)
+                            const SizedBox(height: AppSpace.s),
+                          _GroupHeading(pickedHeading, palette: palette),
+                          for (final question in picked)
+                            _ShownQuestion(
+                              question: question,
+                              style: body,
+                              palette: palette,
+                            ),
+                        ],
                         if (topics.isNotEmpty) ...[
                           const SizedBox(height: AppSpace.s),
-                          Semantics(
-                            header: true,
-                            child: Text(
-                              'Topics',
-                              style: body.copyWith(fontWeight: FontWeight.bold),
-                            ),
-                          ),
-                          const SizedBox(height: AppSpace.s),
+                          _GroupHeading('Topics', palette: palette),
                           for (final need in topics)
                             Padding(
                               padding: const EdgeInsets.only(
@@ -153,6 +153,17 @@ class VisitScreen extends StatelessWidget {
                               ),
                               child: Text(needWord(need), style: body),
                             ),
+                        ],
+                        if (questions.isNotEmpty || topics.isNotEmpty) ...[
+                          const SizedBox(height: AppSpace.l),
+                          // The one way out of the app: plain text the parent
+                          // pastes wherever they like. Nothing is sent.
+                          OutlinedButton.icon(
+                            key: const ValueKey('visit-copy'),
+                            onPressed: () => _copy(context),
+                            icon: const Icon(Icons.copy_outlined),
+                            label: const Text('Copy my list'),
+                          ),
                         ],
                       ],
                     ),
@@ -163,6 +174,132 @@ class VisitScreen extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+
+  Future<void> _copy(BuildContext context) async {
+    final messenger = ScaffoldMessenger.maybeOf(context);
+    try {
+      await Clipboard.setData(ClipboardData(text: plainText(state)));
+    } catch (_) {
+      messenger
+        ?..hideCurrentSnackBar()
+        ..showSnackBar(
+          const SnackBar(
+            key: ValueKey('visit-copy-failed'),
+            behavior: SnackBarBehavior.floating,
+            content: Text('Your list couldn’t be copied on this device.'),
+          ),
+        );
+      return;
+    }
+    messenger
+      ?..hideCurrentSnackBar()
+      ..showSnackBar(
+        const SnackBar(
+          key: ValueKey('visit-copied'),
+          behavior: SnackBarBehavior.floating,
+          duration: Duration(seconds: 2),
+          content: Text('Your list is copied.'),
+        ),
+      );
+  }
+
+  /// The heading over the parent's own questions.
+  static const ownWordsHeading = 'In my own words';
+
+  /// The heading over the questions picked from the app's suggestions.
+  static const pickedHeading = 'Picked from Bumpy’s suggestions';
+
+  /// The whole list as plain text for the clipboard: the title and week,
+  /// the parent's own words first, then the picked questions, then topics.
+  static String plainText(AppState state) {
+    final questions = state.visitQuestionsOwnFirst;
+    final own = [
+      for (final q in questions)
+        if (q.isOwnWords) q.text,
+    ];
+    final picked = [
+      for (final q in questions)
+        if (!q.isOwnWords) q.text,
+    ];
+    final topics = [
+      for (final need in MaternalNeed.values)
+        if (state.visitTopics.contains(need)) needWord(need),
+    ];
+    final week = state.currentWeek;
+    final lines = <String>['My questions', if (week != null) 'Week $week'];
+    void group(String heading, List<String> items) {
+      if (items.isEmpty) return;
+      lines
+        ..add('')
+        ..add(heading)
+        ..addAll(items.map((item) => '- $item'));
+    }
+
+    group(ownWordsHeading, own);
+    group(pickedHeading, picked);
+    group('Topics', topics);
+    return '${lines.join('\n')}\n';
+  }
+}
+
+/// A plain heading over one group on the show page.
+class _GroupHeading extends StatelessWidget {
+  const _GroupHeading(this.text, {required this.palette});
+
+  final String text;
+  final AppPalette palette;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppSpace.m),
+      child: Semantics(
+        header: true,
+        child: Text(
+          text,
+          style: AppText.heading.copyWith(color: palette.inkSoft),
+        ),
+      ),
+    );
+  }
+}
+
+/// One question on the show page, with its quiet origin line when it was
+/// picked from the app's suggestions.
+class _ShownQuestion extends StatelessWidget {
+  const _ShownQuestion({
+    required this.question,
+    required this.style,
+    required this.palette,
+  });
+
+  final VisitQuestion question;
+  final TextStyle style;
+  final AppPalette palette;
+
+  @override
+  Widget build(BuildContext context) {
+    final origin = visitOriginLine(question);
+    return Padding(
+      key: ValueKey('visit-show-${question.text}'),
+      padding: const EdgeInsets.only(bottom: AppSpace.l),
+      child: MergeSemantics(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(question.text, style: style),
+            if (origin != null) ...[
+              const SizedBox(height: AppSpace.xs),
+              Text(
+                origin,
+                style: AppText.body.copyWith(color: palette.inkSoft),
+              ),
+            ],
+          ],
+        ),
+      ),
     );
   }
 }

@@ -91,6 +91,7 @@ void main() {
     await tapOn(t, find.byKey(const ValueKey('fact-add-question')));
     expect(state.hasVisitQuestion(_question), isTrue);
     expect(state.visitQuestions.single.text, _question);
+    expect(state.visitQuestions.single.origin, VisitOrigin.today);
     expect(find.text('On your visit list'), findsOneWidget);
     expect(find.byKey(const ValueKey('fact-add-question')), findsNothing);
     expect(state.completedCheckIns, isEmpty);
