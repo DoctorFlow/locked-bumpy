@@ -1,1 +1,621 @@
-[]
+[
+  {
+    "id": "guide_iron",
+    "need": "IRON",
+    "status": "draft",
+    "approved_by": "",
+    "approved_date": "",
+    "last_checked": "2026-11-24",
+    "costume_line": "Vampires think about one red thing all night. Today I think about iron with you.",
+    "point": "Being pregnant is a very common cause of low iron, which can make you more tired. Many foods carry iron, and a blood test can check yours.",
+    "facts": [
+      {
+        "id": "iron-f1",
+        "kind": "why",
+        "text": "When your body is low on iron, you may feel more tired than usual.",
+        "source": "nhs-pregnancy-vitamins",
+        "claims": ["IRON-02"]
+      },
+      {
+        "id": "iron-f2",
+        "kind": "food",
+        "text": "Beans, chickpeas and tofu are all foods that carry iron.",
+        "source": "leeds-iron",
+        "claims": ["IRON-08", "IRON-09"]
+      },
+      {
+        "id": "iron-f3",
+        "kind": "pairing",
+        "text": "Vitamin C foods with a meal help your body take in more iron.",
+        "source": "leeds-iron",
+        "claims": ["IRON-06"]
+      },
+      {
+        "id": "iron-f4",
+        "kind": "care_team",
+        "text": "Your doctor or midwife can check your iron with a blood test.",
+        "source": "nhs-pregnancy-vitamins",
+        "claims": ["IRON-05"]
+      },
+      {
+        "id": "iron-f5",
+        "kind": "good_to_know",
+        "text": "Dark leafy greens and dried fruit such as apricots, prunes and figs carry iron.",
+        "source": "nhs-vegan-diet",
+        "claims": ["IRON-10", "IRON-11"]
+      },
+      {
+        "id": "iron-f6",
+        "kind": "good_to_know",
+        "text": "Tea and coffee, even decaf, can lower the iron you take in from a meal.",
+        "source": "leeds-iron",
+        "claims": ["IRON-07"]
+      }
+    ],
+    "try_this": [
+      "Add beans or chickpeas to a meal",
+      "Add vitamin C: tomato, peppers or orange",
+      "Snack on dried apricots, prunes or figs",
+      "Keep tea and coffee for between meals",
+      "Keep iron tablets out of children's reach"
+    ],
+    "if_hard": "On a hard day, baked beans or a cereal with added iron are quick, low-cost ways to get some. If food is a struggle for a while, tell your doctor or midwife.",
+    "questions": [
+      "What did my blood tests show about my iron, and when is the next check?",
+      "I'm tired most days. Could it be low iron, or is it the pregnancy?",
+      "Would an iron tablet help me, or are food and my vitamin enough?"
+    ],
+    "call_today": "Call your doctor or midwife today if your poo is black, tar-like or red, or has blood in or on it, even if you are not sure.",
+    "call_now": "",
+    "closing": "Your doctor or midwife decides the amount.",
+    "sources": [
+      {
+        "key": "nhs-pregnancy-vitamins",
+        "org": "NHS",
+        "title": "Vitamins, supplements and nutrition in pregnancy",
+        "url": "https://www.nhs.uk/pregnancy/keeping-well/pregnancy-vitamins-and-supplements/"
+      },
+      {
+        "key": "leeds-iron",
+        "org": "Leeds Teaching Hospitals NHS Trust",
+        "title": "Iron intake in pregnancy and beyond",
+        "url": "https://www.leedsth.nhs.uk/patients/resources/iron-intake-in-pregnancy-and-beyond/"
+      },
+      {
+        "key": "nhs-vegan-diet",
+        "org": "NHS",
+        "title": "The vegan diet",
+        "url": "https://www.nhs.uk/live-well/eat-well/how-to-eat-a-balanced-diet/the-vegan-diet/"
+      },
+      {
+        "key": "nhs-ferrous-sulfate",
+        "org": "NHS",
+        "title": "Side effects of ferrous sulfate",
+        "url": "https://www.nhs.uk/medicines/ferrous-sulfate/side-effects-of-ferrous-sulfate/"
+      },
+      {
+        "key": "nhs-iron",
+        "org": "NHS",
+        "title": "Iron (vitamins and minerals)",
+        "url": "https://www.nhs.uk/conditions/vitamins-and-minerals/iron/"
+      }
+    ]
+  },
+  {
+    "id": "guide_brain",
+    "need": "BRAIN",
+    "status": "draft",
+    "approved_by": "",
+    "approved_date": "",
+    "last_checked": "2026-11-24",
+    "costume_line": "Zombies only ever talk about brains. I am growing mine, so I dressed up for you.",
+    "point": "This need is about your baby's growing brain. Folic acid and iodine both matter for it, and your doctor or midwife can guide you.",
+    "facts": [
+      {
+        "id": "brain-f1",
+        "kind": "why",
+        "text": "Folic acid helps prevent serious problems with how a baby's brain and spine form.",
+        "source": "cdc-folic-acid",
+        "claims": ["BRAIN-01"]
+      },
+      {
+        "id": "brain-f2",
+        "kind": "food",
+        "text": "Some breakfast cereals have folic acid added, so the box label is worth a look.",
+        "source": "cdc-folic-acid",
+        "claims": ["BRAIN-07"]
+      },
+      {
+        "id": "brain-f3",
+        "kind": "pairing",
+        "text": "If you did not take folic acid before pregnancy, the advice is to start as soon as you know.",
+        "source": "rcog-healthy-eating",
+        "claims": ["BRAIN-05"]
+      },
+      {
+        "id": "brain-f4",
+        "kind": "care_team",
+        "text": "Some people get a different folic acid plan, so ask your doctor or midwife about yours.",
+        "source": "nhs-pregnancy-vitamins",
+        "claims": ["BRAIN-16"]
+      },
+      {
+        "id": "brain-f5",
+        "kind": "good_to_know",
+        "text": "Iodine matters for how a baby's brain grows during pregnancy.",
+        "source": "odphp-nutrition",
+        "claims": ["BRAIN-08"]
+      },
+      {
+        "id": "brain-f6",
+        "kind": "good_to_know",
+        "text": "There is no known safe amount of alcohol in pregnancy.",
+        "source": "cdc-alcohol",
+        "claims": ["BRAIN-17"]
+      }
+    ],
+    "try_this": [
+      "Look for folic acid on your vitamin label",
+      "Try a cereal with folic acid added",
+      "Add leafy greens or beans to a meal",
+      "Bring your vitamin bottle to your next visit"
+    ],
+    "if_hard": "If your vitamin is hard to keep down or afford, tell your doctor or midwife. A late start on folic acid, or a drink before you knew, is worth saying at a visit too.",
+    "questions": [
+      "Do I need a different folic acid plan because of my health or medicines?",
+      "Does my vitamin have iodine, and is that enough with the food I eat?",
+      "I had a drink before I knew I was pregnant. Is there anything to check?"
+    ],
+    "call_today": "Call your doctor or midwife today if your baby is moving less than usual, or you have any bleeding from your vagina, even if you are not sure.",
+    "call_now": "",
+    "closing": "Your doctor or midwife decides what is right for you.",
+    "sources": [
+      {
+        "key": "cdc-folic-acid",
+        "org": "CDC",
+        "title": "About Folic Acid",
+        "url": "https://www.cdc.gov/folic-acid/about/index.html"
+      },
+      {
+        "key": "rcog-healthy-eating",
+        "org": "Royal College of Obstetricians and Gynaecologists (RCOG)",
+        "title": "Healthy eating and vitamin supplements in pregnancy",
+        "url": "https://www.rcog.org.uk/for-the-public/browse-our-patient-information/healthy-eating-and-vitamin-supplements-in-pregnancy/"
+      },
+      {
+        "key": "nhs-pregnancy-vitamins",
+        "org": "NHS",
+        "title": "Vitamins, supplements and nutrition in pregnancy",
+        "url": "https://www.nhs.uk/pregnancy/keeping-well/pregnancy-vitamins-and-supplements/"
+      },
+      {
+        "key": "odphp-nutrition",
+        "org": "US Office of Disease Prevention and Health Promotion (ODPHP)",
+        "title": "Nutrition during pregnancy: support healthy mom and baby",
+        "url": "https://odphp.health.gov/news/202202/nutrition-during-pregnancy-support-healthy-mom-and-baby"
+      },
+      {
+        "key": "cdc-alcohol",
+        "org": "CDC",
+        "title": "About alcohol use during pregnancy",
+        "url": "https://www.cdc.gov/alcohol-pregnancy/about/index.html"
+      },
+      {
+        "key": "nhs-baby-movements",
+        "org": "NHS",
+        "title": "Your baby's movements",
+        "url": "https://www.nhs.uk/pregnancy/keeping-well/your-babys-movements/"
+      },
+      {
+        "key": "nhs-symptoms",
+        "org": "NHS",
+        "title": "Pregnancy symptoms you need to get help for",
+        "url": "https://www.nhs.uk/pregnancy/common-symptoms/pregnancy-symptoms-you-need-to-get-help-for/"
+      }
+    ]
+  },
+  {
+    "id": "guide_bones",
+    "need": "BONES",
+    "status": "draft",
+    "approved_by": "",
+    "approved_date": "",
+    "last_checked": "2026-11-24",
+    "costume_line": "A skeleton is all bones. I am busy making mine, so I wore them for you.",
+    "point": "Calcium helps build bones and keep teeth healthy, and vitamin D helps your body manage it. Food and sunlight both play a part.",
+    "facts": [
+      {
+        "id": "bones-f1",
+        "kind": "why",
+        "text": "Calcium helps build bones and keeps teeth healthy.",
+        "source": "nhs-calcium",
+        "claims": ["BONES-01"]
+      },
+      {
+        "id": "bones-f2",
+        "kind": "food",
+        "text": "Dairy foods give calcium, and so do unsweetened dairy-free choices with calcium added.",
+        "source": "rcog-healthy-eating",
+        "claims": ["BONES-06"]
+      },
+      {
+        "id": "bones-f3",
+        "kind": "pairing",
+        "text": "Vitamin D helps your body manage calcium, so the two work as a pair.",
+        "source": "nhs-vitamin-d",
+        "claims": ["BONES-02"]
+      },
+      {
+        "id": "bones-f4",
+        "kind": "care_team",
+        "text": "Only a few foods have vitamin D, so ask your doctor or midwife what suits you.",
+        "source": "nhs-vitamin-d",
+        "claims": ["BONES-12"]
+      },
+      {
+        "id": "bones-f5",
+        "kind": "good_to_know",
+        "text": "Your skin makes vitamin D from sunlight, but cover up if you are out in the sun for long.",
+        "source": "nhs-vitamin-d",
+        "claims": ["BONES-11", "BONES-15"]
+      },
+      {
+        "id": "bones-f6",
+        "kind": "good_to_know",
+        "text": "Curly kale and okra give calcium, but your body cannot use all the calcium in spinach.",
+        "source": "nhs-calcium",
+        "claims": ["BONES-07", "BONES-09"]
+      }
+    ],
+    "try_this": [
+      "Choose pasteurized milk, yogurt and cheese",
+      "Try a plant drink with calcium added",
+      "Add curly kale or okra to a meal",
+      "Check your vitamin label for vitamin D"
+    ],
+    "if_hard": "If dairy does not suit you or costs too much, other foods carry calcium too. Your doctor or midwife can help you find a mix that works for you.",
+    "questions": [
+      "Do you want me to take vitamin D, and all year or only in winter?",
+      "Does my vitamin have vitamin D and calcium, and is that enough for me?",
+      "I don't eat much dairy. How can I get enough calcium?"
+    ],
+    "call_today": "Call your doctor or midwife today if you have a severe headache that will not go away, blurred vision or flashing lights, pain below your ribs, or sudden swelling of your face, hands or feet, even if you are not sure.",
+    "call_now": "",
+    "closing": "Your doctor or midwife decides the amount.",
+    "sources": [
+      {
+        "key": "nhs-calcium",
+        "org": "NHS",
+        "title": "Calcium",
+        "url": "https://www.nhs.uk/conditions/vitamins-and-minerals/calcium/"
+      },
+      {
+        "key": "rcog-healthy-eating",
+        "org": "Royal College of Obstetricians and Gynaecologists (RCOG)",
+        "title": "Healthy eating and vitamin supplements in pregnancy",
+        "url": "https://www.rcog.org.uk/for-the-public/browse-our-patient-information/healthy-eating-and-vitamin-supplements-in-pregnancy/"
+      },
+      {
+        "key": "nhs-vitamin-d",
+        "org": "NHS",
+        "title": "Vitamin D",
+        "url": "https://www.nhs.uk/conditions/vitamins-and-minerals/vitamin-d/"
+      },
+      {
+        "key": "nhs-vegan-diet",
+        "org": "NHS",
+        "title": "The vegan diet",
+        "url": "https://www.nhs.uk/live-well/eat-well/how-to-eat-a-balanced-diet/the-vegan-diet/"
+      },
+      {
+        "key": "cdc-listeria",
+        "org": "CDC",
+        "title": "Listeria prevention",
+        "url": "https://www.cdc.gov/listeria/prevention/index.html"
+      },
+      {
+        "key": "nhs-pre-eclampsia",
+        "org": "NHS",
+        "title": "Pre-eclampsia",
+        "url": "https://www.nhs.uk/conditions/pre-eclampsia/"
+      }
+    ]
+  },
+  {
+    "id": "guide_water",
+    "need": "WATER",
+    "status": "draft",
+    "approved_by": "",
+    "approved_date": "",
+    "last_checked": "2026-11-24",
+    "costume_line": "A wrapped mummy is the driest thing I know. So my wraps mean water, for you.",
+    "point": "Water is an everyday need in pregnancy, and it is easy to run short. Water, milk and lower-sugar drinks all count toward your day.",
+    "facts": [
+      {
+        "id": "water-f1",
+        "kind": "why",
+        "text": "Being pregnant can make your body run short of water more easily.",
+        "source": "cdc-heat",
+        "claims": ["WATER-13"]
+      },
+      {
+        "id": "water-f2",
+        "kind": "food",
+        "text": "Water, milk and lower-sugar drinks all count toward the fluids you drink in a day.",
+        "source": "nhs-water-drinks",
+        "claims": ["WATER-07"]
+      },
+      {
+        "id": "water-f3",
+        "kind": "pairing",
+        "text": "High-fiber foods and fluids, water most of all, work as a pair to help avoid constipation.",
+        "source": "niddk-health-tips",
+        "claims": ["WATER-10"]
+      },
+      {
+        "id": "water-f4",
+        "kind": "care_team",
+        "text": "Severe vomiting can dry your body out, and your doctor or midwife can treat that.",
+        "source": "medlineplus-nausea",
+        "claims": ["WATER-24"]
+      },
+      {
+        "id": "water-f5",
+        "kind": "good_to_know",
+        "text": "Pale yellow pee is a simple sign that you are drinking enough.",
+        "source": "nhs-water-drinks",
+        "claims": ["WATER-04"]
+      },
+      {
+        "id": "water-f6",
+        "kind": "good_to_know",
+        "text": "When nausea hits, sipping drinks little and often may help.",
+        "source": "nhs-vomiting",
+        "claims": ["WATER-08"]
+      }
+    ],
+    "try_this": [
+      "Sip drinks little and often",
+      "Check for pale yellow pee",
+      "Choose water, milk or a lower-sugar drink",
+      "Add high-fiber foods to your meals"
+    ],
+    "if_hard": "If nausea makes drinking hard, sipping little and often may help. If you cannot keep drinks down, that is a reason to call your doctor or midwife.",
+    "questions": [
+      "How much do you want me to drink each day, given my health?",
+      "How much caffeine is fine for me, counting tea, coffee and cola?",
+      "I throw up most days. How will I know when it needs treatment?"
+    ],
+    "call_today": "Call your doctor or midwife today if you are vomiting and cannot keep food or drinks down, your pee is very dark or you have not peed for many hours, you feel very weak, dizzy or faint when you stand up, or you have stomach pain, a high temperature or blood in your vomit, even if you are not sure.",
+    "call_now": "",
+    "closing": "Your doctor or midwife decides the amount.",
+    "sources": [
+      {
+        "key": "cdc-heat",
+        "org": "CDC",
+        "title": "Heat and pregnancy",
+        "url": "https://www.cdc.gov/heat-health/risk-factors/heat-and-pregnancy.html"
+      },
+      {
+        "key": "nhs-water-drinks",
+        "org": "NHS",
+        "title": "Water, drinks and nutrition",
+        "url": "https://www.nhs.uk/live-well/eat-well/food-guidelines-and-food-labels/water-drinks-nutrition/"
+      },
+      {
+        "key": "niddk-health-tips",
+        "org": "US National Institutes of Health (NIDDK)",
+        "title": "Health tips for pregnant women",
+        "url": "https://www.niddk.nih.gov/health-information/weight-management/health-tips-pregnant-women"
+      },
+      {
+        "key": "medlineplus-nausea",
+        "org": "MedlinePlus (US National Library of Medicine)",
+        "title": "Nausea and vomiting during pregnancy",
+        "url": "https://medlineplus.gov/ency/article/001499.htm"
+      },
+      {
+        "key": "nhs-vomiting",
+        "org": "NHS",
+        "title": "Vomiting and morning sickness",
+        "url": "https://www.nhs.uk/pregnancy/related-conditions/common-symptoms/vomiting-and-morning-sickness/"
+      }
+    ]
+  },
+  {
+    "id": "guide_rest",
+    "need": "REST",
+    "status": "draft",
+    "approved_by": "",
+    "approved_date": "",
+    "last_checked": "2026-11-24",
+    "costume_line": "A ghost costume is really a bedsheet. Bedsheets mean rest, so I wore one for you.",
+    "point": "Feeling very tired is common in pregnancy, and the NHS says it will not harm you or your baby. Rest when you can, and call your doctor or midwife if it feels like too much.",
+    "facts": [
+      {
+        "id": "rest-f1",
+        "kind": "why",
+        "text": "Hormone changes early in pregnancy can make you very tired, and that is common.",
+        "source": "nhs-tiredness",
+        "claims": ["REST-01", "REST-02"]
+      },
+      {
+        "id": "rest-f2",
+        "kind": "food",
+        "text": "For pregnancy tiredness, the main answer is rest, as much as you can get.",
+        "source": "nhs-tiredness",
+        "claims": ["REST-05"]
+      },
+      {
+        "id": "rest-f3",
+        "kind": "pairing",
+        "text": "If late naps make it hard to sleep at night, an earlier rest may suit you better.",
+        "source": "nhs-tiredness",
+        "claims": ["REST-06"]
+      },
+      {
+        "id": "rest-f4",
+        "kind": "care_team",
+        "text": "If you often feel low and no longer enjoy things, tell your doctor or midwife.",
+        "source": "nhs-depression",
+        "claims": ["REST-20"]
+      },
+      {
+        "id": "rest-f5",
+        "kind": "good_to_know",
+        "text": "Later in pregnancy, tiredness can come back as your body carries more.",
+        "source": "nhs-tiredness",
+        "claims": ["REST-03"]
+      },
+      {
+        "id": "rest-f6",
+        "kind": "good_to_know",
+        "text": "Even light, gentle movement in place of sitting still has health benefits.",
+        "source": "who-activity",
+        "claims": ["REST-14"]
+      }
+    ],
+    "try_this": [
+      "Take a rest whenever you can",
+      "Try an earlier nap if nights are hard",
+      "A gentle walk when you feel able",
+      "Tell someone if your mood stays low"
+    ],
+    "if_hard": "If work or family leave no room to rest, small pauses are still worth taking. If tiredness or low mood keeps building, tell your doctor or midwife.",
+    "questions": [
+      "I'm tired most of the day. Is that what you would expect right now?",
+      "Which sleeping positions are safe and comfortable for me now?",
+      "I have been feeling low or worried. Who can I talk to?"
+    ],
+    "call_today": "Call your doctor or midwife today if your tiredness feels overwhelming, you feel dizzy or faint, you have trouble breathing, chest pain or a fast-beating heart, or you have thoughts about harming yourself or your baby, even if you are not sure.",
+    "call_now": "",
+    "closing": "Your doctor or midwife decides what is right for you.",
+    "sources": [
+      {
+        "key": "nhs-tiredness",
+        "org": "NHS",
+        "title": "Tiredness in pregnancy",
+        "url": "https://www.nhs.uk/pregnancy/related-conditions/common-symptoms/tiredness/"
+      },
+      {
+        "key": "nhs-depression",
+        "org": "NHS",
+        "title": "Depression in pregnancy and after the birth",
+        "url": "https://www.nhs.uk/pregnancy/mental-health-in-pregnancy-and-after-the-birth/depression/"
+      },
+      {
+        "key": "who-activity",
+        "org": "World Health Organization",
+        "title": "World Health Organization 2020 guidelines on physical activity and sedentary behaviour",
+        "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC7719906/"
+      },
+      {
+        "key": "cdc-hear-her",
+        "org": "CDC",
+        "title": "Urgent maternal warning signs (Hear Her)",
+        "url": "https://www.cdc.gov/hearher/maternal-warning-signs/index.html"
+      }
+    ]
+  },
+  {
+    "id": "guide_vitamin",
+    "need": "VITAMIN",
+    "status": "draft",
+    "approved_by": "",
+    "approved_date": "",
+    "last_checked": "2026-11-24",
+    "costume_line": "Witches know every jar on their shelf. My hat is for your jar: the vitamin.",
+    "point": "Pregnancy vitamins are not all the same. The label lists what yours has, and your doctor or midwife can say if it fits you.",
+    "facts": [
+      {
+        "id": "vitamin-f1",
+        "kind": "why",
+        "text": "Folic acid helps lower the chance of serious problems with a baby's brain and spine.",
+        "source": "cdc-folic-acid",
+        "claims": ["VITAMIN-01"]
+      },
+      {
+        "id": "vitamin-f2",
+        "kind": "food",
+        "text": "Leafy greens, beans and oranges are folate-rich foods to add to meals alongside your vitamin.",
+        "source": "cdc-folic-acid",
+        "claims": ["VITAMIN-08"]
+      },
+      {
+        "id": "vitamin-f3",
+        "kind": "pairing",
+        "text": "Gummy pregnancy vitamins often have no iron or calcium in them.",
+        "source": "ods-pregnancy",
+        "claims": ["VITAMIN-12"]
+      },
+      {
+        "id": "vitamin-f4",
+        "kind": "care_team",
+        "text": "Some vitamins have vitamin A as retinol, so ask your doctor or midwife about yours.",
+        "source": "nhs-pregnancy-vitamins",
+        "claims": ["VITAMIN-18"]
+      },
+      {
+        "id": "vitamin-f5",
+        "kind": "good_to_know",
+        "text": "Your vitamin label will say if it has folic acid.",
+        "source": "cdc-folic-acid",
+        "claims": ["VITAMIN-05"]
+      },
+      {
+        "id": "vitamin-f6",
+        "kind": "good_to_know",
+        "text": "When you are pregnant, your body needs more iodine than at other times.",
+        "source": "ods-iodine",
+        "claims": ["VITAMIN-13"]
+      }
+    ],
+    "try_this": [
+      "Look for folic acid on the label",
+      "Show the bottle to your doctor or midwife",
+      "Add leafy greens, beans or oranges to meals",
+      "Try small, plain meals on queasy days"
+    ],
+    "if_hard": "If your vitamin upsets your stomach, costs too much or is hard to swallow, tell your doctor or midwife. On queasy days, small, plain meals may be easier to manage.",
+    "questions": [
+      "Is this vitamin right for me, and is anything left out, like iodine?",
+      "Does my vitamin have vitamin A as retinol, and is that okay for me?",
+      "My vitamin makes me feel sick. Is there another kind I could try?"
+    ],
+    "call_today": "Call your doctor or midwife today if you are vomiting and cannot keep food or drinks down, or your pee is very dark, even if you are not sure.",
+    "call_now": "",
+    "closing": "Your doctor or midwife decides what is right for you.",
+    "sources": [
+      {
+        "key": "cdc-folic-acid",
+        "org": "CDC",
+        "title": "About Folic Acid",
+        "url": "https://www.cdc.gov/folic-acid/about/index.html"
+      },
+      {
+        "key": "ods-pregnancy",
+        "org": "NIH Office of Dietary Supplements",
+        "title": "Dietary Supplements in Pregnancy: fact sheet for health professionals",
+        "url": "https://ods.od.nih.gov/factsheets/Pregnancy-HealthProfessional/"
+      },
+      {
+        "key": "nhs-pregnancy-vitamins",
+        "org": "NHS",
+        "title": "Vitamins, supplements and nutrition in pregnancy",
+        "url": "https://www.nhs.uk/pregnancy/keeping-well/pregnancy-vitamins-and-supplements/"
+      },
+      {
+        "key": "ods-iodine",
+        "org": "NIH Office of Dietary Supplements",
+        "title": "Iodine: consumer fact sheet",
+        "url": "https://ods.od.nih.gov/factsheets/Iodine-Consumer/"
+      },
+      {
+        "key": "nhs-vomiting",
+        "org": "NHS",
+        "title": "Vomiting and morning sickness",
+        "url": "https://www.nhs.uk/pregnancy/related-conditions/common-symptoms/vomiting-and-morning-sickness/"
+      }
+    ]
+  }
+]
