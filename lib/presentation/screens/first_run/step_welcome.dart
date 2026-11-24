@@ -15,13 +15,17 @@ class _StepWelcome extends StatelessWidget {
   final VoidCallback onSwitchLamp;
   final VoidCallback onStart;
 
+  /// Below this much room above Start (a 320 x 568 phone), the room and the
+  /// gaps take their smaller sizes so the whole story fits.
+  static const double _compactBelow = 440;
+
   @override
   Widget build(BuildContext context) {
     // Start is pinned under the story, outside the scroll, so it is always
     // on the first screen. Above it the room, title, story and privacy line
     // sit centred in the space they have, so a tall phone has no empty
     // bottom third and a short one scrolls the story, not the button.
-    final story = Column(
+    Widget story(bool compact) => Column(
       mainAxisAlignment: MainAxisAlignment.center,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -29,11 +33,11 @@ class _StepWelcome extends StatelessWidget {
           borderRadius: AppRadii.card,
           child: NurseryScene(
             palette: palette,
-            // Big on a tall phone, still leaving Start in view on a short one.
-            height: (MediaQuery.sizeOf(context).height * 0.3).clamp(
-              150.0,
-              230.0,
-            ),
+            // Big on a tall phone; at the clamp's floor when the space above
+            // Start is short, so the privacy line is not cut by the scroll.
+            height: compact
+                ? 150.0
+                : (MediaQuery.sizeOf(context).height * 0.3).clamp(150.0, 230.0),
             avatar: BumpyAvatar(
               need: MaternalNeed.iron,
               palette: palette,
@@ -80,7 +84,7 @@ class _StepWelcome extends StatelessWidget {
             ),
           ),
         ),
-        const SizedBox(height: AppSpace.xl),
+        SizedBox(height: compact ? AppSpace.l : AppSpace.xl),
         // Bumpy introduces itself: the title in the story face, then
         // Bumpy's own words (`bumpyStory`), never the app's face.
         Semantics(
@@ -98,7 +102,7 @@ class _StepWelcome extends StatelessWidget {
           textAlign: TextAlign.center,
           style: AppText.bumpyStory.copyWith(color: palette.moonlight),
         ),
-        const SizedBox(height: AppSpace.l),
+        SizedBox(height: compact ? AppSpace.m : AppSpace.l),
         MergeSemantics(
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -136,7 +140,7 @@ class _StepWelcome extends StatelessWidget {
                   minHeight: (constraints.maxHeight - storyPadding.vertical)
                       .clamp(0.0, double.infinity),
                 ),
-                child: story,
+                child: story(constraints.maxHeight < _compactBelow),
               ),
             ),
           ),
@@ -144,9 +148,9 @@ class _StepWelcome extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.fromLTRB(
             AppSpace.page,
-            AppSpace.m,
+            AppSpace.s,
             AppSpace.page,
-            AppSpace.xl,
+            AppSpace.l,
           ),
           child: _PrimaryButton(
             label: 'Start',
