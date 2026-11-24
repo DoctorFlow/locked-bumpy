@@ -318,6 +318,20 @@ SCENARIOS = [
     first_run_until("first-run-step3-everyday", 3, look="everyday"),
     first_run_until("first-run-step4", 4),
     first_run_until("first-run-step5", 5),
+    # calm-content: the urgent list in the parent's week (GUIDE-CONTRACT
+    # Amendment 4). Week 9: signs not yet due sit in a last quiet group;
+    # week 30: the movement sign opens the list. Drafts, so --review.
+    *[S(f"urgent-wk{n}", {"week": n}, [
+        tap("Guides", "tab"), wait(500),
+        tap("When to get help right away", find=True), wait(700),
+        shot(f"urgent-wk{n}"), scroll(), shot(f"urgent-wk{n}-2"),
+        scroll(), shot(f"urgent-wk{n}-3"), scroll(), shot(f"urgent-wk{n}-4"),
+    ], shot=None, note="calm-content: urgent list order by week") for n in (9, 30)],
+    # Today at week 20, scrolled to the fact card. The camera's day is an
+    # IRON day, so the folic acid skip itself is proven by the tests.
+    S("today-wk20", {"week": 20}, [
+        wait(500), shot("today-wk20"), scroll(), shot("today-wk20-2"),
+    ], shot=None, note="calm-content: Today at week 20"),
 ]
 
 # Three key moments for sheet__journey.png: first existing shot name of each.
@@ -815,6 +829,8 @@ def main():
     parser.add_argument("--review", action="store_true",
                         help="profile build with --dart-define=BUMPY_REVIEW=true (draft text shows)")
     parser.add_argument("--fast", action="store_true", help="only 375x812@3, both looks")
+    parser.add_argument("--size", type=int, choices=[w for w, _, _ in SIZES],
+                        help="only this width (overrides --fast's 375)")
     parser.add_argument("--week", type=int, help="put every scenario without its own week in week N")
     parser.add_argument("--skip-build", action="store_true", help="reuse <app>/build/web")
     parser.add_argument("--only", nargs="+", action="extend",
@@ -840,6 +856,8 @@ def main():
     out = args.out.resolve()
     out.mkdir(parents=True, exist_ok=True)
     sizes = [SHEET_SIZE] if args.fast else SIZES
+    if args.size:
+        sizes = [sz for sz in SIZES if sz[0] == args.size]
     print(f"Little Bumpy camera: {app} -> {out}", flush=True)
 
     if args.skip_build:
