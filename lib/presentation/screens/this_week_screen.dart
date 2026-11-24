@@ -310,16 +310,19 @@ class _WeekCardView extends StatelessWidget {
         size.width >= 540 &&
         size.height <= 600 &&
         MediaQuery.textScalerOf(context).scale(14) <= 21;
+    final short = beside && size.height < 380;
     final avatar = portrait;
     final room = avatar == null
         ? null
         : NurseryScene(
             palette: palette,
             avatar: avatar,
-            height: beside ? 150 : 192,
+            height: beside ? (short ? 112 : 150) : 192,
           );
     final text = Padding(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 18),
+      padding: short
+          ? const EdgeInsets.symmetric(horizontal: 12, vertical: 6)
+          : const EdgeInsets.fromLTRB(20, 16, 20, 18),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -347,7 +350,7 @@ class _WeekCardView extends StatelessWidget {
                       child: Text(
                         'Week $week',
                         style: TextStyle(
-                          fontSize: 28,
+                          fontSize: short ? 22 : 28,
                           fontWeight: FontWeight.bold,
                           color: palette.accent,
                         ),
@@ -367,10 +370,14 @@ class _WeekCardView extends StatelessWidget {
             ],
           ),
           if (card != null) ...[
-            const SizedBox(height: 10),
+            SizedBox(height: short ? 5 : 10),
             Text(
               card!.babyLine,
-              style: TextStyle(fontSize: 18, height: 1.45, color: palette.ink),
+              style: TextStyle(
+                fontSize: short ? 16 : 18,
+                height: short ? 1.3 : 1.45,
+                color: palette.ink,
+              ),
             ),
           ],
           if (!isCurrentWeek) ...[
@@ -398,8 +405,8 @@ class _WeekCardView extends StatelessWidget {
           child: room != null && beside
               ? Row(
                   children: [
-                    Expanded(flex: 4, child: room),
-                    Expanded(flex: 6, child: text),
+                    Expanded(flex: short ? 1 : 2, child: room),
+                    Expanded(flex: short ? 2 : 3, child: text),
                   ],
                 )
               : Column(
