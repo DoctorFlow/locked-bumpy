@@ -28,7 +28,8 @@ part 'onboarding_buttons.dart';
 /// First-run onboarding: five short steps shown as a horizontal page flow.
 ///
 /// 1 Welcome: who Bumpy is, what the app holds, and that it stays private.
-/// 2 Date (due date or last period) with a live week preview. Required.
+/// 2 Date (due date, weeks, or last period) with a live week preview.
+///   Required.
 /// 3 Optional baby nickname.
 /// 4 Look (Halloween or Everyday) and skin tone.
 /// 5 Six costumes, six everyday needs, shown the way the chosen look shows
@@ -54,18 +55,38 @@ class _FirstRunScreenState extends State<FirstRunScreen> {
   int _step = 0;
 
   // ── Date state ───────────────────────────────────────────────────────────
-  bool _useDueDate = true;
+  _DateWay _way = _DateWay.dueDate;
   DateTime? _dueDateChoice;
   DateTime? _periodStartChoice;
-  DateTime? get _pickedDate =>
-      _useDueDate ? _dueDateChoice : _periodStartChoice;
+  int? _weekChoice;
+  bool get _useDueDate => _way == _DateWay.dueDate;
+  DateTime? get _pickedDate => switch (_way) {
+    _DateWay.dueDate => _dueDateChoice,
+    _DateWay.lastPeriod => _periodStartChoice,
+    _DateWay.weeks => null,
+  };
 
-  /// Live gestational week computed from picked date; null until date chosen.
+  /// The due date the chosen way leads to: the one value every way saves.
+  /// A week becomes the due date that puts today on the first day of it.
+  DateTime? get _dueDateToSave => switch (_way) {
+    _DateWay.dueDate => _dueDateChoice,
+    _DateWay.lastPeriod =>
+      _periodStartChoice == null
+          ? null
+          : PregnancyCalculator.dueDateFromLmp(_periodStartChoice!),
+    _DateWay.weeks =>
+      _weekChoice == null
+          ? null
+          : PregnancyCalculator.dueDateForWeek(
+              week: _weekChoice!,
+              currentDate: widget.state.today,
+            ),
+  };
+
+  /// Live gestational week from the chosen way; null until a choice.
   int? get _previewWeek {
-    if (_pickedDate == null) return null;
-    final dueDate = _useDueDate
-        ? _pickedDate!
-        : PregnancyCalculator.dueDateFromLmp(_pickedDate!);
+    final dueDate = _dueDateToSave;
+    if (dueDate == null) return null;
     return PregnancyCalculator.weekFromDueDate(
       dueDate: dueDate,
       currentDate: widget.state.today,
@@ -116,6 +137,16 @@ class _FirstRunScreenState extends State<FirstRunScreen> {
 
   Future<void> _pickDate() async {
     widget.state.refreshDay();
+    if (_way == _DateWay.weeks) {
+      final week = await _pickWeek(
+        _themed.currentContext ?? context,
+        palette: _pickHalloween ? AppPalette.halloween : AppPalette.everyday,
+        selected: _weekChoice,
+        onPause: widget.state.pause,
+      );
+      if (week != null && mounted) setState(() => _weekChoice = week);
+      return;
+    }
     final picked = await pickPregnancyDate(
       _themed.currentContext ?? context,
       today: widget.state.today,
@@ -134,13 +165,20 @@ class _FirstRunScreenState extends State<FirstRunScreen> {
     }
   }
 
-  Future<void> _confirm() async {
-    if (_pickedDate == null || _saving) return;
-    setState(() => _saving = true);
+  /// Choosing "I know how many weeks" with no week yet opens the week grid
+  /// at once: the parent has just said they know it.
+  void _chooseWay(_DateWay way) {
+    final changed = way != _way;
+    setState(() => _way = way);
+    if (changed && way == _DateWay.weeks && _weekChoice == null) {
+      _pickDate();
+    }
+  }
 
-    final dueDate = _useDueDate
-        ? _pickedDate!
-        : PregnancyCalculator.dueDateFromLmp(_pickedDate!);
+  Future<void> _confirm() async {
+    final dueDate = _dueDateToSave;
+    if (dueDate == null || _saving) return;
+    setState(() => _saving = true);
 
     final saved = await widget.state.finishSetup(
       date: dueDate,
@@ -224,14 +262,14 @@ class _FirstRunScreenState extends State<FirstRunScreen> {
                               ),
                               _StepDate(
                                 palette: palette,
-                                useDueDate: _useDueDate,
+                                way: _way,
                                 pickedDate: _pickedDate,
+                                pickedWeek: _weekChoice,
                                 previewWeek: _previewWeek,
-                                onToggleMode: (v) =>
-                                    setState(() => _useDueDate = v),
+                                onWay: _chooseWay,
                                 onPickDate: _pickDate,
                                 onBack: _back,
-                                onNext: _pickedDate != null
+                                onNext: _dueDateToSave != null
                                     ? () => _goTo(2)
                                     : null,
                               ),

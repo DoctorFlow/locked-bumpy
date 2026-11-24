@@ -123,7 +123,11 @@ void main() {
       final state = await start(halloween: true);
       await t.pumpWidget(wrap(state, reduceMotion: true));
       await t.pumpAndSettle();
-      for (final label in ['Iron · today’s need', 'Water', 'Prenatal vitamin']) {
+      for (final label in [
+        'Iron · today’s need',
+        'Water',
+        'Prenatal vitamin',
+      ]) {
         await tick(t, label);
         await t.pump();
         await t.pump(const Duration(milliseconds: 100));
@@ -161,16 +165,18 @@ void main() {
       final left = t.getRect(find.byKey(const ValueKey('saved-disc-iron')));
       final right = t.getRect(find.byKey(const ValueKey('saved-disc-vitamin')));
       final box = t.getRect(card);
-      expect(
-        (left.left - box.left) - (box.right - right.right),
-        closeTo(0, 1),
-      );
+      expect((left.left - box.left) - (box.right - right.right), closeTo(0, 1));
       final thanks = find.byKey(const ValueKey('today-check-ins-thanks'));
       expect(t.widget<Text>(thanks).data, 'Thank you!\nThat made me smile.');
-      expect(find.descendant(of: card, matching: find.byType(DraftTag)), findsOne);
+      expect(
+        find.descendant(of: card, matching: find.byType(DraftTag)),
+        findsOne,
+      );
       // Nothing on the card counts, scores or compares.
       final words = t
-          .widgetList<Text>(find.descendant(of: card, matching: find.byType(Text)))
+          .widgetList<Text>(
+            find.descendant(of: card, matching: find.byType(Text)),
+          )
           .map((w) => w.data ?? '')
           .join(' ');
       expect(words, isNot(matches(RegExp(r'\d'))));
@@ -191,7 +197,10 @@ void main() {
       );
       await t.pumpWidget(wrap(state));
       await t.pumpAndSettle();
-      expect(find.byKey(const ValueKey('today-check-ins-thanks')), findsNothing);
+      expect(
+        find.byKey(const ValueKey('today-check-ins-thanks')),
+        findsNothing,
+      );
       expect(find.byKey(const ValueKey('saved-disc-iron')), findsOne);
       await t.pumpWidget(const SizedBox());
     });
@@ -212,7 +221,11 @@ void main() {
       final shadow = t.widget<DecoratedBox>(tag).decoration as BoxDecoration;
       expect(shadow.boxShadow, isNotEmpty);
       final ButtonStyle? style = width < 340
-          ? t.widget<IconButton>(find.byKey(const ValueKey('wardrobe-compact'))).style
+          ? t
+                .widget<IconButton>(
+                  find.byKey(const ValueKey('wardrobe-compact')),
+                )
+                .style
           : t
                 .widget<ButtonStyleButton>(
                   find.descendant(

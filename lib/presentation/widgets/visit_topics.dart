@@ -666,9 +666,7 @@ class _EditWordsDialogState extends State<_EditWordsDialog> {
             maxLines: 5,
             enableSuggestions: false,
             autocorrect: false,
-            decoration: const InputDecoration(
-              labelText: 'In my own words',
-            ),
+            decoration: const InputDecoration(labelText: 'In my own words'),
           ),
         ],
       ),

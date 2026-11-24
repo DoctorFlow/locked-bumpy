@@ -46,19 +46,23 @@ void main() {
 
       await _press(tester, LogicalKeyboardKey.tab); // Pause
       await _press(tester, LogicalKeyboardKey.tab);
-      _expectFocused(tester, 'Due date');
+      _expectFocused(tester, 'I know my due date');
       await _press(tester, LogicalKeyboardKey.tab);
-      _expectFocused(tester, 'Last period');
+      _expectFocused(tester, 'I know how many weeks');
+      await _press(tester, LogicalKeyboardKey.tab);
+      _expectFocused(tester, 'I know when my last period started');
       await _press(tester, LogicalKeyboardKey.space);
       expect(find.text('Choose period start date'), findsOneWidget);
 
       await tester.sendKeyDownEvent(LogicalKeyboardKey.shiftLeft);
       await _press(tester, LogicalKeyboardKey.tab);
+      await _press(tester, LogicalKeyboardKey.tab);
       await tester.sendKeyUpEvent(LogicalKeyboardKey.shiftLeft);
-      _expectFocused(tester, 'Due date');
+      _expectFocused(tester, 'I know my due date');
       await _press(tester, LogicalKeyboardKey.enter);
       expect(find.text('Choose due date'), findsOneWidget);
 
+      await _press(tester, LogicalKeyboardKey.tab);
       await _press(tester, LogicalKeyboardKey.tab);
       await _press(tester, LogicalKeyboardKey.tab);
       _expectFocused(tester, 'Pick your due date\nChoose due date');

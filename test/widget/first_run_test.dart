@@ -121,8 +121,9 @@ void main() {
 
       expect(find.text('2 of 5'), findsOneWidget);
       expect(find.text('When am I due?'), findsOneWidget);
-      expect(find.text('Due date'), findsOneWidget);
-      expect(find.text('Last period'), findsOneWidget);
+      expect(find.text('I know my due date'), findsOneWidget);
+      expect(find.text('I know how many weeks'), findsOneWidget);
+      expect(find.text('I know when my last period started'), findsOneWidget);
       expect(find.text('Choose due date'), findsOneWidget);
       final next = find.widgetWithText(ElevatedButton, 'Next');
       expect(tester.widget<ElevatedButton>(next).onPressed, isNull);
@@ -243,17 +244,17 @@ void main() {
       // No preview chip before a date is picked.
       expect(find.textContaining('You are at week'), findsNothing);
 
-      await tester.tap(find.text('Last period'));
+      await tester.tap(find.text('I know when my last period started'));
       await tester.pumpAndSettle();
       await tester.ensureVisible(find.text('Choose period start date'));
       await tester.tap(find.text('Choose period start date'));
       await tester.pumpAndSettle();
       await chooseDateInPicker(tester, periodBack140(DateTime(2026, 11, 23)));
       expect(find.text('You are at week 20 right now.'), findsOneWidget);
-      await tester.tap(find.text('Due date'));
+      await tester.tap(find.text('I know my due date'));
       await tester.pumpAndSettle();
       expect(find.text('Choose due date'), findsOneWidget);
-      await tester.tap(find.text('Last period'));
+      await tester.tap(find.text('I know when my last period started'));
       await tester.pumpAndSettle();
       expect(find.text('You are at week 20 right now.'), findsOneWidget);
     });
