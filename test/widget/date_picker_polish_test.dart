@@ -85,6 +85,12 @@ void main() {
       expect(_textColor(tester, 'OK'), palette.accentText);
       expect(_decoration(tester, 'OK'), isNot(TextDecoration.underline));
       expect(_textColor(tester, 'Cancel'), palette.ink);
+      // Cancel is a quiet button, not a link: no underline either.
+      expect(_decoration(tester, 'Cancel'), isNot(TextDecoration.underline));
+      expect(
+        tester.getSize(find.byKey(const ValueKey('picker-cancel'))).height,
+        greaterThanOrEqualTo(48),
+      );
       final ok = tester.getSize(_ok);
       expect(ok.width, greaterThanOrEqualTo(64));
       expect(ok.height, greaterThanOrEqualTo(48));

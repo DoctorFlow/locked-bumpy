@@ -342,8 +342,13 @@ class _PregnancyCalendarDialogState extends State<PregnancyCalendarDialog> {
               children: [
                 TextButton(
                   key: const ValueKey('picker-cancel'),
-                  // Quiet ink, so it never outshines OK.
-                  style: TextButton.styleFrom(foregroundColor: palette.ink),
+                  // Quiet ink, so it never outshines OK, and not underlined:
+                  // it is a button beside OK, not a link. The theme's own
+                  // button type, minus the link underline.
+                  style: TextButton.styleFrom(
+                    foregroundColor: palette.ink,
+                    textStyle: AppText.button,
+                  ),
                   onPressed: () => Navigator.pop(context),
                   child: Text(loc.cancelButtonLabel),
                 ),
