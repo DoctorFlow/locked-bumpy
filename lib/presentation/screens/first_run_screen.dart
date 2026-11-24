@@ -140,90 +140,80 @@ class _FirstRunScreenState extends State<FirstRunScreen> {
   Widget build(BuildContext context) {
     final palette = _pickHalloween ? AppPalette.halloween : AppPalette.everyday;
 
-    return Theme(
-      data: Theme.of(context).copyWith(extensions: [palette]),
-      child: Scaffold(
-        backgroundColor: palette.skyBottom,
-        body: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 440),
-            child: Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [palette.skyTop, palette.skyBottom],
-                ),
+    return Scaffold(
+      backgroundColor: palette.skyBottom,
+      body: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 440),
+          child: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [palette.skyTop, palette.skyBottom],
               ),
-              child: SafeArea(
-                child: Column(
-                  children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _step > 0
-                              ? _StepIndicator(
-                                  step: _step - 1,
-                                  palette: palette,
-                                )
-                              : const SizedBox.shrink(),
-                        ),
-                        PauseButton(
-                          onPressed: widget.state.pause,
-                          color: palette.moonlight,
-                        ),
-                      ],
-                    ),
-                    Expanded(
-                      child: AbsorbPointer(
-                        absorbing: _saving,
-                        child: PageView(
-                          controller: _pages,
-                          physics: const NeverScrollableScrollPhysics(),
-                          children: [
-                            _Step1Date(
-                              palette: palette,
-                              skinTone: _skinTone,
-                              useDueDate: _useDueDate,
-                              pickedDate: _pickedDate,
-                              previewWeek: _previewWeek,
-                              onToggleMode: (v) =>
-                                  setState(() => _useDueDate = v),
-                              onPickDate: _pickDate,
-                              onSwitchLamp: () => setState(
-                                () => _pickHalloween = !_pickHalloween,
-                              ),
-                              onEnter: _pickedDate != null && !_saving
-                                  ? _confirm
-                                  : null,
-                              onNext: _pickedDate != null
-                                  ? () => _goTo(1)
-                                  : null,
+            ),
+            child: SafeArea(
+              child: Column(
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _step > 0
+                            ? _StepIndicator(step: _step - 1, palette: palette)
+                            : const SizedBox.shrink(),
+                      ),
+                      PauseButton(
+                        onPressed: widget.state.pause,
+                        color: palette.moonlight,
+                      ),
+                    ],
+                  ),
+                  Expanded(
+                    child: AbsorbPointer(
+                      absorbing: _saving,
+                      child: PageView(
+                        controller: _pages,
+                        physics: const NeverScrollableScrollPhysics(),
+                        children: [
+                          _Step1Date(
+                            palette: palette,
+                            skinTone: _skinTone,
+                            useDueDate: _useDueDate,
+                            pickedDate: _pickedDate,
+                            previewWeek: _previewWeek,
+                            onToggleMode: (v) =>
+                                setState(() => _useDueDate = v),
+                            onPickDate: _pickDate,
+                            onSwitchLamp: () => setState(
+                              () => _pickHalloween = !_pickHalloween,
                             ),
-                            _Step2Nickname(
-                              palette: palette,
-                              controller: _nicknameController,
-                              onBack: () => _goTo(0),
-                              onNext: () => _goTo(2),
-                            ),
-                            _Step3Look(
-                              palette: palette,
-                              skinTone: _skinTone,
-                              onTone: (tone) =>
-                                  setState(() => _skinTone = tone),
-                              isHalloween: _pickHalloween,
-                              saving: _saving,
-                              onToggle: (v) =>
-                                  setState(() => _pickHalloween = v),
-                              onBack: () => _goTo(1),
-                              onConfirm: _confirm,
-                            ),
-                          ],
-                        ),
+                            onEnter: _pickedDate != null && !_saving
+                                ? _confirm
+                                : null,
+                            onNext: _pickedDate != null ? () => _goTo(1) : null,
+                          ),
+                          _Step2Nickname(
+                            palette: palette,
+                            controller: _nicknameController,
+                            onBack: () => _goTo(0),
+                            onNext: () => _goTo(2),
+                          ),
+                          _Step3Look(
+                            palette: palette,
+                            skinTone: _skinTone,
+                            onTone: (tone) => setState(() => _skinTone = tone),
+                            isHalloween: _pickHalloween,
+                            saving: _saving,
+                            onToggle: (v) => setState(() => _pickHalloween = v),
+                            onBack: () => _goTo(1),
+                            onConfirm: _confirm,
+                          ),
+                        ],
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
           ),
