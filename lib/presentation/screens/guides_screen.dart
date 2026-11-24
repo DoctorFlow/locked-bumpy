@@ -399,7 +399,7 @@ class _NeedCard extends StatelessWidget {
                 onTap: onOpen,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [top, if (summary != null) summary],
+                  children: [top, ?summary],
                 ),
               ),
             ),
