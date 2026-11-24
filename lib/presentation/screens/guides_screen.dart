@@ -10,6 +10,7 @@ import '../../domain/models/guide.dart';
 import '../../domain/models/need.dart';
 import '../../domain/models/skin_tone.dart';
 import '../widgets/draft_tag.dart';
+import '../widgets/need_word.dart';
 import '../widgets/paper_portrait.dart';
 import '../widgets/visit_topics.dart';
 import 'guide_screen.dart';

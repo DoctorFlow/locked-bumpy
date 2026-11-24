@@ -11,6 +11,7 @@ import '../../domain/models/need.dart';
 import '../../domain/models/urgent_signs.dart';
 import '../widgets/bumpy_avatar.dart';
 import '../widgets/draft_tag.dart';
+import '../widgets/need_word.dart';
 import '../widgets/visit_topics.dart';
 import 'guides_screen.dart' show CostumeTag;
 import 'urgent_screen.dart';

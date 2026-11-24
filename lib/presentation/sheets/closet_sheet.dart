@@ -8,6 +8,7 @@ import '../../domain/models/app_state.dart';
 import '../../domain/models/need.dart';
 import '../../domain/models/skin_tone.dart';
 import '../widgets/bumpy_avatar.dart';
+import '../widgets/need_word.dart';
 import '../widgets/paper_portrait.dart';
 
 class ClosetSheet extends StatefulWidget {
@@ -226,10 +227,6 @@ class _ClosetSheetState extends State<ClosetSheet> {
 String _costumeName(MaternalNeed need) =>
     need.costume[0] + need.costume.substring(1).toLowerCase();
 
-/// Sentence-case need word ("Prenatal vitamin"), as on Today and Guides.
-String _needWord(MaternalNeed need) =>
-    need == MaternalNeed.vitamin ? 'Prenatal vitamin' : need.label;
-
 class _CostumeCard extends StatelessWidget {
   const _CostumeCard({
     required this.thumbnailSize,
@@ -260,7 +257,7 @@ class _CostumeCard extends StatelessWidget {
           child: PaperChoice(
             key: ValueKey('closet-${need.name}'),
             selected: selected,
-            label: 'Try $name, ${need.label}',
+            label: 'Try $name, ${needWord(need)}',
             onTap: onTap,
             focusColor: palette.ink,
             borderRadius: AppRadii.control,
@@ -309,7 +306,7 @@ class _CostumeCard extends StatelessWidget {
                       const SizedBox(width: AppSpace.xs),
                       Flexible(
                         child: Text(
-                          _needWord(need),
+                          needWord(need),
                           textAlign: TextAlign.center,
                           style: AppText.small.copyWith(color: palette.inkSoft),
                         ),

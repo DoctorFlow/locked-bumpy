@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'app_nav_bar.dart';
+import 'need_word.dart';
 import 'pause_button.dart';
 
 import '../../core/theme/app_text.dart';
@@ -214,10 +215,6 @@ double _tabBarClearance(BuildContext context) {
   root?.visitChildren(visit);
   return found.clamp(0, screen / 2);
 }
-
-/// Sentence-case need word ("Prenatal vitamin"), as on Today and Guides.
-String needWord(MaternalNeed need) =>
-    need == MaternalNeed.vitamin ? 'Prenatal vitamin' : need.label;
 
 class _VisitEditor extends StatefulWidget {
   const _VisitEditor({required this.state, this.include});

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:little_bumpy/presentation/widgets/visit_topics.dart'
-    show needWord;
+import 'package:little_bumpy/presentation/widgets/need_word.dart';
 import 'package:little_bumpy/content/content_loader.dart';
 import 'package:little_bumpy/core/theme/app_text.dart';
 import 'package:little_bumpy/core/theme/palette.dart';

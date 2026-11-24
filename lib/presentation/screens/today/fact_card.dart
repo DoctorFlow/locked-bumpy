@@ -78,7 +78,7 @@ class _FactCard extends StatelessWidget {
                 style: quiet,
                 onPressed: () => GuideScreen.open(context, state, need),
                 icon: const Icon(Icons.menu_book_outlined, size: 22),
-                label: Text('Open the ${_needWord(need).toLowerCase()} guide'),
+                label: Text('Open the ${needWord(need).toLowerCase()} guide'),
               ),
             ],
           ),

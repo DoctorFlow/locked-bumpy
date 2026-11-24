@@ -12,6 +12,7 @@ import '../../../domain/models/need.dart';
 import '../../sheets/closet_sheet.dart';
 import '../../widgets/bumpy_avatar.dart';
 import '../../widgets/draft_tag.dart';
+import '../../widgets/need_word.dart';
 import '../../widgets/nursery_scene.dart';
 import '../../widgets/visit_topics.dart';
 import '../guide_screen.dart';

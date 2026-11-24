@@ -76,8 +76,8 @@ class _CheckInsPanel extends StatelessWidget {
                   _CheckInTile(
                     key: ValueKey(item),
                     title: item == need
-                        ? '${_needWord(need)} · today’s need'
-                        : _needWord(item),
+                        ? '${needWord(need)} · today’s need'
+                        : needWord(item),
                     subtitle: _checkInHint(item),
                     need: item,
                     isTicked: state.isChecked(item.name),
@@ -245,7 +245,7 @@ class _SavedCheckIns extends StatelessWidget {
             ),
             const SizedBox(height: 4),
             Text(
-              needs.map(_needWord).join(' · '),
+              needs.map(needWord).join(' · '),
               style: AppText.body.copyWith(color: palette.inkSoft),
             ),
             const SizedBox(height: 12),

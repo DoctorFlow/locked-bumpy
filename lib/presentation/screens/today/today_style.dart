@@ -18,12 +18,6 @@ BoxDecoration _paperTag(AppPalette p) => BoxDecoration(
   boxShadow: paperShadows(p, raised: true),
 );
 
-/// Sentence-case name of a need, for the app's own voice.
-String _needWord(MaternalNeed need) => switch (need) {
-  MaternalNeed.vitamin => 'Prenatal vitamin',
-  _ => need.label,
-};
-
 /// Sentence-case costume name ("Vampire").
 String _costumeWord(MaternalNeed need) =>
     need.costume[0] + need.costume.substring(1).toLowerCase();

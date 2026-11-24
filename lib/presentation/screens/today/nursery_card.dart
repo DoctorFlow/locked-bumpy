@@ -143,12 +143,12 @@ class _NeedPairing extends StatelessWidget {
         state.costumeOverride != null &&
         state.costumeOverride != need;
     final title = palette.isHalloween && !dressedOther
-        ? '${_costumeWord(need)} night · ${_needWord(need)}'
-        : 'Today · ${_needWord(need)}';
+        ? '${_costumeWord(need)} night · ${needWord(need)}'
+        : 'Today · ${needWord(need)}';
     final spoken = palette.isHalloween && !dressedOther
         ? 'Today Bumpy is a ${_costumeWord(need).toLowerCase()}, '
-              'for ${_needWord(need).toLowerCase()}'
-        : 'Today is for ${_needWord(need).toLowerCase()}';
+              'for ${needWord(need).toLowerCase()}'
+        : 'Today is for ${needWord(need).toLowerCase()}';
     final other = state.costumeOverride;
     return Semantics(
       container: true,

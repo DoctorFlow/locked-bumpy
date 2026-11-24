@@ -5,6 +5,7 @@ import '../../core/theme/palette.dart';
 import '../../core/theme/paper.dart';
 import '../../domain/models/app_state.dart';
 import '../../domain/models/need.dart';
+import '../widgets/need_word.dart';
 import '../widgets/visit_topics.dart';
 import '../widgets/whole_word_text.dart';
 
