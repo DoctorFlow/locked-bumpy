@@ -582,7 +582,6 @@ class _Marker extends StatelessWidget {
   );
 }
 
-
 class _Bullet extends StatelessWidget {
   const _Bullet({required this.palette, required this.child});
   final AppPalette palette;

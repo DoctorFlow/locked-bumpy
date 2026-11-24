@@ -130,7 +130,10 @@ void main() {
     final add = find.text('Add to my visit list');
     await t.ensureVisible(add);
     await t.pumpAndSettle();
-    final button = find.ancestor(of: add, matching: find.byType(OutlinedButton));
+    final button = find.ancestor(
+      of: add,
+      matching: find.byType(OutlinedButton),
+    );
     expect(button, findsOneWidget);
     expect(
       find.ancestor(of: add, matching: find.byType(FilledButton)),

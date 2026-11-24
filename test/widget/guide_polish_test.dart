@@ -28,7 +28,10 @@ void main() {
     drafts: true,
   )[MaternalNeed.iron]!;
 
-  Future<void> openGuides(WidgetTester t, {Size size = const Size(375, 812)}) async {
+  Future<void> openGuides(
+    WidgetTester t, {
+    Size size = const Size(375, 812),
+  }) async {
     t.view.physicalSize = size;
     t.view.devicePixelRatio = 1;
     addTearDown(t.view.reset);
@@ -60,10 +63,7 @@ void main() {
       final word = find.descendant(of: card, matching: find.text('Iron'));
       // Starts at the card's own padding, left of the need word, and
       // below the picture: a paragraph, not a narrow column.
-      expect(
-        t.getTopLeft(summary).dx,
-        lessThan(t.getTopLeft(word).dx - 48),
-      );
+      expect(t.getTopLeft(summary).dx, lessThan(t.getTopLeft(word).dx - 48));
       expect(
         t.getTopLeft(summary).dy,
         greaterThanOrEqualTo(t.getBottomLeft(portrait).dy),
@@ -87,7 +87,10 @@ void main() {
 
   /// The visit-list control is the one outlined, full-width form.
   void expectOneForm(WidgetTester t, Finder label, {required Finder within}) {
-    final button = find.ancestor(of: label, matching: find.byType(OutlinedButton));
+    final button = find.ancestor(
+      of: label,
+      matching: find.byType(OutlinedButton),
+    );
     expect(button, findsOneWidget);
     expect(
       find.descendant(
@@ -138,10 +141,7 @@ void main() {
     expect(t.widget<Text>(heading).style!.fontSize, 18);
     expect(find.descendant(of: piece, matching: icon), findsOneWidget);
     // The icon sits level with the heading, inside the piece's 16 inset.
-    expect(
-      (t.getCenter(icon).dy - t.getCenter(heading).dy).abs(),
-      lessThan(4),
-    );
+    expect((t.getCenter(icon).dy - t.getCenter(heading).dy).abs(), lessThan(4));
     expect(t.getTopLeft(icon).dx - t.getTopLeft(piece).dx, 16);
     // No colour strip down the edge any more.
     expect(
@@ -190,7 +190,10 @@ void main() {
     );
     await t.scrollUntilVisible(add, 200);
     await t.pumpAndSettle();
-    final button = find.ancestor(of: add, matching: find.byType(OutlinedButton));
+    final button = find.ancestor(
+      of: add,
+      matching: find.byType(OutlinedButton),
+    );
     expect(t.getSize(button).width, t.getSize(row).width - 2 * 12);
     expect(
       find.descendant(of: button, matching: find.byIcon(Icons.playlist_add)),
