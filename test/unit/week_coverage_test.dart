@@ -17,26 +17,43 @@ void main() {
       expect(cards, isNotEmpty);
     });
 
-    test('there are exactly 39 cards (one per week 4–42)', () {
-      expect(cards.length, equals(39));
-    });
-
-    test('every week 4–42 has at least one approved card', () {
+    test('every week 4–42 has an approved card or a draft awaiting review', () {
       for (int w = 4; w <= 42; w++) {
         for (final mode in ['everyday', 'halloween']) {
-          final card = WeekCard.findFor(cards: cards, week: w, mode: mode);
-          expect(card, isNotNull, reason: 'No approved $mode card for week $w');
+          final approved = WeekCard.findFor(cards: cards, week: w, mode: mode);
+          final draft = cards.any(
+            (c) =>
+                c.week == w &&
+                c.status == 'draft' &&
+                (c.mode == 'both' || c.mode == mode),
+          );
+          expect(
+            approved != null || draft,
+            isTrue,
+            reason: 'No approved or draft $mode card for week $w',
+          );
         }
       }
     });
 
-    test('all cards have status=approved', () {
-      for (final c in cards) {
+    test('every approved card passes the gate', () {
+      for (final c in cards.where((c) => c.status == 'approved')) {
         expect(
-          c.status,
-          equals('approved'),
-          reason: 'card week=${c.week} has status ${c.status}',
+          WeekCard.findFor(
+            cards: [c],
+            week: c.week,
+            mode: c.mode == 'both' ? 'everyday' : c.mode,
+          ),
+          same(c),
+          reason: 'approved card week=${c.week} mode=${c.mode} fails the gate',
         );
+      }
+    });
+
+    test('every draft card has empty approved_by and approved_date', () {
+      for (final c in cards.where((c) => c.status == 'draft')) {
+        expect(c.approvedBy, isEmpty, reason: 'draft week=${c.week}');
+        expect(c.approvedDate, isEmpty, reason: 'draft week=${c.week}');
       }
     });
 

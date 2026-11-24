@@ -137,6 +137,34 @@ void main() {
     });
   });
 
+  group('ContentGate.bannedTerm — whole words only', () {
+    test('"hear" does not block heart or heartbeat', () {
+      expect(ContentGate.bannedTerm('My heart is busy today.'), isNull);
+      expect(ContentGate.bannedTerm('Heartbeat practice!'), isNull);
+    });
+
+    test('"move" does not block remove', () {
+      expect(ContentGate.bannedTerm('Remove the label first.'), isNull);
+    });
+
+    test('whole banned words are still blocked, any case', () {
+      expect(ContentGate.bannedTerm('Can you HEAR me?'), 'hear');
+      expect(ContentGate.bannedTerm('Time to move.'), 'move');
+      expect(ContentGate.bannedTerm('Hears a song.'), 'hear');
+      expect(ContentGate.bannedTerm('Two kicks today.'), 'kick');
+    });
+
+    test('multi-word entries still match as phrases', () {
+      expect(ContentGate.bannedTerm('Never let down.'), 'let down');
+      expect(
+        ContentGate.bannedTerm('Zombie Brains for lunch'),
+        'zombie brains',
+      );
+      expect(ContentGate.bannedTerm("If you don't, ask."), "if you don't");
+      expect(ContentGate.bannedTerm('Let the dog down.'), isNull);
+    });
+  });
+
   test(
     'one withdrawn Today line leaves reviewed neighbours available',
     () async {
@@ -202,27 +230,29 @@ void main() {
   // ── Real JSON asset tests ─────────────────────────────────────────────────
 
   group('today_lines.json — real asset', () {
+    // All rows in the pack, drafts included.
+    late List<ContentRecord> rows;
+    // Only the rows a parent can see: approved rows that pass the gate.
     late List<ContentRecord> records;
 
     setUpAll(() async {
       final raw = await rootBundle.loadString(
         'assets/content/today_lines.json',
       );
-      records = ContentRecord.listFromJsonString(raw);
+      rows = ContentRecord.listFromJsonString(raw);
+      records = rows.where(ContentGate.canDisplay).toList();
     });
 
-    test('loads without throwing (all records pass gate)', () {
-      expect(records, isNotEmpty);
-      expect(() => ContentGate.validateAll(records), returnsNormally);
+    test('every approved row passes the gate', () {
+      final approved = rows.where((r) => r.status == 'approved').toList();
+      expect(approved, isNotEmpty);
+      expect(() => ContentGate.validateAll(approved), returnsNormally);
     });
 
-    test('every record has status approved', () {
-      for (final r in records) {
-        expect(
-          r.status,
-          equals('approved'),
-          reason: 'record ${r.id} has status ${r.status}',
-        );
+    test('every draft row has empty approved_by and approved_date', () {
+      for (final r in rows.where((r) => r.status == 'draft')) {
+        expect(r.approvedBy, isEmpty, reason: 'draft ${r.id} has a reviewer');
+        expect(r.approvedDate, isEmpty, reason: 'draft ${r.id} has a date');
       }
     });
 

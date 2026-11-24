@@ -3,6 +3,7 @@ import '../domain/models/content_record.dart';
 import '../domain/models/guide_article.dart';
 import '../domain/models/need.dart';
 import '../domain/models/week_card.dart';
+import 'content_paths.dart';
 
 /// Loads and validates content packs from bundled JSON assets.
 ///
@@ -38,14 +39,12 @@ class ContentLoader {
   static Future<List<WeekCard>> loadWeekCards() async {
     final cached = _weekCards;
     if (cached != null) return cached;
-    final raw = await rootBundle.loadString('assets/content/week_cards.json');
+    final raw = await rootBundle.loadString(ContentPaths.weekCards);
     return _weekCards = List.unmodifiable(WeekCard.listFromJsonString(raw));
   }
 
   static Future<Map<MaternalNeed, GuideArticle>> loadGuides() async {
-    final raw = await rootBundle.loadString(
-      'assets/content/guide_articles.json',
-    );
+    final raw = await rootBundle.loadString(ContentPaths.guideArticles);
     return GuideArticle.reviewed(raw, reviewer: 'Karan');
   }
 

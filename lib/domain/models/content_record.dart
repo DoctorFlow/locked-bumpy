@@ -159,10 +159,27 @@ class ContentGate {
     return parsed != null && parsed.toIso8601String().split('T').first == date;
   }
 
+  /// One pattern per banned entry. Each entry matches as a whole word or
+  /// phrase, case-insensitive, so "hear" blocks "hears" but not "heart", and
+  /// "move" blocks "moved" but not "remove". Simple endings (-s, -es, -d,
+  /// -ed, -ing) are still blocked. Spaces in a phrase match any whitespace.
+  static final List<(String, RegExp)> _bannedPatterns = [
+    for (final term in _banned)
+      (
+        term,
+        RegExp(
+          r'\b' +
+              term.split(' ').map(RegExp.escape).join(r'\s+') +
+              r'(?:s|es|d|ed|ing)?\b',
+          caseSensitive: false,
+        ),
+      ),
+  ];
+
+  /// Returns the first banned entry found in [text], or null when clean.
   static String? bannedTerm(String text) {
-    final lower = text.toLowerCase();
-    for (final word in _banned) {
-      if (lower.contains(word)) return word;
+    for (final (term, pattern) in _bannedPatterns) {
+      if (pattern.hasMatch(text)) return term;
     }
     return null;
   }

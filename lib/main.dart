@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'core/theme/app_theme.dart';
 import 'core/theme/palette.dart';
 import 'domain/models/app_state.dart';
 import 'presentation/screens/first_run_screen.dart';
@@ -92,11 +93,7 @@ class _LittleBumpyAppState extends State<LittleBumpyApp>
           ? Duration.zero
           : const Duration(milliseconds: 300),
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        brightness: state.isHalloween ? Brightness.dark : Brightness.light,
-        scaffoldBackgroundColor: palette.skyBottom,
-        extensions: [palette],
-      ),
+      theme: buildTheme(palette),
       home: Scaffold(
         body: LayoutBuilder(
           builder: (context, bounds) {
