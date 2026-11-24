@@ -144,9 +144,13 @@ class PrefsService {
   /// Empty string means the mother hasn't set a nickname.
   String get nickname => _prefs.getString(AppConstants.prefsNicknameKey) ?? '';
 
-  Future<bool> saveNickname(String value) => _orderedWrite(
-    () => _prefs.setString(AppConstants.prefsNicknameKey, value.trim()),
-  );
+  Future<bool> saveNickname(String value) => _orderedWrite(() async {
+    final saved = await _attempt(
+      () => _prefs.setString(AppConstants.prefsNicknameKey, value.trim()),
+    );
+    if (!saved) await _reloadFromDisk();
+    return saved;
+  });
 
   // ── Daily check-ins ──────────────────────────────────────────────────────
 

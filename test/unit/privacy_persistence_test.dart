@@ -186,6 +186,20 @@ void main() {
     },
   );
 
+  test(
+    'rejected nickname stays editable and the saved name survives',
+    () async {
+      await start(active);
+      flaky.rejectString = 'baby_nickname';
+      expect(await state.saveNickname('Maple'), isFalse);
+      expect(state.nickname, 'Cub');
+      expect(coldBoot().nickname, 'Cub');
+      flaky.rejectString = null;
+      expect(await state.saveNickname('Maple'), isTrue);
+      expect(coldBoot().nickname, 'Maple');
+    },
+  );
+
   for (final erase in [false, true]) {
     test(
       'interrupted setup stops before nickname and date (erase=$erase)',

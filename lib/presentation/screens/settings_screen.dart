@@ -25,46 +25,68 @@ class SettingsScreen extends StatelessWidget {
 
   Future<void> _editNickname(BuildContext context) async {
     var value = state.nickname;
-    final saved = await showDialog<String>(
+    var saving = false;
+    var failed = false;
+    await showDialog<void>(
       context: context,
-      builder: (dialog) => AlertDialog(
-        scrollable: true,
-        title: Row(
-          children: [
-            const Expanded(child: Text('Baby nickname')),
-            PauseButton(
-              onPressed: state.pause,
-              color: Theme.of(dialog).colorScheme.onSurface,
+      builder: (dialog) => StatefulBuilder(
+        builder: (context, update) {
+          Future<void> save() async {
+            if (saving || state.isPaused) return;
+            update(() {
+              saving = true;
+              failed = false;
+            });
+            final saved = await state.saveNickname(value);
+            if (!context.mounted || state.isPaused || state.isFirstRun) return;
+            if (saved) {
+              Navigator.pop(context);
+            } else {
+              update(() {
+                saving = false;
+                failed = true;
+              });
+            }
+          }
+
+          return AlertDialog(
+            scrollable: true,
+            title: Row(
+              children: [
+                const Expanded(child: Text('Baby nickname')),
+                PauseButton(
+                  onPressed: state.pause,
+                  color: Theme.of(context).colorScheme.onSurface,
+                ),
+              ],
             ),
-          ],
-        ),
-        content: TextFormField(
-          initialValue: value,
-          autofocus: true,
-          maxLength: 24,
-          textCapitalization: TextCapitalization.words,
-          decoration: const InputDecoration(labelText: 'Nickname (optional)'),
-          onChanged: (text) => value = text,
-          onFieldSubmitted: (text) => Navigator.pop(dialog, text),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialog),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(dialog, value),
-            child: const Text('Save'),
-          ),
-        ],
+            content: TextFormField(
+              initialValue: value,
+              autofocus: true,
+              readOnly: saving,
+              maxLength: 24,
+              textCapitalization: TextCapitalization.words,
+              decoration: InputDecoration(
+                labelText: 'Nickname (optional)',
+                errorText: failed ? 'Couldn’t save on this device.' : null,
+              ),
+              onChanged: (text) => value = text,
+              onFieldSubmitted: (_) => save(),
+            ),
+            actions: [
+              TextButton(
+                onPressed: saving ? null : () => Navigator.pop(context),
+                child: const Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: saving ? null : save,
+                child: Text(failed ? 'Retry save' : 'Save'),
+              ),
+            ],
+          );
+        },
       ),
     );
-    if (saved != null &&
-        context.mounted &&
-        !state.isPaused &&
-        !state.isFirstRun) {
-      await state.saveNickname(saved);
-    }
   }
 
   @override

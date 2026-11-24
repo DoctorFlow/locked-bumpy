@@ -95,12 +95,13 @@ class AppState extends ChangeNotifier {
   /// Display name: nickname if set, otherwise 'Little Bumpy'.
   String get babyDisplayName => _nickname.isEmpty ? 'Little Bumpy' : _nickname;
 
-  Future<void> saveNickname(String value) async {
-    if (isPaused) return;
-    _nickname = value.trim();
-    final saved = _prefs.saveNickname(_nickname);
+  Future<bool> saveNickname(String value) async {
+    if (isPaused) return false;
+    final name = value.trim();
+    if (!await _prefs.saveNickname(name)) return false;
+    _nickname = name;
     notifyListeners();
-    await saved;
+    return true;
   }
 
   Set<MaternalNeed> _visitTopics;
