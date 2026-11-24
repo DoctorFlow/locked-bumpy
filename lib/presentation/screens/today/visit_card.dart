@@ -8,6 +8,15 @@ part of 'today_screen.dart';
 // visit". When today's need has no guide (so no fact card with its "add a question" action), it
 // also holds the one-tap "Save <need> for my visit" topic control.
 
+/// [text] trimmed, with a full stop only when it does not already end
+/// in one (or in a question or exclamation mark), so a screen reader
+/// never reads "?.".
+String withFullStop(String text) {
+  final t = text.trim();
+  if (t.isEmpty) return t;
+  return RegExp(r'[.?!\u2026]$').hasMatch(t) ? t : '$t.';
+}
+
 /// The parent's newest question in their own words, right under Bumpy's
 /// line, so a parent who reopens the app at the appointment finds it at
 /// once. A slim strip of paper; the whole strip opens "Show at my visit".
@@ -30,7 +39,7 @@ class _OwnWordsStrip extends StatelessWidget {
   Widget build(BuildContext context) {
     return Semantics(
       button: true,
-      label: '$label: $question. Show at my visit',
+      label: '$label: ${withFullStop(question)} Show at my visit',
       excludeSemantics: true,
       onTap: () => VisitScreen.open(context, state),
       child: PaperCard(
