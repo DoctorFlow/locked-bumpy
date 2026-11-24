@@ -137,14 +137,16 @@ class _ChapterPage extends StatelessWidget {
                 const SizedBox(height: AppSpace.s),
                 Text(chapter.knowText, style: body),
                 const SizedBox(height: AppSpace.s),
-                // Quiet text only: the app opens no links.
+                // Quiet text only: the app opens no links. Regular 14, and
+                // only the page's own title, not the site name the web page
+                // adds after " - " (display trimming; the record is kept).
                 Text(
-                  chapter.knowSourceTitle.isEmpty
-                      ? 'Source: ${chapter.knowSourceOrg}'
-                      : 'Source: ${chapter.knowSourceOrg}, '
-                            '${chapter.knowSourceTitle}',
+                  chapterSourceLine(
+                    chapter.knowSourceOrg,
+                    chapter.knowSourceTitle,
+                  ),
                   key: const ValueKey('chapter-know-source'),
-                  style: AppText.label.copyWith(color: palette.inkSoft),
+                  style: AppText.small.copyWith(color: palette.inkSoft),
                 ),
                 const SizedBox(height: AppSpace.xxl),
                 // Get ready: the suggested question is its own piece with
@@ -1124,4 +1126,12 @@ class _CuriousLink extends StatelessWidget {
       ),
     );
   }
+}
+
+/// The chapter's quiet source line: "Source: NHS, 15 weeks pregnant guide".
+/// Web page titles carry the site after " - " ("... - Best Start in Life -
+/// NHS"); only the first part is shown, and the stored record is untouched.
+String chapterSourceLine(String org, String title) {
+  final page = title.split(' - ').first.trim();
+  return page.isEmpty ? 'Source: $org' : 'Source: $org, $page';
 }
