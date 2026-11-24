@@ -58,7 +58,13 @@ class PausedScreen extends StatelessWidget {
                             height: 72,
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
-                              color: palette.moon,
+                              // At night the moon token is pumpkin, which
+                              // reads as an orange ball; cream moonlight is
+                              // the moon. By day the pale yellow moon shows
+                              // on cream paper, where moonlight would vanish.
+                              color: palette.isHalloween
+                                  ? palette.moonlight
+                                  : palette.moon,
                               border: Border.all(color: palette.edge),
                               boxShadow: paperShadows(palette),
                             ),
