@@ -895,7 +895,8 @@ class _ChapterWeekCard extends StatelessWidget {
               ),
               if (isCurrentWeek) _HereTag(fill: band, ink: onBand),
               // Only a review build ever shows a draft card.
-              if (card?.isDraft ?? false) DraftTag(palette: palette),
+              if (card?.isDraft ?? false)
+                DraftTag.of(palette: palette, held: card!.isHeld),
             ],
           ),
           if (card != null) ...[
