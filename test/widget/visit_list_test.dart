@@ -56,12 +56,13 @@ void main() {
     expect(cold.visitQuestions.single.text, _own);
     await t.pumpWidget(LittleBumpyApp(state: cold));
     await t.pumpAndSettle();
+    // The words wait in the strip under Bumpy; the card below does not
+    // repeat them.
+    expect(find.textContaining('“$_own”', findRichText: true), findsOneWidget);
+    expect(find.byKey(const ValueKey('own-words-strip')), findsOneWidget);
     final card = find.byKey(const ValueKey('visit-card'));
     await t.ensureVisible(card);
-    expect(
-      find.descendant(of: card, matching: find.text('“$_own”')),
-      findsOneWidget,
-    );
+    expect(find.byKey(const ValueKey('visit-add-another')), findsOneWidget);
     expect(find.text('Show at my visit'), findsOneWidget);
     expect(find.byKey(const ValueKey('visit-invite')), findsNothing);
     await t.pumpWidget(const SizedBox());
@@ -81,9 +82,17 @@ void main() {
 
     final card = find.byKey(const ValueKey('visit-card'));
     await t.ensureVisible(card);
-    // The newest of the parent's own questions, with no count of the rest.
+    // The newest of the parent's own questions is in the strip under
+    // Bumpy; the card shows the next one, with no count of the rest.
     expect(
-      find.descendant(of: card, matching: find.text('“$_second”')),
+      find.descendant(
+        of: find.byKey(const ValueKey('own-words-strip')),
+        matching: find.textContaining('“$_second”', findRichText: true),
+      ),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(of: card, matching: find.text('“$_own”')),
       findsOneWidget,
     );
     expect(
@@ -144,8 +153,11 @@ void main() {
     expect(find.text(_second), findsNothing);
     await tapOn(t, find.byTooltip('Close'));
     expect(find.byType(VisitScreen), findsNothing);
+    // With the newest gone, the strip holds the other own words and the
+    // card the picked question.
+    expect(find.textContaining('“$_own”', findRichText: true), findsOneWidget);
     expect(
-      find.descendant(of: card, matching: find.text('“$_own”')),
+      find.descendant(of: card, matching: find.text('“$_guide”')),
       findsOneWidget,
     );
     handle.dispose();

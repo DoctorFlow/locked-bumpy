@@ -255,6 +255,15 @@ class _TodayScreenState extends State<TodayScreen>
           saveFailed: _failedTopic == need && !savedForVisit,
           onSaveForVisit: () => _saveForVisit(need),
         );
+        // The parent's own question at once on reopening, under Bumpy.
+        final ownQuestion = state.newestOwnQuestion;
+        final strip = ownQuestion.isEmpty
+            ? null
+            : _OwnWordsStrip(
+                state: state,
+                palette: palette,
+                question: ownQuestion,
+              );
         final checkInsPanel = _CheckInsPanel(
           state: state,
           need: need,
@@ -292,6 +301,10 @@ class _TodayScreenState extends State<TodayScreen>
                       children: [
                         nursery,
                         const SizedBox(height: 16),
+                        if (strip != null) ...[
+                          strip,
+                          const SizedBox(height: 16),
+                        ],
                         if (fact != null) ...[fact, const SizedBox(height: 16)],
                         visit,
                       ],
@@ -324,7 +337,10 @@ class _TodayScreenState extends State<TodayScreen>
               // The daily ritual sits right under Bumpy, so a tick and
               // Bumpy's answer share the first screen.
               nursery,
-              const SizedBox(height: 16),
+              SizedBox(height: strip == null ? 16 : 12),
+              // Slim, so Bumpy, the strip and two check-in rows share the
+              // first screen of a 375 x 812 phone.
+              if (strip != null) ...[strip, const SizedBox(height: 12)],
               checkInsPanel,
               const SizedBox(height: 16),
               if (fact != null) ...[fact, const SizedBox(height: 16)],

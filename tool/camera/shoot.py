@@ -306,6 +306,34 @@ SCENARIOS = [
         tap("Show at my visit", "button", find=True), wait(500),
         tap("Copy my list", "button", find=True), wait(400),
     ], note="Copy my list and its note"),
+    # Own words (roles/own-words.md): the app reopened with the parent's own
+    # question saved. It sits in a slim strip under Bumpy, above the ticks.
+    S("own-words-today", {"visit_topics": VISIT_MIXED}, [wait(300)],
+      note="reopened Today: the newest own words under Bumpy"),
+    S("own-words-today-one", {"visit_topics": [_q2("Can my partner come in with me?", "own",
+                                                    day="2026-11-20")]},
+      [wait(300), shot("own-words-today-one"),
+       reveal("Another question? Add it here.", at=0.55), wait(300),
+       shot("own-words-card-one")],
+      shot=None, note="one own question: the card offers to add another, no repeat"),
+    S("own-words-card", {"visit_topics": VISIT_MIXED}, [
+        reveal("Show at my visit", at=0.62), wait(300),
+    ], note="the visit card shows the rest of the list, not the strip's words"),
+    S("own-words-show", {"visit_topics": VISIT_MIXED}, [
+        tap("My question", "button"), wait(500), shot("own-words-show"),
+        scroll(), shot("own-words-show-2"), scroll(), shot("own-words-show-3"),
+        scroll(), shot("own-words-show-4"),
+    ], shot=None, note="the strip opens Show at my visit; the end clears the bottom"),
+    S("own-words-edit", {"visit_topics": VISIT_MIXED}, [
+        tap("My question", "button"), wait(500), tap("Edit", "button"), wait(500),
+        shot("own-words-edit"), scroll(), shot("own-words-edit-2"),
+        scroll(), shot("own-words-edit-3"),
+    ], shot=None, note="the sheet: the show page's two headings and origin lines"),
+    S("own-words-saved", {"visit_topics": [_q2("Can my partner come in with me?", "own",
+                                                day="2026-11-20")]}, [
+        tap("Another question? Add it here.", find=True), wait(500),
+        tap("Save visit list", "button", find=True), wait(500),
+    ], note="the saved note floats above the tab bar"),
     # First run: brand-new install, from roles/lane-firstrun.md (five steps).
     # No look is saved yet, so it runs once; first-run-everyday picks the
     # Everyday card on the look step.
