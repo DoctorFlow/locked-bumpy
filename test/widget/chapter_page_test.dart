@@ -125,6 +125,26 @@ void main() {
     expect(find.text('Write my own question'), findsOneWidget);
   });
 
+  testWidgets('a question saved while browsing keeps the browsed week', (
+    t,
+  ) async {
+    final state = await openThisWeek(t);
+    final next = find.byIcon(Icons.arrow_forward_ios);
+    await t.ensureVisible(next);
+    await t.pumpAndSettle();
+    await t.tap(next);
+    await t.pumpAndSettle();
+    expect(find.text('Week 17'), findsOneWidget);
+    final add = find.text('Add to my visit list');
+    await t.ensureVisible(add);
+    await t.pumpAndSettle();
+    await t.tap(add);
+    await t.pumpAndSettle();
+    final saved = state.visitQuestions.single;
+    expect(saved.origin, VisitOrigin.week);
+    expect(saved.week, 17);
+  });
+
   testWidgets('the curious question opens that need\'s guide page', (t) async {
     ContentLoader.debugSetGuides({
       MaternalNeed.rest: Guide.reviewAll(

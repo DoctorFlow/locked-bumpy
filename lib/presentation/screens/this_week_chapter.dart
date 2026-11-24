@@ -164,6 +164,7 @@ class _ChapterPage extends StatelessWidget {
                     padding: const EdgeInsets.all(AppSpace.l),
                     child: _AddQuestion(
                       question: chapter.suggestedQuestion,
+                      week: week,
                       state: state,
                       palette: palette,
                       fill: band,
@@ -951,6 +952,7 @@ class _HereTag extends StatelessWidget {
 class _AddQuestion extends StatefulWidget {
   const _AddQuestion({
     required this.question,
+    required this.week,
     required this.state,
     required this.palette,
     required this.fill,
@@ -958,6 +960,7 @@ class _AddQuestion extends StatefulWidget {
   });
 
   final String question;
+  final int week;
   final AppState state;
   final AppPalette palette;
   final Color fill;
@@ -980,6 +983,7 @@ class _AddQuestionState extends State<_AddQuestion> {
     final ok = await widget.state.addVisitQuestion(
       widget.question,
       origin: VisitOrigin.week,
+      week: widget.week,
     );
     if (!mounted) return;
     setState(() {
