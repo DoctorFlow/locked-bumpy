@@ -1,8 +1,13 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import '../../core/theme/app_text.dart';
 import '../../core/theme/palette.dart';
 import '../../core/theme/paper.dart';
 import 'pause_button.dart';
+
+/// Line height of a day number: tight, so a row stays short.
+const double _dayLineHeight = 1.25;
 
 /// Shown under the picker's buttons when OK is pressed with no day chosen.
 const String pickADayFirst = 'Pick a day first';
@@ -570,7 +575,18 @@ class _DayGrid extends StatelessWidget {
     while (cells.length % 7 != 0) {
       cells.add(null);
     }
-    const cellHeight = AppSpace.target;
+    // Large text: each row grows with the day numbers (the dialog scrolls),
+    // and a number too wide for its seventh of the width is drawn smaller
+    // instead of cut. Nothing is ever clipped.
+    final scaler = MediaQuery.textScalerOf(context);
+    final cellHeight = math.max(
+      AppSpace.target,
+      scaler.scale(AppText.body.fontSize!) * _dayLineHeight + 12,
+    );
+    final weekdayHeight = math.max(
+      32.0,
+      scaler.scale(AppText.label.fontSize!) * _dayLineHeight + 8,
+    );
     return Column(
       key: ValueKey('picker-days-${month.year}-${month.month}'),
       mainAxisSize: MainAxisSize.min,
@@ -581,11 +597,17 @@ class _DayGrid extends StatelessWidget {
               for (var i = 0; i < 7; i++)
                 Expanded(
                   child: SizedBox(
-                    height: 32,
+                    height: weekdayHeight,
                     child: Center(
-                      child: Text(
-                        loc.narrowWeekdays[(firstDay + i) % 7],
-                        style: AppText.label.copyWith(color: palette.inkSoft),
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Text(
+                          loc.narrowWeekdays[(firstDay + i) % 7],
+                          style: AppText.label.copyWith(
+                            color: palette.inkSoft,
+                            height: _dayLineHeight,
+                          ),
+                        ),
                       ),
                     ),
                   ),
@@ -659,7 +681,7 @@ class _Day extends StatelessWidget {
       excludeSemantics: true,
       onTap: enabled ? pick : null,
       child: Padding(
-        padding: const EdgeInsets.all(2),
+        padding: const EdgeInsets.symmetric(horizontal: 1, vertical: 2),
         child: InkWell(
           key: ValueKey('picker-day-${day.year}-${day.month}-${day.day}'),
           onTap: enabled ? pick : null,
@@ -673,10 +695,15 @@ class _Day extends StatelessWidget {
                   : null,
             ),
             child: Center(
-              child: Text(
-                '${day.day}',
-                style: (selected ? AppText.bodyStrong : AppText.body).copyWith(
-                  color: ink,
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  '${day.day}',
+                  key: ValueKey('picker-day-number-${day.day}'),
+                  maxLines: 1,
+                  softWrap: false,
+                  style: (selected ? AppText.bodyStrong : AppText.body)
+                      .copyWith(color: ink, height: _dayLineHeight),
                 ),
               ),
             ),
