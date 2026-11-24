@@ -394,7 +394,7 @@ SCENARIOS = [
     S("date-picker", {"setup": False}, [
         tap("Start", "button"), wait(500),
         tap_first(["Choose due date", "Pick your due date"]), wait(700), shot("date-picker-open"),
-        tap("May 2027. Choose another month", "button"), wait(500), shot("date-picker-months"),
+        tap_first(["April 2027. Choose another month", "May 2027. Choose another month"]), wait(500), shot("date-picker-months"),
         tap("March 2027", "button", find=True), wait(500),
         tap_first(["15, Monday, March 15, 2027"], find=True), wait(400), shot("date-picker-day"),
         tap_first(["OK"]), wait(700), shot("date-picker-picked"),
@@ -416,6 +416,38 @@ SCENARIOS = [
         tap("Week 9", "button", find=True), wait(700), shot("date-big-weeks-picked"),
     ], shot=None, sizes=[(320, 568, 2)], text=2,
       note="date-step: the weeks way at 320 px and 200% text"),
+    # Wave 10 (roles/guide-answer.md, roles/first-run-2.md): the guide opened
+    # from a chapter's curious question lands on the answering fact with a
+    # soft mark; the same guide from the Guides list opens at the top, no
+    # mark. The last-period calendar's opening month. The end of This Week
+    # (the last link must clear the week bar).
+    S("guide-answer-wk9", {"week": 9}, [
+        tap("This Week", "tab"), wait(600),
+        tap("Does sipping water help when I feel sick?", find=True), wait(1200),
+        shot("guide-answer-wk9"),
+    ], shot=None, note="guide-answer: week 9 curious question -> Water guide at water-f6"),
+    S("guide-answer-wk20", {"week": 20}, [
+        tap("This Week", "tab"), wait(600),
+        tap("I feel tired a lot these days. What can help me rest?", find=True), wait(1200),
+        shot("guide-answer-wk20"),
+    ], shot=None, note="guide-answer: week 20 curious question -> Rest guide at rest-f2"),
+    S("guide-list-water", {"week": 9}, [
+        tap("Guides", "tab"), tap("Water", "button", find=True), wait(900), shot("guide-list-water"),
+    ], shot=None, note="guide-answer: Water guide from the Guides list (top, no mark)"),
+    S("guide-list-rest", {"week": 20}, [
+        tap("Guides", "tab"), tap("Rest", "button", find=True), wait(900), shot("guide-list-rest"),
+    ], shot=None, note="guide-answer: Rest guide from the Guides list (top, no mark)"),
+    S("date-period", {"setup": False}, [
+        tap("Start", "button"), wait(500),
+        tap("I know when my last period started", "button", find=True), wait(600),
+        tap_first(["Choose period start date", "Pick your last period start"], find=True), wait(700),
+        shot("date-period-open"),
+    ], shot=None, sizes=DATE_SIZES, note="first-run-2: last-period calendar opens mid-range"),
+    *[S(f"this-week-end-wk{n}", {"week": n}, [
+        tap("This Week", "tab"), wait(600),
+        *[st for _ in range(10) for st in (scroll(), wait(150))], wait(400),
+        shot(f"this-week-end-wk{n}"),
+    ], shot=None, note="guide-answer: end of This Week clears the week bar") for n in (9, 20)],
 ]
 
 # Three key moments for sheet__journey.png: first existing shot name of each.
