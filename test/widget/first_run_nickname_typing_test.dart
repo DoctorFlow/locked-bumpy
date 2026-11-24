@@ -46,6 +46,36 @@ void main() {
   for (final halloween in [true, false]) {
     final look = halloween ? 'Halloween' : 'Everyday';
 
+    // On the web with semantics on, a page whose route scope had been
+    // unfocused on each step change lost the browser's focus right after a
+    // tap on the field. A step change drops only the focused control.
+    testWidgets('$look: a step change keeps the page focus scope in focus', (
+      tester,
+    ) async {
+      final handle = tester.ensureSemantics();
+      SharedPreferences.setMockInitialValues({'is_halloween': halloween});
+      final state = await AppState.load(now: () => DateTime(2026, 11, 24));
+      await tester.pumpWidget(LittleBumpyApp(state: state));
+      await tester.pumpAndSettle();
+      await _tap(tester, find.text('Start'));
+      await _tap(tester, find.text('Choose due date'));
+      await chooseDateInPicker(tester, dueIn140(state.today));
+      // As on the web with semantics on: the button takes focus, then the
+      // tap moves to the next step.
+      await tester.ensureVisible(find.text('Next'));
+      await tester.pumpAndSettle();
+      tester.semantics.performAction(
+        find.semantics.byLabel('Next'),
+        SemanticsAction.focus,
+      );
+      await tester.pumpAndSettle();
+      await _tap(tester, find.text('Next'));
+      final scope = FocusScope.of(tester.element(find.byType(EditableText)));
+      expect(scope.hasFocus, isTrue);
+      handle.dispose();
+      await tester.pumpWidget(const SizedBox());
+    });
+
     testWidgets('$look: a tap on the nickname field takes typing and the '
         'name is carried into the app', (tester) async {
       final state = await _toNickname(tester, halloween: halloween);
