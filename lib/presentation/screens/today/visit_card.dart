@@ -101,7 +101,7 @@ class _VisitCard extends StatelessWidget {
           ? own
           : questions.isNotEmpty
           ? questions.first.text
-          : topics.first.label;
+          : needWord(topics.first);
       final more = questions.length + topics.length - 1;
       children.addAll([
         const SizedBox(height: 4),
@@ -130,10 +130,10 @@ class _VisitCard extends StatelessWidget {
             ),
             label: Text(
               savedForVisit
-                  ? '${need.label} saved · View visit list'
+                  ? '${needWord(need)} saved · View visit list'
                   : savingTopic
                   ? 'Saving…'
-                  : 'Save ${need.label} for my visit',
+                  : 'Save ${needWord(need)} for my visit',
             ),
             onPressed: savingTopic
                 ? null
