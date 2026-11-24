@@ -32,7 +32,7 @@ class _GuidesScreenState extends State<GuidesScreen> {
           Semantics(
             header: true,
             child: Text(
-              'Care guides',
+              snapshot.data?.isNotEmpty == true ? 'Care guides' : 'Care topics',
               style: TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.bold,
@@ -118,8 +118,14 @@ class _NeedGuide extends StatelessWidget {
           need.label,
           style: TextStyle(color: palette.ink, fontWeight: FontWeight.w600),
         ),
-        subtitle: isToday
-            ? Text('Today’s need', style: TextStyle(color: palette.inkSoft))
+        subtitle: isToday || savedForVisit
+            ? Text(
+                [
+                  if (isToday) 'Today’s need',
+                  if (savedForVisit) 'On your visit list',
+                ].join(' · '),
+                style: TextStyle(color: palette.inkSoft),
+              )
             : null,
         childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 18),
         expandedCrossAxisAlignment: CrossAxisAlignment.stretch,
@@ -141,14 +147,7 @@ class _NeedGuide extends StatelessWidget {
                 fontWeight: FontWeight.w600,
               ),
             ),
-          if (copy == null) ...[
-            const SizedBox(height: 12),
-            Text(
-              'The written guide is awaiting review.',
-              textAlign: TextAlign.center,
-              style: TextStyle(color: palette.inkSoft, height: 1.35),
-            ),
-          ] else ...[
+          if (copy != null) ...[
             const SizedBox(height: 12),
             Text(copy.body, style: TextStyle(color: palette.ink, height: 1.4)),
             const SizedBox(height: 12),
