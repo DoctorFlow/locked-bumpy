@@ -299,6 +299,7 @@ class _ThisWeekScreenState extends State<ThisWeekScreen> {
                         palette: palette,
                         state: widget.state,
                         isCurrentWeek: week == _currentWeek,
+                        currentWeek: _currentWeek,
                         onReturn: () => _goTo(_currentWeek),
                         onVisit: () => VisitTopics.edit(context, widget.state),
                       ),
