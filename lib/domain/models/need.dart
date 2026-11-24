@@ -36,7 +36,7 @@ enum MaternalNeed {
     needName: 'VITAMIN',
     costume: 'WITCH',
     color: AppPalette.needVitamin,
-    foodHint: 'The vitamin your doctor chose',
+    foodHint: 'The vitamin your doctor or midwife chose',
   );
 
   final String needName;

@@ -3,8 +3,8 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart' show rootBundle;
 
-import '../core/build_flags.dart';
 import '../domain/models/chapter.dart';
+import '../domain/models/content_record.dart';
 
 /// Loads the storybook chapters from `assets/content/chapters.json`.
 ///
@@ -16,13 +16,6 @@ class ChapterLoader {
   static const String assetPath = 'assets/content/chapters.json';
 
   static List<Chapter>? _cache;
-
-  /// Tests set this to see drafts without a review build.
-  @visibleForTesting
-  static bool? debugReviewBuild;
-
-  /// Drafts show only in a review build, with a Draft tag.
-  static bool get showsDrafts => debugReviewBuild ?? kReviewBuild;
 
   /// Every well-formed record, whatever its review status. Never throws.
   static Future<List<Chapter>> load() async {
@@ -67,23 +60,28 @@ class ChapterLoader {
     return List.unmodifiable(chapters);
   }
 
-  /// Whether [chapter] may be shown to a parent in this build.
-  static bool isVisible(Chapter chapter, {bool? reviewBuild}) =>
-      chapter.isApproved || ((reviewBuild ?? showsDrafts) && chapter.isDraft);
+  /// Whether [chapter] may be shown to a parent in this build. The same
+  /// three-outcome gate as Today lines, week cards and guides: `shown`
+  /// always, `draft` only in a review build (with a Draft tag).
+  static bool isVisible(Chapter chapter, {bool? drafts}) =>
+      chapter.review(drafts: drafts) != Review.hidden;
 
-  /// The visible chapter whose range holds [week], or null.
-  static Chapter? forWeek(
-    List<Chapter> chapters,
-    int week, {
-    bool? reviewBuild,
-  }) {
+  /// The visible chapter whose range holds [week], or null. An approved
+  /// chapter wins over a draft for the same week.
+  static Chapter? forWeek(List<Chapter> chapters, int week, {bool? drafts}) {
+    Chapter? draft;
     for (final chapter in chapters) {
-      if (chapter.contains(week) &&
-          isVisible(chapter, reviewBuild: reviewBuild)) {
-        return chapter;
+      if (!chapter.contains(week)) continue;
+      switch (chapter.review(drafts: drafts)) {
+        case Review.shown:
+          return chapter;
+        case Review.draft:
+          draft ??= chapter;
+        case Review.hidden:
+          break;
       }
     }
-    return null;
+    return draft;
   }
 
   /// Replaces the loaded chapters (tests), or clears them when null.

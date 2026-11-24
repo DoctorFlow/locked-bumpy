@@ -103,16 +103,16 @@ void main() {
     );
     for (final review in [false, true]) {
       expect(
-        ChapterLoader.forWeek(chapters, 18, reviewBuild: review)?.id,
+        ChapterLoader.forWeek(chapters, 18, drafts: review)?.id,
         'chapter_16',
       );
       expect(
-        ChapterLoader.forWeek(chapters, 21, reviewBuild: review)?.id,
+        ChapterLoader.forWeek(chapters, 21, drafts: review)?.id,
         review ? 'chapter_20' : null,
       );
-      expect(ChapterLoader.forWeek(chapters, 25, reviewBuild: review), isNull);
-      expect(ChapterLoader.forWeek(chapters, 29, reviewBuild: review), isNull);
-      expect(ChapterLoader.forWeek(chapters, 15, reviewBuild: review), isNull);
+      expect(ChapterLoader.forWeek(chapters, 25, drafts: review), isNull);
+      expect(ChapterLoader.forWeek(chapters, 29, drafts: review), isNull);
+      expect(ChapterLoader.forWeek(chapters, 15, drafts: review), isNull);
     }
   });
 

@@ -8,11 +8,14 @@ import '../../core/constants/app_constants.dart';
 import '../../core/theme/palette.dart';
 import '../../domain/models/app_state.dart';
 import '../../domain/models/chapter.dart';
+import '../../domain/models/content_record.dart';
 import '../../domain/models/need.dart';
 import '../../domain/models/week_card.dart';
 import '../widgets/bumpy_avatar.dart';
+import '../widgets/draft_tag.dart';
 import '../widgets/nursery_scene.dart';
 import '../widgets/visit_topics.dart';
+import 'guide_screen.dart';
 
 part 'this_week_chapter.dart';
 
@@ -408,6 +411,8 @@ class _WeekCardView extends StatelessWidget {
                           fontWeight: FontWeight.w600,
                         ),
                       ),
+                    // Only a review build ever shows a draft card.
+                    if (card?.isDraft ?? false) DraftTag(palette: palette),
                   ],
                 ),
               ),

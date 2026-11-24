@@ -16,7 +16,7 @@ class PackageTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             self.make_output(root)
-            paths = ["assets/assets/images/body-witch.png", "assets/assets/content/guide_articles.json",
+            paths = ["assets/assets/images/body-witch.png", "assets/assets/content/guides.json",
                      "icons/Icon-192.png", "canvaskit/chromium/canvaskit.js"]
             paths.append(next(root.glob("assets/assets/images/*.webp")).relative_to(root).as_posix())
             paths.append(next(root.glob("fonts/**/*.woff2")).relative_to(root).as_posix())

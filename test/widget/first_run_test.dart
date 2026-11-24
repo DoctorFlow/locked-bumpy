@@ -163,7 +163,7 @@ void main() {
       expect(
         find.text(
           'This app is not medical advice. '
-          'If you are worried about anything, call your doctor.',
+          'If you are worried about anything, call your doctor or midwife.',
         ),
         findsOneWidget,
       );

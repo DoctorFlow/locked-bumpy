@@ -82,6 +82,17 @@ class Chapter {
 
   bool get isDraft => status == 'draft';
 
+  /// The shared content gate's verdict ([ContentGate.review]). Every field
+  /// rule was checked when the record was parsed, so only review status and
+  /// the build decide: `shown`, `draft` (review build only) or `hidden`.
+  Review review({bool? drafts}) => ContentGate.review(
+    status: status,
+    reviewer: approvedBy,
+    date: approvedDate,
+    rulesPass: true,
+    drafts: drafts,
+  );
+
   bool contains(int week) => week >= fromWeek && week <= toWeek;
 
   /// The picture for the current look. The page falls back to an accent

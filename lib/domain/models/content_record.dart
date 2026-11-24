@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart' show visibleForTesting;
 import '../../core/build_flags.dart';
 
 /// The three outcomes of the content gate.
@@ -145,12 +146,21 @@ class ContentGate {
   /// a review build (see `build_flags.dart`); tests pass `drafts:` instead.
   static const bool draftsByDefault = kReviewBuild;
 
-  /// The one content gate for Today lines, week cards and guides.
+  /// Widget tests set this to act as a review build (true) or a release
+  /// (false) for every kind of content at once; null means the build flag.
+  @visibleForTesting
+  static bool? debugDrafts;
+
+  /// Whether this build shows drafts: the one switch for Today lines, week
+  /// cards, chapters and guides when a caller does not pass `drafts:`.
+  static bool get showsDrafts => debugDrafts ?? draftsByDefault;
+
+  /// The one content gate for Today lines, week cards, chapters and guides.
   ///
   /// - [Review.shown]: approved, with a non-empty reviewer and a real date,
   ///   and [rulesPass].
   /// - [Review.draft]: status `draft`, [rulesPass], and [drafts] is true
-  ///   (a review build).
+  ///   (a review build; [showsDrafts] when not given).
   /// - [Review.hidden]: everything else, including approved rows that break
   ///   a rule.
   static Review review({
@@ -158,21 +168,18 @@ class ContentGate {
     required String reviewer,
     required String date,
     required bool rulesPass,
-    bool drafts = draftsByDefault,
+    bool? drafts,
   }) {
     if (!rulesPass) return Review.hidden;
     if (status == 'approved') {
       return hasDatedReview(reviewer, date) ? Review.shown : Review.hidden;
     }
-    if (drafts && status == 'draft') return Review.draft;
+    if ((drafts ?? showsDrafts) && status == 'draft') return Review.draft;
     return Review.hidden;
   }
 
   /// [review] for one Today line.
-  static Review reviewRecord(
-    ContentRecord record, {
-    bool drafts = draftsByDefault,
-  }) => review(
+  static Review reviewRecord(ContentRecord record, {bool? drafts}) => review(
     status: record.status,
     reviewer: record.approvedBy,
     date: record.approvedDate,
