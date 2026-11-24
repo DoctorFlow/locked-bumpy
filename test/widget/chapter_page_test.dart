@@ -4,6 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:little_bumpy/content/chapter_loader.dart';
 import 'package:little_bumpy/content/content_loader.dart';
+import 'package:little_bumpy/content/urgent_loader.dart';
+import 'package:little_bumpy/core/theme/palette.dart';
+import 'package:little_bumpy/domain/models/urgent_signs.dart';
+import 'package:little_bumpy/presentation/screens/urgent_screen.dart';
 import 'package:little_bumpy/domain/models/app_state.dart';
 import 'package:little_bumpy/domain/models/content_record.dart';
 import 'package:little_bumpy/domain/models/guide.dart';
@@ -17,6 +21,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../chapter_fixtures.dart';
 import '../support/guide_fixture.dart';
+import '../support/urgent_fixture.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -400,6 +405,66 @@ void main() {
       },
     );
   }
+
+  for (final halloween in [false, true]) {
+    final look = halloween ? 'Halloween' : 'Everyday';
+    testWidgets('the chapter page ends with Today\'s urgent link ($look)', (
+      t,
+    ) async {
+      UrgentLoader.debugSet(
+        UrgentSigns.review(jsonEncode(paperBoatUrgent()), drafts: false),
+      );
+      addTearDown(() => UrgentLoader.debugSet(null));
+      await openThisWeek(t, halloween: halloween);
+      final link = find.byKey(const ValueKey('chapter-urgent-link-16'));
+      expect(link, findsOneWidget);
+      // The same widget and words as Today's footer link.
+      expect(t.widget(link), isA<UrgentLink>());
+      final words = find.descendant(
+        of: link,
+        matching: find.text('When to get help right away'),
+      );
+      expect(words, findsOneWidget);
+      // Last on the page: below the curious question, on the page itself
+      // (not inside the chapter card), in moonlight.
+      await t.ensureVisible(link);
+      await t.pumpAndSettle();
+      final curious = find.text('How long can a kite string be?');
+      expect(t.getTopLeft(link).dy, greaterThan(t.getBottomLeft(curious).dy));
+      expect(
+        find.ancestor(of: link, matching: find.byType(PaperCard)),
+        findsNothing,
+      );
+      final button = t.widget<TextButton>(
+        find.descendant(of: link, matching: find.byType(TextButton)),
+      );
+      final palette = halloween ? AppPalette.halloween : AppPalette.everyday;
+      expect(
+        button.style!.foregroundColor!.resolve(<WidgetState>{}),
+        palette.moonlight,
+      );
+      expect(t.getSize(words).height, lessThan(48));
+      expect(
+        t
+            .getSize(
+              find.descendant(of: link, matching: find.byType(TextButton)),
+            )
+            .height,
+        greaterThanOrEqualTo(48),
+      );
+      await t.tap(words);
+      await t.pumpAndSettle();
+      expect(find.byType(UrgentScreen), findsOneWidget);
+      expect(find.text('The sail has a hole in it'), findsOneWidget);
+    });
+  }
+
+  testWidgets('a week without a chapter has no chapter urgent link', (t) async {
+    await openThisWeek(t);
+    await t.tap(find.byIcon(Icons.arrow_back_ios_new));
+    await t.pumpAndSettle();
+    expect(find.byKey(const ValueKey('chapter-urgent-link-15')), findsNothing);
+  });
 
   testWidgets('at normal text on a tall phone the week strip stays fixed', (
     t,

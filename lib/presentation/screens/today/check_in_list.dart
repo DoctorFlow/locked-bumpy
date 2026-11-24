@@ -182,19 +182,12 @@ class _TodayFooter extends StatelessWidget {
           style: AppText.small.copyWith(color: palette.moonlightSoft),
           textAlign: TextAlign.center,
         ),
-        // Beside the safety line, a quiet link to the urgent signs: a text
-        // button (underlined, 48 px) in moonlight, which reads on the page in
-        // both looks.
-        Center(
-          child: TextButton(
-            key: const ValueKey('today-urgent-link'),
-            style: TextButton.styleFrom(foregroundColor: palette.moonlight),
-            onPressed: () => UrgentScreen.open(context, state),
-            child: const Text(
-              'When to get help right away',
-              textAlign: TextAlign.center,
-            ),
-          ),
+        // Beside the safety line, the quiet link to the urgent signs (the
+        // same link ends every chapter page).
+        UrgentLink(
+          key: const ValueKey('today-urgent-link'),
+          state: state,
+          palette: palette,
         ),
       ],
     );

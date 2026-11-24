@@ -5,6 +5,8 @@ import 'package:little_bumpy/domain/models/app_state.dart';
 import 'package:little_bumpy/domain/models/need.dart';
 import 'package:little_bumpy/main.dart';
 import 'package:little_bumpy/presentation/screens/first_run_screen.dart';
+import 'package:little_bumpy/presentation/widgets/bumpy_avatar.dart';
+import 'package:little_bumpy/presentation/widgets/need_word.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'pick_date_helper.dart';
@@ -176,9 +178,8 @@ void main() {
       await _tap(tester, find.text('Start'));
       await _tap(tester, find.text('Choose due date'));
 
-      Color okColor() => DefaultTextStyle.of(
-        tester.element(find.text('OK')),
-      ).style.color!;
+      Color okColor() =>
+          DefaultTextStyle.of(tester.element(find.text('OK'))).style.color!;
       final cancelColor = DefaultTextStyle.of(
         tester.element(find.text('Cancel')),
       ).style.color!;
@@ -335,7 +336,7 @@ void main() {
           final tile = find.byKey(ValueKey('first-run-need-${need.name}'));
           expect(tile, findsOneWidget);
           expect(
-            find.descendant(of: tile, matching: find.text(need.label)),
+            find.descendant(of: tile, matching: find.text(needWord(need))),
             findsOneWidget,
           );
           final picture = halloween
@@ -481,6 +482,147 @@ void main() {
         await tester.pumpWidget(const SizedBox());
       }
     });
+  });
+
+  group('First run steps 3 to 5 on paper', () {
+    Future<AppState> openStep(
+      WidgetTester tester,
+      int page, {
+      bool halloween = true,
+    }) async {
+      final state = await _freshState(halloween: halloween);
+      await tester.pumpWidget(_wrap(state));
+      await tester.pump();
+      tester
+          .widget<PageView>(find.byType(PageView))
+          .controller!
+          .jumpToPage(page);
+      await tester.pumpAndSettle();
+      return state;
+    }
+
+    testWidgets('step 3: Bumpy wears the nickname as it is typed', (
+      tester,
+    ) async {
+      final state = await openStep(tester, 2);
+      expect(
+        find.text('Optional. Leave it blank if you prefer Little Bumpy.'),
+        findsOneWidget,
+      );
+      final card = find.byKey(const ValueKey('first-run-nickname-bumpy'));
+      expect(
+        find.descendant(of: card, matching: find.byType(BumpyAvatar)),
+        findsOneWidget,
+      );
+      final tag = find.byKey(const ValueKey('first-run-name-tag'));
+      expect(
+        find.descendant(of: tag, matching: find.text('Little Bumpy')),
+        findsOneWidget,
+      );
+      await tester.enterText(find.byType(TextField), 'Clover');
+      await tester.pump();
+      expect(
+        find.descendant(of: tag, matching: find.text('Clover')),
+        findsOneWidget,
+      );
+      await tester.enterText(find.byType(TextField), '   ');
+      await tester.pump();
+      expect(
+        find.descendant(of: tag, matching: find.text('Little Bumpy')),
+        findsOneWidget,
+      );
+      // Typing alone saves nothing; the nickname is saved at the end.
+      expect(state.nickname, '');
+    });
+
+    testWidgets('step 4: the tick sits on the picture, not beside the name', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(320, 568);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await openStep(tester, 3);
+      // The name has the card's whole width (it broke as "Hallowee / n"
+      // beside the tick at 320 px): the tick ends above the name starts.
+      final tick = find.byIcon(Icons.check_rounded);
+      expect(tick, findsOneWidget);
+      for (final name in ['Halloween', 'Everyday']) {
+        final label = find.text(name);
+        final card = find.ancestor(
+          of: label,
+          matching: find.byType(AnimatedContainer),
+        );
+        final inner = tester.getSize(card.first).width - 2 * 12;
+        expect(tester.getSize(label).width, lessThanOrEqualTo(inner + .5));
+        expect(
+          tester.getBottomLeft(tick).dy,
+          lessThan(tester.getTopLeft(find.text('Everyday')).dy),
+        );
+      }
+      expect(tester.takeException(), isNull);
+    });
+
+    for (final halloween in [true, false]) {
+      final look = halloween ? 'Halloween' : 'Everyday';
+      testWidgets('step 5 ($look): Bumpy is there and every row is even', (
+        tester,
+      ) async {
+        tester.view.physicalSize = const Size(320, 568);
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.reset);
+        await openStep(tester, 4, halloween: halloween);
+        expect(find.text('Prenatal vitamin'), findsOneWidget);
+        expect(find.text('Prenatal Vitamin'), findsNothing);
+        // Bumpy: in every costume tile at night, standing above by day.
+        expect(
+          find.byKey(const ValueKey('first-run-needs-bumpy')),
+          halloween ? findsNothing : findsOneWidget,
+        );
+        // Three across at 320 px; the tiles in a row share one height, so
+        // the two-line "Prenatal vitamin" no longer leaves its tile taller.
+        Size size(MaternalNeed need) =>
+            tester.getSize(find.byKey(ValueKey('first-run-need-${need.name}')));
+        const needs = MaternalNeed.values;
+        for (final row in [needs.sublist(0, 3), needs.sublist(3)]) {
+          expect(row.map((n) => size(n).height).toSet(), hasLength(1));
+        }
+        expect(
+          tester
+              .getTopLeft(find.byKey(const ValueKey('first-run-need-bones')))
+              .dy,
+          tester
+              .getTopLeft(find.byKey(const ValueKey('first-run-need-iron')))
+              .dy,
+        );
+        expect(tester.takeException(), isNull);
+      });
+    }
+
+    for (final halloween in [true, false]) {
+      final look = halloween ? 'Halloween' : 'Everyday';
+      testWidgets('steps 3 to 5 fit 320 px at 2x text ($look)', (tester) async {
+        tester.view.physicalSize = const Size(320, 568);
+        tester.view.devicePixelRatio = 1;
+        tester.platformDispatcher.textScaleFactorTestValue = 2;
+        addTearDown(tester.view.reset);
+        addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+        final state = await _freshState(halloween: halloween);
+        await tester.pumpWidget(_wrap(state));
+        await tester.pump();
+        for (final page in [2, 3, 4]) {
+          tester
+              .widget<PageView>(find.byType(PageView))
+              .controller!
+              .jumpToPage(page);
+          await tester.pumpAndSettle();
+          expect(tester.takeException(), isNull, reason: 'step ${page + 1}');
+          final next = find.text(page == 4 ? 'Meet Bumpy' : 'Next');
+          await tester.ensureVisible(next);
+          await tester.pumpAndSettle();
+          expect(tester.getSize(next).width, lessThanOrEqualTo(320));
+        }
+      });
+    }
   });
 
   group('AppState nickname', () {

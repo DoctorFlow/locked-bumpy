@@ -278,3 +278,25 @@ class _ActionStrip extends StatelessWidget {
     ),
   );
 }
+
+/// The quiet link to this page, set on the page (not on a card): a text
+/// button (underlined, 48 px) in moonlight, which reads on the page in both
+/// looks. Today has it beside its safety line; every chapter page ends with
+/// it. One widget, so the words and look are the same in both places.
+class UrgentLink extends StatelessWidget {
+  const UrgentLink({super.key, required this.state, required this.palette});
+
+  final AppState state;
+  final AppPalette palette;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: TextButton(
+        style: TextButton.styleFrom(foregroundColor: palette.moonlight),
+        onPressed: () => UrgentScreen.open(context, state),
+        child: const Text(UrgentScreen.rowLabel, textAlign: TextAlign.center),
+      ),
+    );
+  }
+}
