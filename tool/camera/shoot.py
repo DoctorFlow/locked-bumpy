@@ -404,6 +404,8 @@ SCENARIOS = [
         tap_first(["Choose due date", "Pick your due date"], find=True), wait(700),
         shot("date-big-picker"),
         *[st for _ in range(2) for st in (tap("Previous month", "button"), wait(350))],
+        # At 200% text the month scrolls; bring day 15 into view first.
+        reveal("15, Monday, March 15, 2027", at=0.4), wait(300),
         tap_first(["15, Monday, March 15, 2027"], find=True), wait(400), shot("date-big-day"),
         tap_first(["OK"], find=True), wait(700), shot("date-big-picked"),
     ], shot=None, sizes=[(320, 568, 2)], text=2,
