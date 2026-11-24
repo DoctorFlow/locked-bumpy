@@ -285,6 +285,37 @@ void main() {
       await t.pumpWidget(const SizedBox());
     });
 
+    testWidgets('the saved note from Today floats above the tab bar at 320 '
+        'px and 200 percent text ($look)', (t) async {
+      await _phone(t, const Size(320, 568), text: 2);
+      final state = await _start(halloween: halloween);
+      await state.addVisitQuestion(_own);
+      await _reopen(t);
+      final add = find.byKey(const ValueKey('visit-add-another'));
+      await t.ensureVisible(add);
+      await t.pumpAndSettle();
+      await t.tap(add);
+      await t.pumpAndSettle();
+      final save = find.text('Save visit list');
+      await t.ensureVisible(save);
+      await t.pumpAndSettle();
+      await t.tap(save);
+      await t.pump();
+      await t.pump(const Duration(milliseconds: 750));
+      final note = t.getRect(
+        find
+            .descendant(
+              of: find.byKey(const ValueKey('visit-saved')),
+              matching: find.byType(Material),
+            )
+            .first,
+      );
+      final tabs = t.getRect(find.byType(AppNavBar));
+      expect(note.bottom, lessThanOrEqualTo(tabs.top));
+      await t.pumpAndSettle(const Duration(seconds: 3));
+      expect(find.byKey(const ValueKey('visit-saved')), findsNothing);
+      await t.pumpWidget(const SizedBox());
+    });
   }
 
   testWidgets('the visit sheet groups the questions under the show view\'s '
