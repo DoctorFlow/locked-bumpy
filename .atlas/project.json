@@ -1,0 +1,33 @@
+{
+  "schema_version": "1.0.0",
+  "project_id": "locked-bumpy",
+  "display_name": "Little Bumpy",
+  "aliases": [
+    "little-bumpy-app",
+    "Locked In: Night Shift"
+  ],
+  "canonical_remote": "DoctorFlow/locked-bumpy",
+  "canonical_branch": "main",
+  "leadership": "karan-owned",
+  "durability": "app",
+  "roles": [
+    "app"
+  ],
+  "lifecycle": "active",
+  "data_policy": "no-phi",
+  "entrypoints": {
+    "overview": "README.md",
+    "assets": "ASSETS.md",
+    "decisions": "docs/decisions.md"
+  },
+  "collaborations": [
+    {
+      "name": "little-bumpy-kit",
+      "relationship": "build kit and guides for this app"
+    },
+    {
+      "name": "avatar-harness",
+      "relationship": "source of the Bumpy mascot pictures"
+    }
+  ]
+}
